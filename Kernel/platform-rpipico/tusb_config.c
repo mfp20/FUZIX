@@ -22,7 +22,6 @@
 #define EPNUM15 0x8f
 
 #define USBD_VID                (0x2E8A) // Raspberry Pi
-
 // Temporary setup until I figure out how to dynamically reconfigure USB at runtime
 // PID depends on the 32 endpoints usage, packed in couples (I/O), 16 bits:
 // (MSb) 0--- ---- ---- ---1 (LSb)
@@ -43,7 +42,6 @@
 //       |`----------------------  vendor-spare1 in
 //       `-----------------------  unused
 // ie: if all drivers are enabled, the resulting PID is 0x7FFF
-
 #define PID_MAP(dev, nbit)      ( (USB_DEV_##dev) << (nbit) )
 #define USBD_PID                ( 1                  + \
                                   PID_MAP(CONSOLE,  1)  + \
@@ -67,14 +65,14 @@
 #define USBD_STR_MANUF  (0x01)
 #define USBD_STR_PRODUCT (0x02)
 #define USBD_STR_SERIAL (0x03)
-#define USBD_STR_TTY    (0x04)
+#define USBD_STR_CONSOLE (0x04)
 #define USBD_STR_LOG    (0x05)
 #define USBD_STR_EXTFS  (0x06)
 #define USBD_STR_CDC    (0x07)
 #define USBD_STR_VENDOR (0x08)
 
-#define USBD_MAX_POWER_MA (250)
-#define USBD_CDC_CMD_MAX_SIZE (8)
+#define USBD_MAX_POWER_MA (100)
+#define USBD_CDC_CMD_MAX_SIZE (64)
 #define USBD_CDC_IN_OUT_MAX_SIZE (64)
 
 
@@ -86,7 +84,7 @@
 tusb_desc_device_t const desc_device = {
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
-    .bcdUSB             = 0x0200, // USB Specification version 2.0 (microframes each 0.125us)
+    .bcdUSB             = 0x0200, // USB Specification version 2.0 (microframes each 0.125ms)
     .bDeviceClass       = 0x00,   // Each interface specifies its own
     .bDeviceSubClass    = 0x00,   // Each interface specifies its own
     .bDeviceProtocol    = MISC_PROTOCOL_IAD,
@@ -116,7 +114,7 @@ extern pico_unique_board_id_t pico_id;
 // C string for iSerialNumber in USB Device Descriptor, two chars per byte + terminating NULL
 char usb_serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 // convert pico_id into a string to be used as descriptor
-static void id2str(void) {
+void tusb_id2str(void) {
     for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2; i++) {
         /* Byte index inside the uid array */
         int bi = i / 2;
@@ -133,9 +131,9 @@ static const char *const string_desc_arr[] = {
     [USBD_STR_MANUF]    = "Raspberry Pi",
     [USBD_STR_PRODUCT]  = "Pico Fuzix",
     [USBD_STR_SERIAL]   = usb_serial,
-    [USBD_STR_TTY]      = "Pico Fuzix console",
-    [USBD_STR_LOG]      = "Pico Fuzix log",
-    [USBD_STR_EXTFS]    = "Pico Fuzix extfs",
+    [USBD_STR_CONSOLE]  = "Fuzix console",
+    [USBD_STR_LOG]      = "Fuzix log",
+    [USBD_STR_EXTFS]    = "Fuzix extfs",
     [USBD_STR_CDC]      = "Tinyusb CDC",
     [USBD_STR_VENDOR]   = "Tinyusb Vendor"
 };
@@ -178,13 +176,27 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 //--------------------------------------------------------------------+
 
 enum {
-  ITFNUM0,
-  ITFNUM1,
-  ITFNUM2,
-  ITFNUM3,
-  ITFNUM4,
-  ITFNUM5,
-  ITFNUM6,
+#if USB_DEV_CONSOLE
+  ITFNUM0, ITFNUM0_DATA,
+#endif
+#if USB_DEV_LOG
+  ITFNUM1, ITFNUM1_DATA,
+#endif
+#if USB_DEV_EXTFS
+  ITFNUM2, ITFNUM2_DATA,
+#endif
+#if USB_DEV_TTY1
+  ITFNUM3, ITFNUM3_DATA,
+#endif
+#if USB_DEV_RAW1
+  ITFNUM4, ITFNUM4_DATA,
+#endif
+#if USB_DEV_TTY2
+  ITFNUM5, ITFNUM5_DATA,
+#endif
+#if USB_DEV_RAW2
+  ITFNUM6, ITFNUM6_DATA,
+#endif
   ITFNUM_TOTAL
 };
 
@@ -198,7 +210,7 @@ static const uint8_t desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITFNUM_TOTAL, USBD_STR_LANG, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA),
 #if USB_DEV_CONSOLE
     // Interface 0
-    TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_TTY, EPNUM1, USBD_CDC_CMD_MAX_SIZE, EPNUM2 & 0x7F, EPNUM2, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_CONSOLE, EPNUM1, USBD_CDC_CMD_MAX_SIZE, EPNUM2 & 0x7F, EPNUM2, USBD_CDC_IN_OUT_MAX_SIZE),
 #endif
 #if USB_DEV_LOG
     // Interface 1

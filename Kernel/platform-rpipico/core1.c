@@ -5,6 +5,7 @@
  */
 
 #include <tusb.h>
+#include <tusb_config.h>
 #include <pico/stdlib.h>
 #include <pico/time.h>
 #include <pico/binary_info.h>
@@ -41,6 +42,7 @@ static void core1_main(void)
     uart_set_translate_crlf(uart_default, false);
     uart_set_fifo_enabled(uart_default, true);
 
+	tusb_id2str();
     tusb_init();
 
 	for (;;)

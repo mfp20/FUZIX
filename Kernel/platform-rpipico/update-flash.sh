@@ -258,7 +258,9 @@ ln cp mv
 ln cp ln
 
 bget ../../Applications/V7/cmd/sh/sh
+bget ../../Applications/V7/cmd/sh/fsh
 chmod 0755 sh
+chmod 0755 fsh
 
 bget ../../Applications/V7/cmd/ac
 bget ../../Applications/V7/cmd/accton
@@ -357,7 +359,7 @@ cd /usr/games
 #bget ../../Applications/games/adv14a
 #bget ../../Applications/games/adv14b
 #bget ../../Applications/games/advint
-bget ../../Applications/games/cowsay
+#bget ../../Applications/games/cowsay
 #bget ../../Applications/games/fortune
 #bget ../../Applications/games/fortune.dat
 #bget ../../Applications/games/hamurabi
@@ -398,7 +400,7 @@ bget ../../Applications/games/cowsay
 #chmod 0755 adv14a
 #chmod 0755 adv14b
 #chmod 0755 advint
-chmod 0755 cowsay
+#chmod 0755 cowsay
 #chmod 0755 fortune
 #chmod 0644 fortune.dat
 #chmod 0755 hamurabi
@@ -423,14 +425,14 @@ chmod 0755 cowsay
 #chmod 0755 z8
 #chmod 0755 invaders
 
-bget ../../Applications/cave/advent
-chmod 0755 advent
+#bget ../../Applications/cave/advent
+#chmod 0755 advent
 
 cd /usr/games
 mkdir lib
 cd lib
-bget ../../Applications/cave/advent.db
-chmod 0644 advent.db
+#bget ../../Applications/cave/advent.db
+#chmod 0644 advent.db
 
 #cd /usr/lib
 #mkdir trek
