@@ -21,3 +21,5 @@ size.report
 # Build system output
 .obj
 bin
+#
+Kernel/platform-rpipico/build

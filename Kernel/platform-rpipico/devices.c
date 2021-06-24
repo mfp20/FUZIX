@@ -9,6 +9,7 @@
 #include <printf.h>
 #include "globals.h"
 #include "picosdk.h"
+#include <pico/unique_id.h>
 #include <hardware/irq.h>
 #include <hardware/structs/timer.h>
 #include <pico/multicore.h>
@@ -31,6 +32,10 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
+// Why a uint8_t[8] array inside a struct instead of an uint64_t an inquiring mind might wonder
+pico_unique_board_id_t pico_id;
+
+//
 static absolute_time_t now;
 
 bool validdev(uint16_t dev)
@@ -64,9 +69,11 @@ static void timer_tick_cb(unsigned alarm)
 
 void device_init(void)
 {
+    // get board id for later use in USB descriptor array
+    pico_get_unique_board_id(&pico_id);
+
     /* The flash device is too small to be useful, and a corrupt flash will
      * cause a crash on startup... oddly. */
-
 	flash_dev_init();
     
 	sd_rawinit();

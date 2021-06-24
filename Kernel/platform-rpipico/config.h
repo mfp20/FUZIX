@@ -1,3 +1,6 @@
+
+#include <stdint.h>
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -61,9 +64,10 @@ extern uint8_t progbase[USERMEM];
 #define BOOTDEVICE 0x0000 /* hda */
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
-/* Device parameters */
+/* 
+ * Devices parameters
+ */
 #define NUM_DEV_TTY 1
-
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    20       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
@@ -72,6 +76,15 @@ extern uint8_t progbase[USERMEM];
 
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
+
+#define USB_DEV_CONSOLE (1) // device console
+#define USB_DEV_EXTFS   (0) // external fs
+#define USB_DEV_LOG     (1) // log output
+#define USB_DEV_TTY1    (0) // spare
+#define USB_DEV_RAW1    (0) // spare
+#define USB_DEV_TTY2    (0) // spare
+#define USB_DEV_RAW2    (0) // spare
+#define USB_DEV_TTY3    (0) // spare
 
 /* Prevent name clashes wish the Pico SDK */
 

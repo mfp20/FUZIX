@@ -48,32 +48,32 @@ static void core1_main(void)
 		tud_task();
 
 		if (multicore_fifo_rvalid()
-			&& (!tud_cdc_connected() || tud_cdc_write_available())
+			&& (!tud_cdc_n_connected(0) || tud_cdc_n_write_available(0))
 			&& uart_is_writable(uart_default))
 		{
 			int b = multicore_fifo_pop_blocking();
 
-			if (tud_cdc_connected())
+			if (tud_cdc_n_connected(0))
 			{
-				tud_cdc_write(&b, 1);
-				tud_cdc_write_flush();
+				tud_cdc_n_write(0, &b, 1);
+				tud_cdc_n_write_flush(0);
 			}
 			
 			uart_putc(uart_default, b);
 		}
 
 		if (multicore_fifo_wready()
-			&& ((tud_cdc_connected() && tud_cdc_available())
-				|| uart_is_readable(uart_default)))
+			&& ((tud_cdc_n_connected(0) && tud_cdc_n_available(0))
+			|| uart_is_readable(uart_default)))
 		{
 			/* Only service a byte from CDC *or* the UART, in case two show
 			 * up at the same time and we end up blocking. No big loss, the
 			 * next one will be read the next time around the loop. */
 
-			if (tud_cdc_available())
+			if (tud_cdc_n_available(0))
 			{
 				uint8_t b;
-				int count = tud_cdc_read(&b, 1);
+				int count = tud_cdc_n_read(0, &b, 1);
 				if (count)
 					multicore_fifo_push_blocking(b);
 			}

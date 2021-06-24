@@ -29,8 +29,8 @@ add_executable(fuzix
 	rawflash.c
 	swapper.c
 	tricks.S
+	tusb_config.c
 	core1.c
-	usbdescriptors.c
 	../dev/blkdev.c
 	../dev/mbr.c
 	../dev/devsd_discard.c
@@ -63,13 +63,14 @@ add_executable(fuzix
 )
 
 target_link_libraries(fuzix
+	tinyusb_device
+	tinyusb_board
 	pico_stdlib
+	pico_unique_id
 	pico_multicore
 	hardware_flash
 	hardware_spi
 	hardware_uart
-	tinyusb_device_unmarked
-	tinyusb_board
 )
 
 pico_set_float_implementation(fuzix none)
