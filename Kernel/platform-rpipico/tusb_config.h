@@ -31,8 +31,8 @@
 
 //------------- CLASS -------------//
 
-#define CFG_TUD_CDC     (USB_DEV_CONSOLE+USB_DEV_LOG+USB_DEV_TTY1+USB_DEV_TTY2)
-#define CFG_TUD_VENDOR  (USB_DEV_EXTFS+USB_DEV_RAW1+USB_DEV_RAW2)
+#define CFG_TUD_CDC     (USB_DEV_CONSOLE+USB_DEV_LOG+USB_DEV_EXTFS+USB_DEV_TTY1+USB_DEV_TTY2)
+#define CFG_TUD_VENDOR  (USB_DEV_RAW1+USB_DEV_RAW2)
 
 #if (((CFG_TUD_CDC*2)+(CFG_TUD_VENDOR*2))>15)
 #error "Too many endpoints in use, disable some devices"

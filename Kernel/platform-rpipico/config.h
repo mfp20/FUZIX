@@ -79,10 +79,10 @@ extern uint8_t progbase[USERMEM];
 
 #define USB_DEV_CONSOLE (1) // device console
 #define USB_DEV_LOG     (1) // log output
-#define USB_DEV_EXTFS   (0) // external fs
-#define USB_DEV_TTY1    (0) // spare
+#define USB_DEV_EXTFS   (1) // external fs
+#define USB_DEV_TTY1    (1) // spare
 #define USB_DEV_RAW1    (0) // spare
-#define USB_DEV_TTY2    (0) // spare
+#define USB_DEV_TTY2    (1) // spare
 #define USB_DEV_RAW2    (0) // spare
 
 /* Prevent name clashes wish the Pico SDK */
