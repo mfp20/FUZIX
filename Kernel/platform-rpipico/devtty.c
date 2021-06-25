@@ -4,9 +4,6 @@
 #include <stdbool.h>
 #include <vt.h>
 #include <tty.h>
-#include "picosdk.h"
-#include <pico/multicore.h>
-#include "core1.h"
 
 static uint8_t ttybuf[TTYSIZ];
 
@@ -20,9 +17,9 @@ tcflag_t termios_mask[NUM_DEV_TTY+1] = { 0, _CSYS };
 /* Output for the system console (kprintf etc) */
 void kputchar(uint_fast8_t c)
 {
-    if (c == '\n')
-        usbconsole_putc_blocking('\r');
-    usbconsole_putc_blocking(c);
+    //if (c == '\n')
+    //    usbconsole_putc_blocking('\r');
+    //usbconsole_putc_blocking(c);
 }
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
@@ -32,7 +29,8 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-    return usbconsole_is_writable() ? TTY_READY_NOW : TTY_READY_SOON;
+    //return usbconsole_is_writable() ? TTY_READY_NOW : TTY_READY_SOON;
+    return 0;
 }
 
 /* For the moment */

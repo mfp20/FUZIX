@@ -1,18 +1,15 @@
 #include <kernel.h>
 #include <kdata.h>
-#include "picosdk.h"
 #include "kernel-armm0.def"
-#include "globals.h"
 #include "printf.h"
-#include "core1.h"
 
-uint_fast8_t platform_param(char* p)
-{
+#include "platform.h"
+
+uint_fast8_t platform_param(char* p) {
 	return 0;
 }
 
-void fatal_exception_handler(struct extended_exception_frame* eh)
-{
+void fatal_exception_handler(struct extended_exception_frame* eh) {
     kprintf("FLAGRANT SYSTEM ERROR! EXCEPTION %d\n", eh->cause);
     kprintf(" r0=%p r1=%p  r2=%p  r3=%p\n", eh->r0, eh->r1, eh->r2, eh->r3);
     kprintf(" r4=%p r5=%p  r6=%p  r7=%p\n", eh->r4, eh->r5, eh->r6, eh->r7);
@@ -25,8 +22,7 @@ void fatal_exception_handler(struct extended_exception_frame* eh)
     panic("fatal exception");
 }
 
-void syscall_handler(struct svc_frame* eh)
-{
+void syscall_handler(struct svc_frame* eh) {
     udata.u_callno = *(uint8_t*)(eh->pc - 2);
     udata.u_argn = eh->r0;
     udata.u_argn1 = eh->r1;
@@ -41,10 +37,7 @@ void syscall_handler(struct svc_frame* eh)
     eh->r1 = udata.u_error;
 }
 
-int main(void)
-{
-    core1_init();
-
+int main(void) {
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
@@ -57,6 +50,8 @@ int main(void)
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
+
+    // TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
 
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;

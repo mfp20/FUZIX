@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -74,7 +73,6 @@ extern uint8_t progbase[USERMEM];
 
 #define MAX_BLKDEV	4
 
-#define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
 
 #define USB_DEV_CONSOLE (1) // device console

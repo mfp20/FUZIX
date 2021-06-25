@@ -5,10 +5,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <blkdev.h>
-#include "dev/devsd.h"
-#include "picosdk.h"
-#include "globals.h"
+
 #include "config.h"
+#include "dev/devsd.h"
+#include "platform.h"
+
 #include <hardware/spi.h>
 
 void sd_rawinit(void)

@@ -5,10 +5,11 @@
 #include <devsd.h>
 #include <stdbool.h>
 #include <blkdev.h>
+
 #include "lib/dhara/map.h"
 #include "lib/dhara/nand.h"
-#include "globals.h"
-#include "picosdk.h"
+
+#include "platform.h"
 #include <hardware/flash.h>
 
 static struct dhara_map dhara;

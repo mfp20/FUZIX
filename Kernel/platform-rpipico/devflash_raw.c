@@ -1,10 +1,11 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel.h>
+
 #include "lib/dhara/nand.h"
-#include "picosdk.h"
+
+#include "platform.h"
 #include <hardware/flash.h>
-#include "globals.h"
 
 int dhara_nand_erase(const struct dhara_nand *n, dhara_block_t b,
                      dhara_error_t *err)

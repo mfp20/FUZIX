@@ -3,7 +3,7 @@
 #include <printf.h>
 #include <exec.h>
 #include "config.h"
-#include "globals.h"
+#include "platform.h"
 
 #undef DEBUG
 

@@ -19,18 +19,18 @@ include_directories(
 )
 
 add_executable(fuzix
-	devices.c
+	platform.c
+	swapper.c
 	devflash.c
+	devflash_raw.c
 	devsdspi.c
+	devusb.c
 	devtty.c
+	devices.c
 	elf.c 
 	main.c
-	misc.c
-	rawflash.c
-	swapper.c
 	tricks.S
-	tusb_config.c
-	core1.c
+	#core1.c
 	../dev/blkdev.c
 	../dev/mbr.c
 	../dev/devsd_discard.c
@@ -63,11 +63,11 @@ add_executable(fuzix
 )
 
 target_link_libraries(fuzix
-	tinyusb_device
-	tinyusb_board
 	pico_stdlib
 	pico_unique_id
 	pico_multicore
+	hardware_regs
+	hardware_structs
 	hardware_flash
 	hardware_spi
 	hardware_uart

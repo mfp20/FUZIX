@@ -1,12 +1,9 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
+
+#include "picosdk.h"
 
 #define FLASH_OFFSET (96*1024)
-
-extern void flash_dev_init(void);
-extern void sd_rawinit(void);
-
-extern void contextswitch(ptptr p);
 
 struct svc_frame
 {
@@ -52,6 +49,10 @@ struct extended_exception_frame
 	uint32_t pc;
 	uint32_t psr;
 };
+
+extern void flash_dev_init(void);
+extern void sd_rawinit(void);
+extern void contextswitch(ptptr p);
 
 #endif
 
