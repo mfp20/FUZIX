@@ -1,5 +1,6 @@
 
 #include "platform.h"
+#include "softirq.h"
 //#include "devusb.h"
 
 #include <version.h>
@@ -47,12 +48,10 @@ static void timer_tick_cb(unsigned alarm) {
         update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
         hardware_alarm_set_target(0, next);
     }
-
-    timer_interrupt();
-
-    while (uart_is_readable(uart0)) {
-        uint8_t b = uart_getc(uart0);	
-        tty_inproc(minor(BOOT_TTY), b);
+    //
+    uarg_t irq = IRQ_ID_TICK;
+    if (!queue_try_add(&fuzix_softirq_q, &irq)) {
+        // TODO lag error
     }
 }
 

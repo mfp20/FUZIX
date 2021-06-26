@@ -36,6 +36,10 @@ int main(void) {
     // init spinlock to protect Fuzix core from access in "di" state
     fuzix_core_lock = spin_lock_init(14);
 
+    // init irq queue
+    queue_init(&fuzix_softirq_q, sizeof(uarg_t), 255);
+    queue_init(&uart0_q, 1, 255);
+    
     // init uart0 for early kprintf
     devtty_init();
 

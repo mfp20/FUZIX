@@ -36,7 +36,7 @@
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
 /* Use soft irqs, ie: hard irqs are managed by underlying RT env */
-//#define CONFIG_SOFT_IRQ
+#define CONFIG_SOFT_IRQ
 
 
 /* Program layout */

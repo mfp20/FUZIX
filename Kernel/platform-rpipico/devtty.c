@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "softirq.h"
 
 #include <kernel.h>
 #include <kdata.h>
@@ -40,9 +41,18 @@ void tty_data_consumed(uint_fast8_t minor) {}
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
 
 static void tty_isr(void) {
-    while (uart_is_readable(uart0)) {
-        uint8_t b = uart_getc(uart0);	
-        tty_inproc(minor(BOOT_TTY), b);
+    uarg_t irq = IRQ_ID_BOOT_TTY;
+    if (queue_is_full(&uart0_q)) {
+        // TODO error buffer full
+    } else {
+        if (!queue_try_add(&fuzix_softirq_q, &irq)) {
+            // TODO lag error
+        } else {
+            while (uart_is_readable(uart0)) {
+                uint8_t b = uart_getc(uart0);
+                queue_try_add(&uart0_q, &b);
+            }
+        } 
     }
 }
 

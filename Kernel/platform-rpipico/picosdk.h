@@ -9,6 +9,7 @@
 #include <pico/types.h>
 #include <pico/unique_id.h>
 #include <pico/multicore.h>
+#include <pico/util/queue.h>
 
 #include <hardware/regs/usb.h>
 
@@ -22,6 +23,8 @@
 #include <hardware/gpio.h>
 #include <hardware/uart.h>
 #include <hardware/spi.h>
+
+typedef queue_t pico_queue_t;
 
 #define MANGLED 1
 #include "mangle.h"

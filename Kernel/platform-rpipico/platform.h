@@ -52,6 +52,8 @@ struct extended_exception_frame
 };
 
 extern spin_lock_t *fuzix_core_lock;
+extern pico_queue_t fuzix_softirq_q;
+extern pico_queue_t uart0_q;
 
 extern void devtty_init(void);
 extern void devflash_init(void);
