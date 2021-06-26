@@ -1,24 +1,13 @@
-/**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
-#include <stdio.h>
-#include "pico/stdlib.h"
-#include <string.h>
-
-#include "devusb_common.h"
-#include "hardware/regs/usb.h"
-#include "hardware/structs/usb.h"
-#include "hardware/irq.h"
-#include "hardware/resets.h"
-
 #include "devusb.h"
 
+#include <stdio.h>
+#include <string.h>
 
 #define usb_hw_set hw_set_alias(usb_hw)
 #define usb_hw_clear hw_clear_alias(usb_hw)
+
+// C string for iSerialNumber in USB Device Descriptor, two chars per byte + terminating NULL
+char usb_serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 
 // Function prototypes for our device specific endpoint handlers defined
 // later on
@@ -78,6 +67,25 @@ static struct usb_device_configuration dev_config = {
                 }
         }
 };
+
+// convert pico_id into a string to be used as descriptor
+void usb_id2str(void) {
+  // Why a uint8_t[8] array inside a struct instead of an uint64_t an inquiring mind might wonder
+  pico_unique_board_id_t pico_id;
+  // get board id for later use in USB descriptor array
+  pico_get_unique_board_id(&pico_id);
+
+  for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2; i++) {
+    // Byte index inside the uid array
+    int bi = i / 2;
+    // Use high nibble first to keep memory order (just cosmetics)
+    uint8_t nibble = (pico_id.id[bi] >> 4) & 0x0F;
+    pico_id.id[bi] <<= 4;
+    // Binary to hex digit
+    usb_serial[i] = nibble < 10 ? nibble + '0' : nibble + 'A' - 10;
+  }
+}
+
 
 /**
  * @brief Given an endpoint address, return the usb_endpoint_configuration of that endpoint. Returns NULL
@@ -508,7 +516,7 @@ void isr_usbctrl(void) {
     }
 
     if (status ^ handled) {
-        panic("Unhandled IRQ 0x%x\n", (uint) (status ^ handled));
+        printf("Unhandled IRQ 0x%x\n", (uint) (status ^ handled));
     }
 }
 
@@ -549,8 +557,9 @@ void ep2_in_handler(uint8_t *buf, uint16_t len) {
     usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);
 }
 
-void usb_init(void) {
+void devusb_init(void) {
     printf("USB Device Low-Level hardware example\n");
+    usb_id2str();
     usb_device_init();
 
     // Wait until configured

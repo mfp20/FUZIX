@@ -1,16 +1,14 @@
+#include "platform.h"
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <timer.h>
 #include <devsd.h>
-#include <stdbool.h>
 #include <blkdev.h>
 
-#include "lib/dhara/map.h"
-#include "lib/dhara/nand.h"
-
-#include "platform.h"
-#include <hardware/flash.h>
+#include <lib/dhara/map.h>
+#include <lib/dhara/nand.h>
 
 static struct dhara_map dhara;
 static const struct dhara_nand nand = 
@@ -73,13 +71,13 @@ static int trim_cb(void)
 	return 0;
 }
 
-void flash_dev_init(void)
+void devflash_init(void)
 {
 	blkdev_t* blk = blkdev_alloc();
 	if (!blk)
 		return;
 
-	kprintf("NAND flash, ");
+	kprintf("NOR flash, ");
 	dhara_map_init(&dhara, &nand, journal_buf, 10);
 	dhara_error_t err = DHARA_E_NONE;
 	dhara_map_resume(&dhara, &err);

@@ -1,13 +1,8 @@
+#include "platform.h"
 #include <kernel.h>
 #include <kdata.h>
-#include "kernel-armm0.def"
-#include "printf.h"
-
-#include "platform.h"
-
-uint_fast8_t platform_param(char* p) {
-	return 0;
-}
+#include <kernel-armm0.def>
+#include <printf.h>
 
 void fatal_exception_handler(struct extended_exception_frame* eh) {
     kprintf("FLAGRANT SYSTEM ERROR! EXCEPTION %d\n", eh->cause);
@@ -38,6 +33,12 @@ void syscall_handler(struct svc_frame* eh) {
 }
 
 int main(void) {
+    // init spinlock to protect Fuzix core from access in "di" state
+    fuzix_core_lock = spin_lock_init(14);
+
+    // init uart0 for early kprintf
+    devtty_init();
+
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||

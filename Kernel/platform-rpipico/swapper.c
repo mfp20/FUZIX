@@ -1,9 +1,9 @@
+#include "platform.h"
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <exec.h>
-#include "config.h"
-#include "platform.h"
 
 #undef DEBUG
 
@@ -95,6 +95,8 @@ static struct mapentry* find_free_block(ptptr p)
         }
     }
 #endif
+
+void contextswitch(ptptr p);
 
 void pagemap_free(ptptr p)
 {
@@ -293,12 +295,6 @@ void clonecurrentprocess(ptptr p)
     #ifdef DEBUG
         kprintf("end clone\n");
     #endif
-}
-
-uint_fast8_t platform_canswapon(uint16_t devno)
-{
-    /* Only allow swapping to hd devices. */
-    return (devno >> 8) == 0;
 }
 
 int swapout(ptptr p)

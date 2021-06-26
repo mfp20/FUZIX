@@ -1,3 +1,6 @@
+#ifndef _CONFIG_DOT_H
+#define _CONFIG_DOT_H
+
 #include <stdint.h>
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -32,6 +35,9 @@
 /* Serial TTY, no VT or font */
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
+/* Use soft irqs, ie: hard irqs are managed by underlying RT env */
+//#define CONFIG_SOFT_IRQ
+
 
 /* Program layout */
 
@@ -53,8 +59,8 @@ extern uint8_t progbase[USERMEM];
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
-#define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
+#define BOOT_TTY (512 + 1)  /* Set this to default device for stdio, stderr */
+                            /* In this case, the default is the first TTY device */
 
 #define TICKSPERSEC 200   /* Ticks per second */
 /* We need a tidier way to do this from the loader */
@@ -70,11 +76,7 @@ extern uint8_t progbase[USERMEM];
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    20       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
-
 #define MAX_BLKDEV	4
-
-#define swap_map(x) ((uint8_t*)(x))
-
 #define USB_DEV_CONSOLE (1) // device console
 #define USB_DEV_LOG     (1) // log output
 #define USB_DEV_EXTFS   (1) // external fs
@@ -83,10 +85,12 @@ extern uint8_t progbase[USERMEM];
 #define USB_DEV_TTY2    (1) // spare
 #define USB_DEV_RAW2    (0) // spare
 
-/* Prevent name clashes wish the Pico SDK */
+//
+#define swap_map(x) ((uint8_t*)(x))
 
 #define MANGLED 1
 #include "mangle.h"
 
-// vim: sw=4 ts=4 et
+#endif
 
+// vim: sw=4 ts=4 et

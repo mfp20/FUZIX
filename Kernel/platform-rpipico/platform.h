@@ -1,7 +1,8 @@
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef _PLATFORM_DOT_H
+#define _PLATFORM_DOT_H
 
 #include "picosdk.h"
+#include "config.h"
 
 #define FLASH_OFFSET (96*1024)
 
@@ -50,9 +51,18 @@ struct extended_exception_frame
 	uint32_t psr;
 };
 
-extern void flash_dev_init(void);
-extern void sd_rawinit(void);
-extern void contextswitch(ptptr p);
+extern spin_lock_t *fuzix_core_lock;
+
+extern void devtty_init(void);
+extern void devflash_init(void);
+extern void devsd_spi_init(void);
+extern void devusb_init(void);
+
+extern void devcore1_init(core1_main_t c1main);
+extern bool devcore1_is_readable(void);
+extern bool devcore1_is_writable(void);
+extern uint8_t devcore1_getc_blocking(void);
+extern void devcore1_putc_blocking(uint8_t b);
 
 #endif
 

@@ -1,8 +1,7 @@
-#ifndef USBDEV_COMMON_H_
-#define USBDEV_COMMON_H_
+#ifndef _USBDEV_COMMON_DOT_H_
+#define _USBDEV_COMMON_DOT_H_
 
-#include "pico/types.h"
-#include "hardware/structs/usb.h"
+#include "platform.h"
 
 // bmRequestType bit definitions
 #define USB_REQ_TYPE_STANDARD 0x00u

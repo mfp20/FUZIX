@@ -26,11 +26,11 @@ add_executable(fuzix
 	devsdspi.c
 	devusb.c
 	devtty.c
+	devcore1.c
 	devices.c
 	elf.c 
 	main.c
 	tricks.S
-	#core1.c
 	../dev/blkdev.c
 	../dev/mbr.c
 	../dev/devsd_discard.c
@@ -63,16 +63,20 @@ add_executable(fuzix
 )
 
 target_link_libraries(fuzix
+	cmsis_core
 	pico_stdlib
 	pico_unique_id
 	pico_multicore
 	hardware_regs
 	hardware_structs
+	hardware_sync
 	hardware_flash
 	hardware_spi
 	hardware_uart
 )
 
+pico_enable_stdio_uart(fuzix 0)
+pico_enable_stdio_usb(fuzix 0)
 pico_set_float_implementation(fuzix none)
 pico_set_double_implementation(fuzix none)
 pico_add_extra_outputs(fuzix)

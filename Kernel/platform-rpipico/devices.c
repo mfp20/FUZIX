@@ -1,24 +1,21 @@
-#include <kernel.h>
+
+#include "platform.h"
+//#include "devusb.h"
+
 #include <version.h>
+#include <kernel.h>
 #include <kdata.h>
 #include <devsys.h>
 #include <blkdev.h>
 #include <tty.h>
-#include <devtty.h>
-#include <dev/devsd.h>
 #include <printf.h>
+#include <dev/devsd.h>
 
-#include "platform.h"
-#include "devusb.h"
+//
+static absolute_time_t now;
 
-#include <hardware/irq.h>
-#include <hardware/structs/timer.h>
-#include <pico/multicore.h>
-
-
-
-struct devsw dev_tab[] =  /* The device driver switch table */
-{
+// The device driver switch table
+struct devsw dev_tab[] = {
 // minor    open         close        read      write           ioctl
 // ---------------------------------------------------------------------
   /* 0: /dev/hd - block device interface */
@@ -34,11 +31,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
-//
-static absolute_time_t now;
-
-bool validdev(uint16_t dev)
-{
+bool validdev(uint16_t dev) {
     /* This is a bit uglier than needed but the right hand side is
        a constant this way */
     if(dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) - 1)
@@ -47,8 +40,7 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-static void timer_tick_cb(unsigned alarm)
-{
+static void timer_tick_cb(unsigned alarm) {
     absolute_time_t next;
     update_us_since_boot(&next, to_us_since_boot(now) + (1000000 / TICKSPERSEC));
     if (hardware_alarm_set_target(0, next)) {
@@ -58,30 +50,34 @@ static void timer_tick_cb(unsigned alarm)
 
     timer_interrupt();
 
-//    if (usbconsole_is_readable()) {
-//        uint8_t c = usbconsole_getc_blocking();
-//        tty_inproc(minor(BOOT_TTY), c);
-//    }
+    while (uart_is_readable(uart0)) {
+        uint8_t b = uart_getc(uart0);	
+        tty_inproc(minor(BOOT_TTY), b);
+    }
 }
 
-void device_init(void)
-{
+void device_init(void) {
     /* The flash device is too small to be useful, and a corrupt flash will
      * cause a crash on startup... oddly. */
-	flash_dev_init();
-    
+	devflash_init();
+
     // SD, if any
-	sd_rawinit();
+	devsd_spi_init();
 	devsd_init();
 
     // usb for external fs
-    usb_init();
+    //devusb_init();
 
-    // timer ticker
+    // ticker
     hardware_alarm_claim(0);
     update_us_since_boot(&now, time_us_64());
     hardware_alarm_set_callback(0, timer_tick_cb);
     timer_tick_cb(0);
+
+    // led on, signal init complete
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
 }
 
 /* vim: sw=4 ts=4 et: */

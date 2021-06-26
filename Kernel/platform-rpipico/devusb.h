@@ -1,5 +1,5 @@
-#ifndef USBDEV_H_
-#define USBDEV_H_
+#ifndef _USBDEV_DOT_H_
+#define _USBDEV_DOT_H_
 
 #include "devusb_common.h"
 
@@ -126,7 +126,5 @@ static const unsigned char *descriptor_strings[] = {
         (unsigned char *) "Raspberry Pi",    // Vendor
         (unsigned char *) "Pico Test Device" // Product
 };
-
-void usb_init(void);
 
 #endif
