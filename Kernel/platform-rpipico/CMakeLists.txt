@@ -63,7 +63,7 @@ add_executable(fuzix
 )
 
 target_link_libraries(fuzix
-	cmsis_core
+	#cmsis_core
 	pico_stdlib
 	pico_unique_id
 	pico_multicore

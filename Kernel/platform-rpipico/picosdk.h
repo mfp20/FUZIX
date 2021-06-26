@@ -1,7 +1,7 @@
 #define MANGLED 0
 #include "mangle.h"
 
-#include <RP2040.h> // NVIC_SystemReset() to reboot cpu
+//#include <RP2040.h> // NVIC_SystemReset() to reboot cpu
 
 #include <pico.h>
 

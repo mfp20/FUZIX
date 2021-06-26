@@ -51,7 +51,7 @@ void devtty_init(void) {
     gpio_set_function(1, GPIO_FUNC_UART);
     uart_init(uart0, 115200);
     uart_set_translate_crlf(uart0, true);
-    uart_set_fifo_enabled(uart0, true);
+    uart_set_fifo_enabled(uart0, false);
 
     irq_set_exclusive_handler(UART0_IRQ, tty_isr);
     irq_set_enabled(UART0_IRQ, true);
