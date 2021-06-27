@@ -1,11 +1,9 @@
 #include "platform.h"
-#include "softirq.h"
 
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <exec.h>
-#include <tty.h>
 
 uint8_t sys_cpu = A_ARM;
 uint8_t sys_cpu_feat = AF_CORTEX_M0;
@@ -14,49 +12,21 @@ uaddr_t ramtop = (uaddr_t) PROGTOP;
 uint8_t sys_stubs[sizeof(struct exec)];
 uint16_t swap_dev = 0xffff;
 
-spin_lock_t *fuzix_core_lock;
-pico_queue_t fuzix_softirq_q;
-pico_queue_t uart0_q;
-
-void irq_dispatch(void) {
-	uarg_t id;
-	while (queue_get_level(&fuzix_softirq_q)>0) {
-		queue_remove_blocking(&fuzix_softirq_q, &id);
-		switch (id) {
-			case IRQ_ID_TICK:
-    			timer_interrupt();
-			break;
-			case IRQ_ID_BOOT_TTY:
-				while (queue_get_level(&uart0_q)>0) {
-					uint8_t b;
-					queue_remove_blocking(&uart0_q, &b);	
-					tty_inproc(minor(BOOT_TTY), b);
-				}
-			break;
-			case IRQ_ID_FLASH:
-			break;
-			case IRQ_ID_USB:
-			break;
-			default:
-			// TODO error unknown irq
-			break;
-		}
-	}
-}
+bool fuzix_ready = true;
 
 uint32_t di(void) {
-	//spin_lock_unsafe_blocking(fuzix_core_lock);
+	fuzix_ready = false;
 	return 0;
 }
 
 void ei(void) {
-	irq_dispatch();
-	//spin_unlock_unsafe(fuzix_core_lock);
+	fuzix_ready = true;
+	devvirt_service();
 }
 
 void irqrestore(uint32_t ps) {
-	irq_dispatch();
-	//spin_unlock_unsafe(fuzix_core_lock);
+	fuzix_ready = true;
+	devvirt_service();
 }
 
 void set_cpu_type(void) {}

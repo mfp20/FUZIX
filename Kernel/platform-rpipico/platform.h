@@ -3,11 +3,11 @@
 
 #include "picosdk.h"
 #include "config.h"
+#include "devvirt.h"
 
 #define FLASH_OFFSET (96*1024)
 
-struct svc_frame
-{
+struct svc_frame {
 	uint32_t r12;
 	uint32_t pc;
 	uint32_t lr;
@@ -17,8 +17,7 @@ struct svc_frame
 	uint32_t r3;
 };
 
-struct exception_frame
-{
+struct exception_frame {
 	uint32_t r0;
 	uint32_t r1;
 	uint32_t r2;
@@ -29,8 +28,7 @@ struct exception_frame
 	uint32_t psr;
 };
 
-struct extended_exception_frame
-{
+struct extended_exception_frame {
 	uint32_t r8;
 	uint32_t r9;
 	uint32_t r10;
@@ -51,9 +49,7 @@ struct extended_exception_frame
 	uint32_t psr;
 };
 
-extern spin_lock_t *fuzix_core_lock;
-extern pico_queue_t fuzix_softirq_q;
-extern pico_queue_t uart0_q;
+extern bool fuzix_ready;
 
 extern void devtty_init(void);
 extern void devflash_init(void);

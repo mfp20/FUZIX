@@ -33,12 +33,10 @@ void syscall_handler(struct svc_frame* eh) {
 }
 
 int main(void) {
-    // init spinlock to protect Fuzix core from access in "di" state
-    fuzix_core_lock = spin_lock_init(14);
-
     // init irq queue
-    queue_init(&fuzix_softirq_q, sizeof(uarg_t), 255);
-    queue_init(&uart0_q, 1, 255);
+    queue_init(&devvirt_signal_q, sizeof(uarg_t), UINT8_MAX);
+    queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
+    queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
     
     // init uart0 for early kprintf
     devtty_init();

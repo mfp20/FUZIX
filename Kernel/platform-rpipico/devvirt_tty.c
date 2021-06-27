@@ -1,5 +1,4 @@
 #include "platform.h"
-#include "softirq.h"
 
 #include <kernel.h>
 #include <kdata.h>
@@ -40,18 +39,19 @@ void tty_sleeping(uint_fast8_t minor) {}
 void tty_data_consumed(uint_fast8_t minor) {}
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
 
-static void tty_isr(void) {
-    uarg_t irq = IRQ_ID_BOOT_TTY;
-    if (queue_is_full(&uart0_q)) {
-        // TODO error buffer full
+static void on_uart0_rx_isr(void) {
+    if (fuzix_ready&&queue_is_empty(&devvirt_byte_q)) {
+		tty_inproc(minor(BOOT_TTY), uart_getc(uart0));
     } else {
-        if (!queue_try_add(&fuzix_softirq_q, &irq)) {
-            // TODO lag error
-        } else {
-            while (uart_is_readable(uart0)) {
-                uint8_t b = uart_getc(uart0);
-                queue_try_add(&uart0_q, &b);
-            }
+        softirq_t irq;
+        // get uart byte and evelope for softirq
+        if (!mk_byte_irq(&irq, IRQ_ID_BYTEDEV, NULL, DEV_ID_UART0, OP_ID_READ, uart_getc(uart0))) {
+            // TODO out of memory error
+            return;
+        }
+        // queue softirq
+        if (!queue_try_add(&devvirt_byte_q, &irq)) {
+            // TODO queue full error -> lag -> data lost
         } 
     }
 }
@@ -63,7 +63,7 @@ void devtty_init(void) {
     uart_set_translate_crlf(uart0, true);
     uart_set_fifo_enabled(uart0, false);
 
-    irq_set_exclusive_handler(UART0_IRQ, tty_isr);
+    irq_set_exclusive_handler(UART0_IRQ, on_uart0_rx_isr);
     irq_set_enabled(UART0_IRQ, true);
     uart_set_irq_enables(uart0, true, false);
 }

@@ -21,11 +21,12 @@ include_directories(
 add_executable(fuzix
 	platform.c
 	swapper.c
+	devvirt.c
+	devvirt_tty.c
 	devflash.c
 	devflash_raw.c
 	devsdspi.c
 	devusb.c
-	devtty.c
 	devcore1.c
 	devices.c
 	elf.c 
@@ -65,6 +66,7 @@ add_executable(fuzix
 target_link_libraries(fuzix
 	#cmsis_core
 	pico_stdlib
+	pico_runtime
 	pico_unique_id
 	pico_multicore
 	hardware_regs
