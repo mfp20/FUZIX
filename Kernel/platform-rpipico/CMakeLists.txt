@@ -22,7 +22,11 @@ add_executable(fuzix
 	platform.c
 	swapper.c
 	devvirt.c
-	devvirt_tty.c
+	devvirt_uart.c
+#	devvirt_flash.c
+#	devvirt_sd.c
+#	devvirt_usb.c
+	devtty.c
 	devflash.c
 	devflash_raw.c
 	devsdspi.c

@@ -51,9 +51,15 @@ static void timer_tick_cb(unsigned alarm) {
     if (fuzix_ready&&queue_is_empty(&devvirt_signal_q)) {
         timer_interrupt();
     } else {
-        uarg_t signal = IRQ_ID_TICK;
-        if (!queue_try_add(&devvirt_signal_q, &signal)) {
-            // TODO lag error
+        softirq_t irq;
+        // TODO use for something useful the unused 2 bytes
+        if (!mk_byte_irq(&irq, IRQ_ID_SIGNAL, NULL, DEV_ID_TIMER, 0, 0)) {
+            // TODO out of memory error
+            return;
+        }
+        // queue softirq
+        if (!queue_try_add(&devvirt_signal_q, &irq)) {
+            // TODO queue full error -> lag -> data lost
         }
     }
 }

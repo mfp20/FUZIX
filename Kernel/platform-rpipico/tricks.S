@@ -7,13 +7,6 @@ udata = progbase
 
 .text
 .thumb_func
-.global platform_idle
-platform_idle:
-    wfi
-    bx lr
-
-.text
-.thumb_func
 fatal_exception_handler_trampoline:
     mrs r0, IPSR
     mov r1, sp

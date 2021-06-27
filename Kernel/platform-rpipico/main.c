@@ -34,12 +34,14 @@ void syscall_handler(struct svc_frame* eh) {
 
 int main(void) {
     // init irq queue
-    queue_init(&devvirt_signal_q, sizeof(uarg_t), UINT8_MAX);
+    queue_init(&devvirt_signal_q, sizeof(softirq_t), UINT8_MAX);
     queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
     queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
     
     // init uart0 for early kprintf
+    devvirt_uart0_init(0, 1, 115200, kgetchar);
     devtty_init();
+    devtty_bind(0, devvirt_uart0_read, devvirt_uart0_write, devvirt_uart0_writable);
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||

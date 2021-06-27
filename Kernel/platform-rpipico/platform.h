@@ -49,9 +49,27 @@ struct extended_exception_frame {
 	uint32_t psr;
 };
 
+typedef uint8_t (*byte_rx_t)(void);
+typedef void (*byte_tx_t)(uint8_t);
+typedef bool (*byte_ready_t)(void);
+
 extern bool fuzix_ready;
 
 extern void devtty_init(void);
+extern void devtty_bind(uint8_t n, byte_rx_t r, byte_tx_t t, byte_ready_t w);
+extern void devtty_set_console(uint8_t con);
+extern void kgetchar(uint8_t c);
+
+extern void devvirt_uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb);
+extern uint8_t devvirt_uart0_read(void);
+extern void devvirt_uart0_write(uint8_t b);
+extern bool devvirt_uart0_writable(void);
+
+extern void devvirt_uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb);
+extern uint8_t devvirt_uart1_read(void);
+extern void devvirt_uart1_write(uint8_t b);
+extern bool devvirt_uart1_writable(void);
+
 extern void devflash_init(void);
 extern void devsd_spi_init(void);
 extern void devusb_init(void);

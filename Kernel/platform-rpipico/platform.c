@@ -21,12 +21,12 @@ uint32_t di(void) {
 
 void ei(void) {
 	fuzix_ready = true;
-	devvirt_service();
+	devvirt_service_all();
 }
 
 void irqrestore(uint32_t ps) {
 	fuzix_ready = true;
-	devvirt_service();
+	devvirt_service_all();
 }
 
 void set_cpu_type(void) {}
@@ -61,6 +61,14 @@ uint_fast8_t platform_canswapon(uint16_t devno) {
     // Only allow swapping to hd devices.
     return (devno >> 8) == 0;
 }
+
+void platform_idle(void) {
+	// flush all virtual devices queues
+	devvirt_service_all_flush();
+	// TODO go into power save
+	// wait for interrupt
+	__wfi();
+} 
 
 void platform_discard(void) {}
 

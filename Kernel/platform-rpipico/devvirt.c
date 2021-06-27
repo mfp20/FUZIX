@@ -68,73 +68,112 @@ void clear_irq(softirq_t *irq) {
     if (irq->free) free(irq->data);
 }
 
-void devvirt_service(void) {
+void devvirt_service_signal(void) {
+	softirq_t irq;
+
+    queue_remove_blocking(&devvirt_signal_q, &irq);
+
+    if (irq.id != IRQ_ID_SIGNAL) {
+        // TODO error unknown IRQ
+    } else {
+        switch (*((uint8_t*)irq.data)) {
+            case DEV_ID_TIMER:
+                timer_interrupt();
+            break;
+            default:
+                // TODO error unknown irq
+            break;
+        }
+    }
+
+    clear_byte_irq(&irq);
+} 
+
+void devvirt_service_byte(void) {
+	softirq_t irq;
+
+    queue_remove_blocking(&devvirt_byte_q, &irq);
+
+    if (irq.id != IRQ_ID_BYTE) {
+        // TODO error unknown IRQ
+    } else {
+        switch (*((uint8_t*)irq.data)){
+            case DEV_ID_UART0:
+                if (*((uint8_t*)irq.data+1) == OP_ID_READ)
+                    tty_inproc(minor(BOOT_TTY), *((uint8_t*)irq.data+2));
+                else  
+                    ; // TODO uart write
+            break;
+            case DEV_ID_UART1:
+                // TODO
+            break;
+            case DEV_ID_USB:
+                // TODO
+            break;
+            default:
+                // TODO error unknown irq
+            break;
+        }
+    }
+
+    clear_byte_irq(&irq);
+}
+
+void devvirt_service_block(void) {
 	softirq_t irq;
     iop_t *iop;
-    // priority queue, immediate processing for all queued zero-bytes signals
-	while (queue_get_level(&devvirt_signal_q)>0) {
-		queue_remove_blocking(&devvirt_signal_q, &irq);
-		switch (irq.id) {
-			case IRQ_ID_TICK:
-    			timer_interrupt();
-			break;
-			default:
-				// TODO error unknown irq
-			break;
+
+    queue_remove_blocking(&devvirt_block_q, &irq);
+
+    if (irq.id != IRQ_ID_BLOCK) {
+        // TODO error unknown IRQ
+    } else {
+        iop = (iop_t *)irq.data;
+        switch (iop->dev){
+            case DEV_ID_FLASH:
+                // TODO trigger Fuzix
+            break;
+            case DEV_ID_SD:
+                // TODO trigger Fuzix
+            break;
+            case DEV_ID_USB:
+                // TODO trigger Fuzix
+            break;
+            default:
+                // TODO error unknown irq
+            break;
         }
+    }
+
+    clear_irq(&irq);
+}
+
+void devvirt_service_all(void) {
+    // priority queue, immediate processing for all queued signals
+	while (queue_get_level(&devvirt_signal_q)>0) {
+        devvirt_service_signal();
     }
     // fast queue, max 64 bytes (the rest in platform_idle)
     uint8_t count = 0;
 	while (queue_get_level(&devvirt_byte_q)>0) {
-		queue_remove_blocking(&devvirt_byte_q, &irq);
-		if (irq.id != IRQ_ID_BYTEDEV) {
-            // TODO error unknown IRQ
-        } else {
-            switch (*((uint8_t*)irq.data)){
-                case DEV_ID_UART0:
-                    if (*((uint8_t*)irq.data+1) == OP_ID_READ)
-                        tty_inproc(minor(BOOT_TTY), *((uint8_t*)irq.data+2));
-                    else  
-                        ; // TODO uart write
-                break;
-                case DEV_ID_UART1:
-                    // TODO
-                break;
-                case DEV_ID_USB:
-                    // TODO
-                break;
-                default:
-                    // TODO error unknown irq
-                break;
-            }
-        }
-        clear_byte_irq(&irq);
+        devvirt_service_byte();
         if (count = 64)
             break;
         count++;
     }
-    // best effort queue (one block here, the rest in platform_idle)
-	if (queue_get_level(&devvirt_block_q)>0) {
-		queue_remove_blocking(&devvirt_block_q, &irq);
-		if (irq.id != IRQ_ID_BLOCKDEV) {
-            // TODO error unknown IRQ
-        } else {
-            iop = (iop_t *)irq.data;
-            switch (iop->dev){
-                case DEV_ID_FLASH:
-                    // TODO trigger Fuzix
-                break;
-                case DEV_ID_SD:
-                    // TODO trigger Fuzix
-                break;
-                case DEV_ID_USB:
-                    // TODO trigger Fuzix
-                break;
-                default:
-                    // TODO error unknown irq
-                break;
-            }
-		}
-        clear_irq(&irq);
+}
+
+void devvirt_service_all_flush(void) {
+    // flush priority queue
+	while (queue_get_level(&devvirt_signal_q)>0) {
+        devvirt_service_signal();
+    }
+    // flush fast queue
+	while (queue_get_level(&devvirt_byte_q)>0) {
+        devvirt_service_byte();
+    }
+    // flush best effort queue
+	while (queue_get_level(&devvirt_block_q)>0) {
+        devvirt_service_block();
 	}
 }
