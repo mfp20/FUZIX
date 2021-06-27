@@ -38,10 +38,10 @@ int main(void) {
     queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
     queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
     
-    // init uart0 for early kprintf
-    devvirt_uart0_init(0, 1, 115200, kgetchar);
+    // init tty and uart0 -> tty1, for early kprintf
     devtty_init();
     devtty_bind(0, devvirt_uart0_read, devvirt_uart0_write, devvirt_uart0_writable);
+    devvirt_uart0_init(0, 1, 115200, kgetchar);
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||

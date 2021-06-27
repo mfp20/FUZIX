@@ -1,34 +1,10 @@
 #include "platform.h"
 
-#include <printf.h>
-
 static byte_tx_t tx0 = NULL;
 static byte_tx_t tx1 = NULL;
 
-uint8_t devvirt_uart0_read(void) {
-    return uart_getc(uart0);
-}
 
-void devvirt_uart0_write(uint8_t b) {
-    uart_putc(uart0, b);
-}
-
-bool devvirt_uart0_writable(void) {
-    return uart_is_writable(uart0);
-}
-
-uint8_t devvirt_uart1_read(void) {
-    return uart_getc(uart1);
-}
-
-void devvirt_uart1_write(uint8_t b) {
-    uart_putc(uart1, b);
-}
-
-bool devvirt_uart1_writable(void) {
-    return uart_is_writable(uart1);
-}
-
+// common isr code
 static void on_rx_isr(uint8_t uart_id) {
     uart_inst_t *uart = uart_id ? uart1 : uart0;
     uint8_t dev_id = uart_id ? DEV_ID_UART1 : DEV_ID_UART0;
@@ -55,12 +31,22 @@ static void on_rx_isr(uint8_t uart_id) {
     }
 }
 
-static void uart0_on_rx_isr(void) {
-    on_rx_isr(0);
+
+// uart0
+uint8_t devvirt_uart0_read(void) {
+    return uart_getc(uart0);
 }
 
-static void uart1_on_rx_isr(void) {
-    on_rx_isr(1);
+void devvirt_uart0_write(uint8_t b) {
+    uart_putc(uart0, b);
+}
+
+bool devvirt_uart0_writable(void) {
+    return uart_is_writable(uart0);
+}
+
+static void uart0_on_rx_isr(void) {
+    on_rx_isr(0);
 }
 
 void devvirt_uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb) {
@@ -80,6 +66,24 @@ void devvirt_uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_
 
     //
     tx0 = rx_cb;
+}
+
+
+// uart1
+uint8_t devvirt_uart1_read(void) {
+    return uart_getc(uart1);
+}
+
+void devvirt_uart1_write(uint8_t b) {
+    uart_putc(uart1, b);
+}
+
+bool devvirt_uart1_writable(void) {
+    return uart_is_writable(uart1);
+}
+
+static void uart1_on_rx_isr(void) {
+    on_rx_isr(1);
 }
 
 void devvirt_uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb) {

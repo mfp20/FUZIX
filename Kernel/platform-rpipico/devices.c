@@ -65,6 +65,9 @@ static void timer_tick_cb(unsigned alarm) {
 }
 
 void device_init(void) {
+    // set power level
+    //power_set_mode(POWER_DEFAULT);
+
     /* The flash device is too small to be useful, and a corrupt flash will
      * cause a crash on startup... oddly. */
 	devflash_init();
@@ -81,6 +84,10 @@ void device_init(void) {
     update_us_since_boot(&now, time_us_64());
     hardware_alarm_set_callback(0, timer_tick_cb);
     timer_tick_cb(0);
+
+    // uart1 -> tty2
+    //devtty_bind(1, devvirt_uart1_read, devvirt_uart1_write, devvirt_uart1_writable);
+    //devvirt_uart1_init(4, 5, 115200, kgetchar);
 
     // led on, signal init complete
     gpio_init(PICO_DEFAULT_LED_PIN);

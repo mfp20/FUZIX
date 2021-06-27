@@ -21,12 +21,12 @@ uint32_t di(void) {
 
 void ei(void) {
 	fuzix_ready = true;
-	devvirt_service_all();
+	devvirt_service_quick();
 }
 
 void irqrestore(uint32_t ps) {
 	fuzix_ready = true;
-	devvirt_service_all();
+	devvirt_service_quick();
 }
 
 void set_cpu_type(void) {}
@@ -64,10 +64,13 @@ uint_fast8_t platform_canswapon(uint16_t devno) {
 
 void platform_idle(void) {
 	// flush all virtual devices queues
-	devvirt_service_all_flush();
-	// TODO go into power save
+	devvirt_service_flush();
+	// go into power save
+	//power_set_mode(POWER_LEVEL_SAVE);
 	// wait for interrupt
 	__wfi();
+	// resume normal power level
+	//power_set_mode(POWER_LEVEL_USER);
 } 
 
 void platform_discard(void) {}

@@ -26,6 +26,7 @@ add_executable(fuzix
 #	devvirt_flash.c
 #	devvirt_sd.c
 #	devvirt_usb.c
+	devpower.c
 	devtty.c
 	devflash.c
 	devflash_raw.c

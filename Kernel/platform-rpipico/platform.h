@@ -4,6 +4,7 @@
 #include "picosdk.h"
 #include "config.h"
 #include "devvirt.h"
+#include "devpower.h"
 
 #define FLASH_OFFSET (96*1024)
 

@@ -13,9 +13,11 @@
 
 #include <hardware/regs/usb.h>
 
+#include <hardware/structs/vreg_and_chip_reset.h>
 #include <hardware/structs/timer.h>
 #include <hardware/structs/usb.h>
 
+#include <hardware/vreg.h>
 #include <hardware/sync.h>
 #include <hardware/irq.h>
 #include <hardware/resets.h>
@@ -23,6 +25,7 @@
 #include <hardware/gpio.h>
 #include <hardware/uart.h>
 #include <hardware/spi.h>
+
 
 typedef queue_t pico_queue_t;
 

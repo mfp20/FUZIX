@@ -51,7 +51,7 @@ void clear_irq(softirq_t *irq);
 void devvirt_service_signal(void);
 void devvirt_service_byte(void);
 void devvirt_service_block(void);
-void devvirt_service_all(void);
-void devvirt_service_all_flush(void);
+void devvirt_service_quick(void);
+void devvirt_service_flush(void);
 
 #endif

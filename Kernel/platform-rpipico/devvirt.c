@@ -148,7 +148,7 @@ void devvirt_service_block(void) {
     clear_irq(&irq);
 }
 
-void devvirt_service_all(void) {
+void devvirt_service_quick(void) {
     // priority queue, immediate processing for all queued signals
 	while (queue_get_level(&devvirt_signal_q)>0) {
         devvirt_service_signal();
@@ -163,7 +163,7 @@ void devvirt_service_all(void) {
     }
 }
 
-void devvirt_service_all_flush(void) {
+void devvirt_service_flush(void) {
     // flush priority queue
 	while (queue_get_level(&devvirt_signal_q)>0) {
         devvirt_service_signal();
