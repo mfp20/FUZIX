@@ -161,6 +161,10 @@ void devvirt_service_quick(void) {
             break;
         count++;
     }
+    // best effort queue, 1 block (the rest in platform_idle)
+    if (!queue_is_empty(&devvirt_block_q)) {
+        devvirt_service_block();
+	}
 }
 
 void devvirt_service_flush(void) {
@@ -175,5 +179,6 @@ void devvirt_service_flush(void) {
     // flush best effort queue
 	while (queue_get_level(&devvirt_block_q)>0) {
         devvirt_service_block();
+        switchout();
 	}
 }

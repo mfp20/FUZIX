@@ -6,21 +6,34 @@ static byte_tx_t tx1 = NULL;
 
 // common isr code
 static void on_rx_isr(uint8_t uart_id) {
-    uart_inst_t *uart = uart_id ? uart1 : uart0;
-    uint8_t dev_id = uart_id ? DEV_ID_UART1 : DEV_ID_UART0;
+    uart_inst_t *uart;
+    uint8_t dev_id;
+    char c;
 
+    //
+    if (uart_id) {
+        uart = uart1;
+        dev_id = DEV_ID_UART1;
+        c = devvirt_uart1_read();
+        if (tx1) tx1(c);
+    } else {
+        uart = uart0;
+        dev_id = DEV_ID_UART0;
+        c = devvirt_uart0_read();
+        if (tx0) tx0(c);
+    }
+
+    //
     if (fuzix_ready&&queue_is_empty(&devvirt_byte_q)) {
         if (uart_id) {
-            char c = devvirt_uart1_read();
             if (tx1) tx1(c);
         } else {
-            char c = devvirt_uart0_read();
             if (tx0) tx0(c);
         }
     } else {
         softirq_t irq;
         // get uart byte and evelope for softirq
-        if (!mk_byte_irq(&irq, IRQ_ID_BYTE, NULL, dev_id, OP_ID_READ, uart_getc(uart))) {
+        if (!mk_byte_irq(&irq, IRQ_ID_BYTE, NULL, dev_id, OP_ID_READ, c)) {
             // TODO out of memory error
             return;
         }

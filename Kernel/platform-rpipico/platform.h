@@ -6,6 +6,8 @@
 #include "devvirt.h"
 #include "devpower.h"
 
+#include "tusb_config.h"
+
 #define FLASH_OFFSET (96*1024)
 
 struct svc_frame {
@@ -54,6 +56,7 @@ typedef uint8_t (*byte_rx_t)(void);
 typedef void (*byte_tx_t)(uint8_t);
 typedef bool (*byte_ready_t)(void);
 
+// signal fuzix is in 'ei'/'irqrestore', ie: core code can be used freely
 extern bool fuzix_ready;
 
 extern void devtty_init(void);
@@ -72,14 +75,15 @@ extern void devvirt_uart1_write(uint8_t b);
 extern bool devvirt_uart1_writable(void);
 
 extern void devflash_init(void);
+
 extern void devsd_spi_init(void);
+
 extern void devusb_init(void);
 
-extern void devcore1_init(core1_main_t c1main);
-extern bool devcore1_is_readable(void);
-extern bool devcore1_is_writable(void);
-extern uint8_t devcore1_getc_blocking(void);
-extern void devcore1_putc_blocking(uint8_t b);
+extern bool devvirt_core1_readable(void);
+extern bool devvirt_core1_writable(void);
+extern uint8_t devvirt_core1_read(void);
+extern void devvirt_core1_write(uint8_t b);
+extern void devvirt_core1_init(core1_main_t c1main, byte_tx_t rx_cb);
 
 #endif
-

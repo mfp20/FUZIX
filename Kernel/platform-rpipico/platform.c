@@ -79,6 +79,7 @@ void platform_monitor(void) {}
 
 void platform_reboot(void) {
 	//NVIC_SystemReset();
+	watchdog_reboot(0,0,0);
 }
 
 /* vim: sw=4 ts=4 et: */

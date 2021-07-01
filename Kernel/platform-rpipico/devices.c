@@ -1,6 +1,5 @@
 
 #include "platform.h"
-//#include "devusb.h"
 
 #include <version.h>
 #include <kernel.h>
@@ -76,8 +75,8 @@ void device_init(void) {
 	devsd_spi_init();
 	devsd_init();
 
-    // usb for external fs
-    //devusb_init();
+    // usb
+    devusb_init();
 
     // ticker
     hardware_alarm_claim(0);

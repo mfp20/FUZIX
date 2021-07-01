@@ -43,7 +43,7 @@
 
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
-#define USERMEM (160*1024)
+#define USERMEM (128*1024)
 #define PROGSIZE (65536 - UDATA_SIZE)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
@@ -73,16 +73,17 @@ extern uint8_t progbase[USERMEM];
  * Devices parameters
  */
 #define NUM_DEV_TTY 1
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    20       /* Number of block buffers */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define TTYDEV   BOOT_TTY   // Device used by kernel for messages, panics
+#define NBUFS    20         // Number of block buffers
+#define NMOUNTS	 4          // Number of mounts at a time
 #define MAX_BLKDEV	4
+
 #define USB_DEV_CONSOLE (1) // device console
-#define USB_DEV_LOG     (1) // log output
-#define USB_DEV_EXTFS   (1) // external fs
-#define USB_DEV_TTY1    (1) // spare
+#define USB_DEV_LOG     (0) // log output
+#define USB_DEV_EXTFS   (0) // external fs
+#define USB_DEV_TTY1    (0) // spare
 #define USB_DEV_RAW1    (0) // spare
-#define USB_DEV_TTY2    (1) // spare
+#define USB_DEV_TTY2    (0) // spare
 #define USB_DEV_RAW2    (0) // spare
 
 //

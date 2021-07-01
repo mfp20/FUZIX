@@ -20,8 +20,9 @@ include_directories(
 
 add_executable(fuzix
 	platform.c
-	swapper.c
+	tusb_config.c
 	devvirt.c
+	devvirt_core1.c
 	devvirt_uart.c
 #	devvirt_flash.c
 #	devvirt_sd.c
@@ -31,10 +32,9 @@ add_executable(fuzix
 	devflash.c
 	devflash_raw.c
 	devsdspi.c
-	devusb.c
-	devcore1.c
 	devices.c
 	elf.c 
+	swapper.c
 	main.c
 	tricks.S
 	../dev/blkdev.c
@@ -70,13 +70,17 @@ add_executable(fuzix
 
 target_link_libraries(fuzix
 	#cmsis_core
+	tinyusb_device
+	#tinyusb_board
 	pico_stdlib
 	pico_runtime
+	pico_time
 	pico_unique_id
 	pico_multicore
 	hardware_regs
 	hardware_structs
 	hardware_sync
+	hardware_watchdog
 	hardware_flash
 	hardware_spi
 	hardware_uart

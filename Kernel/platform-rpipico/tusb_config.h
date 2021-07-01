@@ -3,7 +3,6 @@
 
 #include "config.h"
 
-
 //--------------------------------------------------------------------
 // COMMON CONFIGURATION
 //--------------------------------------------------------------------
@@ -44,7 +43,7 @@
 #define CFG_TUD_VENDOR_RX_BUFSIZE (64) // TODO 512 (block device's default block size) might be better
 #define CFG_TUD_VENDOR_TX_BUFSIZE (64)
 
-void tusb_id2str(void);
+void devusb_init(void);
 
 #endif
 

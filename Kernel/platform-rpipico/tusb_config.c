@@ -1,8 +1,8 @@
-#include "config.h"
-#include "picosdk.h"
-#include <pico/unique_id.h>
+#include "tusb_config.h"
 #include <tusb.h>
-
+#include <pico.h>
+#include <pico/stdlib.h>
+#include <pico/unique_id.h>
 
 #define EPNUM0  0x80 // usb control endpoint, not usable for interfaces
 #define EPNUM1  0x81
@@ -267,3 +267,22 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // Invoked when received send break
 //void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {}
 
+
+//--------------------------------------------------------------------+
+// wrapper
+//--------------------------------------------------------------------+
+
+repeating_timer_t tusb_timer;
+
+static bool tusb_handler(repeating_timer_t *rt) {
+    tud_task();
+    // TODO
+    return true;
+}
+
+void devusb_init(void) {  
+  tusb_id2str();
+  tusb_init();
+
+  add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer);
+}
