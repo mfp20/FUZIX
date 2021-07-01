@@ -78,7 +78,7 @@ extern void devflash_init(void);
 
 extern void devsd_spi_init(void);
 
-extern void devusb_init(void);
+extern void usb_init(void);
 
 extern bool devvirt_core1_readable(void);
 extern bool devvirt_core1_writable(void);

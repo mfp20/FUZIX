@@ -78,13 +78,13 @@ extern uint8_t progbase[USERMEM];
 #define NMOUNTS	 4          // Number of mounts at a time
 #define MAX_BLKDEV	4
 
-#define USB_DEV_CONSOLE (1) // device console
-#define USB_DEV_LOG     (0) // log output
-#define USB_DEV_EXTFS   (0) // external fs
-#define USB_DEV_TTY1    (0) // spare
-#define USB_DEV_RAW1    (0) // spare
-#define USB_DEV_TTY2    (0) // spare
-#define USB_DEV_RAW2    (0) // spare
+#define USB_DEV_CONSOLE (1) // system console
+#define USB_DEV_LOG     (1) // system log
+#define USB_DEV_MPLEX   (1) // system binary multiplexer for multiple binary streams (ex: external fs, RPC, ...)
+#define USB_DEV_TTY1    (1) // user tty 1
+#define USB_DEV_RAW1    (1) // user custom interface 1
+#define USB_DEV_TTY2    (1) // user tty 2
+#define USB_DEV_RAW2    (1) // user custom interface 2
 
 //
 #define swap_map(x) ((uint8_t*)(x))

@@ -1,5 +1,6 @@
 #include "tusb_config.h"
 #include <tusb.h>
+
 #include <pico.h>
 #include <pico/stdlib.h>
 #include <pico/unique_id.h>
@@ -17,7 +18,7 @@
 #define EPNUM10 0x8a
 #define EPNUM11 0x8b
 #define EPNUM12 0x8c
-#define EPNUM13 0x0d
+#define EPNUM13 0x8d
 #define EPNUM14 0x8e
 #define EPNUM15 0x8f
 
@@ -30,8 +31,8 @@
 //       |||| |||| |||| |`-------  cdc tty data
 //       |||| |||| ||||  `-------  cdc log cmd
 //       |||| |||| |||`----------  cdc log data
-//       |||| |||| ||`-----------  cdc external filesystem out
-//       |||| |||| |`------------  cdc external filesystem in
+//       |||| |||| ||`-----------  vendor external filesystem out
+//       |||| |||| |`------------  vendor external filesystem in
 //       |||| |||| `-------------  cdc-spare0 cmd
 //       |||| |||`---------------  cdc-spare0 data
 //       |||| ||`----------------  vendor-spare0 out
@@ -48,8 +49,8 @@
                                   PID_MAP(CONSOLE,  2)  + \
                                   PID_MAP(LOG,      3)  + \
                                   PID_MAP(LOG,      4)  + \
-                                  PID_MAP(EXTFS,    5)  + \
-                                  PID_MAP(EXTFS,    6)  + \
+                                  PID_MAP(MPLEX,    5)  + \
+                                  PID_MAP(MPLEX,    6)  + \
                                   PID_MAP(TTY1,     7)  + \
                                   PID_MAP(TTY1,     8)  + \
                                   PID_MAP(RAW1,     9)  + \
@@ -67,13 +68,11 @@
 #define USBD_STR_SERIAL (0x03)
 #define USBD_STR_CONSOLE (0x04)
 #define USBD_STR_LOG    (0x05)
-#define USBD_STR_EXTFS  (0x06)
-#define USBD_STR_CDC    (0x07)
-#define USBD_STR_VENDOR (0x08)
-
-#define USBD_MAX_POWER_MA (250)
-#define USBD_CDC_CMD_MAX_SIZE (64)
-#define USBD_CDC_IN_OUT_MAX_SIZE (64)
+#define USBD_STR_MPLEX  (0x06)
+#define USBD_STR_CDC1    (0x07)
+#define USBD_STR_VENDOR1 (0x08)
+#define USBD_STR_CDC2    (0x09)
+#define USBD_STR_VENDOR2 (0x0a)
 
 
 //--------------------------------------------------------------------+
@@ -84,7 +83,7 @@
 tusb_desc_device_t const desc_device = {
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
-    .bcdUSB             = 0x0200, // USB Specification version 2.0 (microframes each 0.125ms)
+    .bcdUSB             = 0x0200, // USB Specification version 2.0 (TODO check polling rate, 2.0 should be 125us)
     .bDeviceClass       = 0xEF,   // Multi-interface Function Code Device
     .bDeviceSubClass    = 0x02,   // Common Class Sub Class
     .bDeviceProtocol    = MISC_PROTOCOL_IAD, // Interface Association Descriptor protocol
@@ -136,9 +135,11 @@ static const char *const string_desc_arr[] = {
     [USBD_STR_SERIAL]   = usb_serial,
     [USBD_STR_CONSOLE]  = "Fuzix Console",
     [USBD_STR_LOG]      = "Fuzix Log",
-    [USBD_STR_EXTFS]    = "Fuzix Extfs",
-    [USBD_STR_CDC]      = "Tinyusb CDC",
-    [USBD_STR_VENDOR]   = "Tinyusb Vendor"
+    [USBD_STR_MPLEX]    = "Fuzix Multiplexer",
+    [USBD_STR_CDC1]      = "User defined CDC 1",
+    [USBD_STR_VENDOR1]   = "User defined Vendor 1",
+    [USBD_STR_CDC2]      = "User defined CDC 2",
+    [USBD_STR_VENDOR2]   = "User defined Vendor 2"
 };
 
 // Invoked when received GET STRING DESCRIPTOR request
@@ -185,7 +186,7 @@ enum {
 #if USB_DEV_LOG
   ITFNUM1, ITFNUM1_DATA,
 #endif
-#if USB_DEV_EXTFS
+#if USB_DEV_MPLEX
   ITFNUM2, ITFNUM2_DATA,
 #endif
 #if USB_DEV_TTY1
@@ -200,7 +201,6 @@ enum {
 #if USB_DEV_RAW2
   ITFNUM6, ITFNUM6_DATA,
 #endif
-  ITFNUM_TOTAL
 };
 
 #define CONFIG_TOTAL_LEN (  (TUD_CONFIG_DESC_LEN)                   + \
@@ -210,28 +210,28 @@ enum {
 
 static const uint8_t desc_configuration[] = {
     // header
-    TUD_CONFIG_DESCRIPTOR(1, ITFNUM_TOTAL, USBD_STR_LANG, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA),
+    TUD_CONFIG_DESCRIPTOR(1, (CFG_TUD_CDC*2)+CFG_TUD_VENDOR, USBD_STR_LANG, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA),
     // Interfaces
 #if USB_DEV_CONSOLE
-    TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_CONSOLE, EPNUM1, USBD_CDC_CMD_MAX_SIZE, EPNUM2 & 0x7F, EPNUM2, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_CONSOLE, EPNUM1, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM2 & 0x7F, EPNUM2, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_LOG
-    TUD_CDC_DESCRIPTOR(ITFNUM1, USBD_STR_LOG, EPNUM3, USBD_CDC_CMD_MAX_SIZE, EPNUM4 & 0x7F, EPNUM4, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(ITFNUM1, USBD_STR_LOG, EPNUM3, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM4 & 0x7F, EPNUM4, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
-#if USB_DEV_EXTFS
-    TUD_CDC_DESCRIPTOR(ITFNUM2, USBD_STR_EXTFS, EPNUM5, USBD_CDC_CMD_MAX_SIZE, EPNUM6 & 0x7F, EPNUM6, USBD_CDC_IN_OUT_MAX_SIZE),
+#if USB_DEV_MPLEX
+    TUD_VENDOR_DESCRIPTOR(ITFNUM2, USBD_STR_MPLEX, EPNUM5 & 0x7F, EPNUM6, USB_PACKET_MAX_SIZE_DATA_JUMBO),
 #endif
 #if USB_DEV_TTY1
-    TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC, EPNUM7, USBD_CDC_CMD_MAX_SIZE, EPNUM8 & 0x7F, EPNUM8, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC1, EPNUM7, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM8 & 0x7F, EPNUM8, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_RAW1
-    TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_VENDOR, EPNUM9, EPNUM10, 64),
+    TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_VENDOR1, EPNUM9 & 0x7F, EPNUM10, USB_PACKET_MAX_SIZE_DATA_MEDIUM),
 #endif
 #if USB_DEV_TTY2
-    TUD_CDC_DESCRIPTOR(ITFNUM5, USBD_STR_CDC, EPNUM11, USBD_CDC_CMD_MAX_SIZE, EPNUM12 & 0x7F, EPNUM12, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(ITFNUM5, USBD_STR_CDC2, EPNUM11, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM12 & 0x7F, EPNUM12, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_RAW2
-    TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR, EPNUM13, EPNUM14, 64),
+    TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR2, EPNUM13 & 0x7F, EPNUM14, USB_PACKET_MAX_SIZE_DATA_MEDIUM),
 #endif
 };
 
@@ -269,20 +269,31 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 
 
 //--------------------------------------------------------------------+
-// wrapper
+// tinyusb wrapper
 //--------------------------------------------------------------------+
 
 repeating_timer_t tusb_timer;
 
 static bool tusb_handler(repeating_timer_t *rt) {
-    tud_task();
-    // TODO
-    return true;
+  tud_task();
+  // TODO read/write
+
+  //for (int i=0;i<CFG_TUD_VENDOR;i++) {
+  //  if ( tud_vendor_n_available(i) ) {
+  //    uint count = tud_vendor_n_read(i, NULL, 64);
+  //  }
+  //}
+
+  return true;
 }
 
 void devusb_init(void) {  
   tusb_id2str();
   tusb_init();
 
-  add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer);
+  add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
+
+  //for (int i=0;i<CFG_TUD_VENDOR;i++) {
+  //  tud_vendor_n_write(i, NULL, 64);
+  //}
 }

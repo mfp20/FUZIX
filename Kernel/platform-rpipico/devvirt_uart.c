@@ -15,12 +15,10 @@ static void on_rx_isr(uint8_t uart_id) {
         uart = uart1;
         dev_id = DEV_ID_UART1;
         c = devvirt_uart1_read();
-        if (tx1) tx1(c);
     } else {
         uart = uart0;
         dev_id = DEV_ID_UART0;
         c = devvirt_uart0_read();
-        if (tx0) tx0(c);
     }
 
     //
@@ -34,7 +32,7 @@ static void on_rx_isr(uint8_t uart_id) {
         softirq_t irq;
         // get uart byte and evelope for softirq
         if (!mk_byte_irq(&irq, IRQ_ID_BYTE, NULL, dev_id, OP_ID_READ, c)) {
-            // TODO out of memory error
+            // TODO out of memory error -> data lost
             return;
         }
         // queue softirq
