@@ -25,24 +25,26 @@ include_directories(
 )
 
 add_executable(fuzix
-	log.c
-	utils.c
-	platform.c
+	platform_log.c
+	platform_time.c
+	platform_chardev.c
+	platform_blockdev.c
+	platform_power.c
+	platform_fs_dhara.c
 	devvirt.c
 	devvirt_core1.c
 	devvirt_uart.c
 	devvirt_usb.c
 #	devvirt_flash.c
 #	devvirt_sd.c
-#	devvirt_usb.c
-	devpower.c
-	devtty.c
 	devflash.c
-	devflash_raw.c
 	devsdspi.c
 	devices.c
-	elf.c 
-	swapper.c
+	fuzix_elf.c 
+	fuzix_tty.c
+	fuzix_softirq.c
+	fuzix_swapper.c
+	fuzix_misc.c
 	main.c
 	tricks.S
 	../dev/blkdev.c

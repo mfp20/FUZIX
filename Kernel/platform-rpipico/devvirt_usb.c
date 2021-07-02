@@ -1,5 +1,5 @@
 #include "platform.h"
-#include "log.h"
+#include "platform_log.h"
 
 #include <tusb.h>
 
@@ -350,7 +350,7 @@ static stdio_driver_t stdio_usb_cdc_driver[6] = {
   }
 };
 
-void devusb_cdc_stdio(uint8_t id, bool stdio) {
+void usb_cdc_stdio(uint8_t id, bool stdio) {
   stdio_set_driver_enabled(&stdio_usb_cdc_driver[id], stdio);
   if (stdio) {
     LOG_INF("stdio on USB CDC %d", id);
@@ -371,12 +371,12 @@ void devusb_cdc_stdio(uint8_t id, bool stdio) {
 
 
 //--------------------------------------------------------------------+
-// tty helpers
+// fuzix drivers
 //--------------------------------------------------------------------+
 
 uint8_t usb_cdc0_read(void) {
   if (tud_cdc_n_connected(0)) {
-    if (tud_cdc_n_available(0))
+    if (tud_cdc_n_available(0)>0)
       return (uint8_t)tud_cdc_n_read_char(0);
   }
   return 0;
@@ -406,6 +406,7 @@ void tud_cdc_rx_cb(uint8_t itf) {
   //printf("tud_cdc_rx_cb %d\n", itf);
   if (itf==0) {
     tty1_putc((uint8_t)tud_cdc_n_read_char(itf));
+  } else if (itf==1) {
   }
 }
 
@@ -456,14 +457,8 @@ static bool tusb_handler(repeating_timer_t *rt) {
   return true;
 }
 
-void usb_init(uint8_t log) {  
+void usb_init(void) {  
   tusb_id2str();
   tusb_init();
   add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
-
-  // bind cdc0 to tty2
-  devtty_bind(1, usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
-
-  // bind cdc1 to stdio
-  devusb_cdc_stdio(log, true);
 }

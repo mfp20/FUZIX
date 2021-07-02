@@ -1,4 +1,3 @@
-
 #include "platform.h"
 
 #include <version.h>
@@ -9,9 +8,6 @@
 #include <tty.h>
 #include <printf.h>
 #include <dev/devsd.h>
-
-//
-static absolute_time_t now;
 
 // The device driver switch table
 struct devsw dev_tab[] = {
@@ -31,22 +27,16 @@ struct devsw dev_tab[] = {
 };
 
 bool validdev(uint16_t dev) {
-    /* This is a bit uglier than needed but the right hand side is
-       a constant this way */
-    if(dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) - 1)
-	return false;
+    // This is a bit uglier than needed but the right hand side is a constant this way
+    if (dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) - 1)
+	    return false;
     else
         return true;
 }
 
-static void timer_tick_cb(unsigned alarm) {
-    absolute_time_t next;
-    update_us_since_boot(&next, to_us_since_boot(now) + (1000000 / TICKSPERSEC));
-    if (hardware_alarm_set_target(0, next)) {
-        update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
-        hardware_alarm_set_target(0, next);
-    }
-    //
+static repeating_timer_t systick_timer;
+
+static bool systick_timer_handler(repeating_timer_t *rt) {
     if (fuzix_ready&&queue_is_empty(&devvirt_signal_q)) {
         timer_interrupt();
     } else {
@@ -54,36 +44,42 @@ static void timer_tick_cb(unsigned alarm) {
         // TODO use for something useful the unused 2 bytes
         if (!mk_byte_irq(&irq, IRQ_ID_SIGNAL, NULL, DEV_ID_TIMER, 0, 0)) {
             // TODO out of memory error
-            return;
+            return false;
         }
         // queue softirq
         if (!queue_try_add(&devvirt_signal_q, &irq)) {
             // TODO queue full error -> lag -> data lost
+            return false;
         }
     }
+
+    return true;
 }
 
 void device_init(void) {
-    // set power level
+    // power
     //power_set_mode(POWER_DEFAULT);
 
-    /* The flash device is too small to be useful, and a corrupt flash will
-     * cause a crash on startup... oddly. */
+    // ticker
+    add_repeating_timer_us((1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
+
+    // uart1 log
+    uart1_init(4, 5, 115200, NULL);
+    uart_stdio(1, true);
+
+    // usb
+    usb_init();
+    uint8_t usb_id = chardev_add(usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
+    usb_cdc_stdio(1, true);
+    //chardev_add(usb_cdc2_read, usb_cdc2_write, usb_cdc2_writable);
+    //chardev_add(usb_cdc3_read, usb_cdc3_write, usb_cdc3_writable);
+
+    // Flash device is too small to be useful, and a corrupt flash will cause a crash on startup... oddly.
 	devflash_init();
 
     // SD, if any
 	devsd_spi_init();
 	devsd_init();
-
-    // ticker
-    hardware_alarm_claim(0);
-    update_us_since_boot(&now, time_us_64());
-    hardware_alarm_set_callback(0, timer_tick_cb);
-    timer_tick_cb(0);
-
-    // uart1 -> tty2
-    //devtty_bind(1, devvirt_uart1_read, devvirt_uart1_write, devvirt_uart1_writable);
-    //devvirt_uart1_init(4, 5, 115200, kgetchar);
 
     // led on, signal init complete
     gpio_init(PICO_DEFAULT_LED_PIN);

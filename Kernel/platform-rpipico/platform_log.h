@@ -1,7 +1,7 @@
 #ifndef _LOG_DOT_H
 #define _LOG_DOT_H
 
-#include "picosdk.h"
+#include "platform_sdk.h"
 
 #include <stdio.h> // printf
 #include <errno.h> // errno

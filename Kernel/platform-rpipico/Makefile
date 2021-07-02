@@ -12,9 +12,9 @@ build/Makefile: CMakeLists.txt $(wildcard ../*.[chS]) $(wildcard ../*/*.[chS])
 
 image:: world uf2conv
 	./update-flash.sh
-	../../Standalone/mkftl -s 1952 -e 0x1000 -g 10 filesystem.img -o filesystem.ftl
-	arm-none-eabi-objcopy -I binary -O elf32-littlearm --change-section-vma .data=0x10018000 filesystem.ftl filesystem.elf
-	./uf2conv filesystem.ftl filesystem.uf2 0x10018000
+	../../Standalone/mkftl -s 1952 -e 0x1000 -g 10 build/filesystem.img -o build/filesystem.ftl
+	arm-none-eabi-objcopy -I binary -O elf32-littlearm --change-section-vma .data=0x10018000 build/filesystem.ftl build/filesystem.elf
+	./build/uf2conv build/filesystem.ftl build/filesystem.uf2 0x10018000
 
 clean:
 	rm -rf build
@@ -40,5 +40,5 @@ world: build/fuzix.elf
 	$(MAKE) -C ../../Standalone
 
 uf2conv: tools/uf2conv.c
-	cc -O -g -o $@ $<
+	cc -O -g -o build/$@ $<
 

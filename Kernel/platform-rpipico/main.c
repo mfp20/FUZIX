@@ -5,6 +5,48 @@
 #include <kernel-armm0.def>
 #include <printf.h>
 
+struct svc_frame {
+	uint32_t r12;
+	uint32_t pc;
+	uint32_t lr;
+	uint32_t r0;
+	uint32_t r1;
+	uint32_t r2;
+	uint32_t r3;
+};
+
+struct exception_frame {
+	uint32_t r0;
+	uint32_t r1;
+	uint32_t r2;
+	uint32_t r3;
+	uint32_t r12;
+	uint32_t lr;
+	uint32_t pc;
+	uint32_t psr;
+};
+
+struct extended_exception_frame {
+	uint32_t r8;
+	uint32_t r9;
+	uint32_t r10;
+	uint32_t r11;
+	uint32_t cause;
+	uint32_t sp;
+	uint32_t r4;
+	uint32_t r5;
+	uint32_t r6;
+	uint32_t r7;
+	uint32_t r0;
+	uint32_t r1;
+	uint32_t r2;
+	uint32_t r3;
+	uint32_t r12;
+	uint32_t lr;
+	uint32_t pc;
+	uint32_t psr;
+};
+
 void fatal_exception_handler(struct extended_exception_frame* eh) {
     kprintf("FLAGRANT SYSTEM ERROR! EXCEPTION %d\n", eh->cause);
     kprintf(" r0=%p r1=%p  r2=%p  r3=%p\n", eh->r0, eh->r1, eh->r2, eh->r3);
@@ -34,28 +76,23 @@ void syscall_handler(struct svc_frame* eh) {
 }
 
 int main(void) {
-    // init softirq queues
-    queue_init(&devvirt_signal_q, sizeof(softirq_t), UINT8_MAX);
-    queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
-    queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
-    
     // init pico stdio
     stdio_init_all();
 
-    // init ttys
-    devtty_init();
+    // softirq queues for virtual devices
+    queue_init(&devvirt_signal_q, sizeof(softirq_t), UINT8_MAX);
+    queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
+    queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
 
-    // early init uart0 for tty1
+    // tty
+    tty_prepare();
+
+    // uart0 console early init
     uart0_init(0, 1, 115200, tty0_putc);
-    devtty_bind(0, uart0_read, uart0_write, uart0_writable);
+    uint8_t con_id = chardev_add(uart0_read, uart0_write, uart0_writable);
+    chardev_set_console(con_id);
 
-    // early init uart1 for logging
-    uart1_init(4, 5, 115200, NULL);
-    uart_stdio(1, true);
-
-    // usb
-    usb_init(1);
-
+	// sanity check
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
@@ -69,10 +106,10 @@ int main(void) {
 	}
 
     // TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
-
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
+	// disable interrupts and run fuzix
 	di();
 	fuzix_main();
 }

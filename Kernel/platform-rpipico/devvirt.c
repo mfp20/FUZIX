@@ -68,7 +68,7 @@ void clear_irq(softirq_t *irq) {
     if (irq->free) free(irq->data);
 }
 
-void devvirt_service_signal(void) {
+void devvirt_pop_signal(void) {
 	softirq_t irq;
 
     queue_remove_blocking(&devvirt_signal_q, &irq);
@@ -89,7 +89,7 @@ void devvirt_service_signal(void) {
     clear_byte_irq(&irq);
 } 
 
-void devvirt_service_byte(void) {
+void devvirt_pop_byte(void) {
 	softirq_t irq;
 
     queue_remove_blocking(&devvirt_byte_q, &irq);
@@ -143,7 +143,7 @@ void devvirt_service_byte(void) {
     clear_byte_irq(&irq);
 }
 
-void devvirt_service_block(void) {
+void devvirt_pop_block(void) {
 	softirq_t irq;
     iop_t *iop;
 
@@ -178,37 +178,37 @@ void devvirt_service_block(void) {
     clear_irq(&irq);
 }
 
-void devvirt_service_quick(void) {
+void devvirt_quick(void) {
     // priority queue, immediate processing for all queued signals
-	while (queue_get_level(&devvirt_signal_q)>0) {
-        devvirt_service_signal();
+	while (!queue_is_empty(&devvirt_signal_q)) {
+        devvirt_pop_signal();
     }
     // fast queue, max 64 bytes (the rest in platform_idle)
     uint8_t count = 0;
-	while (queue_get_level(&devvirt_byte_q)>0) {
-        devvirt_service_byte();
-        if (count = 64)
+	while (!queue_is_empty(&devvirt_byte_q)) {
+        devvirt_pop_byte();
+        if (count == 64)
             break;
         count++;
     }
     // best effort queue, 1 block (the rest in platform_idle)
     if (!queue_is_empty(&devvirt_block_q)) {
-        devvirt_service_block();
+        devvirt_pop_block();
 	}
 }
 
-void devvirt_service_flush(void) {
+void devvirt_flush(void) {
     // flush priority queue
-	while (queue_get_level(&devvirt_signal_q)>0) {
-        devvirt_service_signal();
+	while (!queue_is_empty(&devvirt_signal_q)) {
+        devvirt_pop_signal();
     }
     // flush fast queue
-	while (queue_get_level(&devvirt_byte_q)>0) {
-        devvirt_service_byte();
+	while (!queue_is_empty(&devvirt_byte_q)) {
+        devvirt_pop_byte();
     }
     // flush best effort queue
-	while (queue_get_level(&devvirt_block_q)>0) {
-        devvirt_service_block();
+	while (!queue_is_empty(&devvirt_block_q)) {
+        devvirt_pop_block();
         switchout();
 	}
 }

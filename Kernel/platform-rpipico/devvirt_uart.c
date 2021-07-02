@@ -1,6 +1,10 @@
 #include "platform.h"
 
-#include "log.h"
+#include "platform_log.h"
+
+// callbacks for received data
+static byte_tx_t rx0_cb = NULL;
+static byte_tx_t rx1_cb = NULL;
 
 //--------------------------------------------------------------------+
 // stdio drivers
@@ -55,37 +59,32 @@ void uart_stdio(uint8_t id, bool stdio) {
 
 
 //--------------------------------------------------------------------+
-// devvirt drivers
+// fuzix drivers
 //--------------------------------------------------------------------+
-
-// callbacks for received data
-static byte_tx_t rx0_cb = NULL;
-static byte_tx_t rx1_cb = NULL;
 
 // isr code
 static void on_rx_isr(uint8_t uart_id) {
     uart_inst_t *uart;
     uint8_t dev_id;
     char c;
+    byte_tx_t cb;
 
-    //
+    // select uart
     if (uart_id) {
         uart = uart1;
         dev_id = DEV_ID_UART1;
         c = uart1_read();
+        cb = rx1_cb;
     } else {
         uart = uart0;
         dev_id = DEV_ID_UART0;
         c = uart0_read();
+        cb = rx0_cb;
     }
 
-    //
+    // route char
     if (fuzix_ready&&queue_is_empty(&devvirt_byte_q)) {
-        if (uart_id) {
-            if (rx1_cb) rx1_cb(c);
-        } else {
-            if (rx0_cb) rx0_cb(c);
-        }
+        if (cb) cb(c);
     } else {
         softirq_t irq;
         // get uart byte and evelope for softirq

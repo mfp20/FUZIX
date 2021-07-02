@@ -83,6 +83,7 @@ extern uint8_t progbase[USERMEM];
 #define NBUFS       20          // Number of block buffers
 #define NMOUNTS     4           // Number of mounts at a time
 #define MAX_BLKDEV	4
+#define FLASH_OFFSET (96*1024)
 
 // USB interfaces
 #define USB_DEV_CONSOLE (1) // system console

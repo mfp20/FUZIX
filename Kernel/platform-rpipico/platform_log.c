@@ -1,4 +1,4 @@
-#include "log.h"
+#include "platform_log.h"
 
 uint8_t log_level = LOG_LEVEL;
 

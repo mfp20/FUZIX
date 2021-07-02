@@ -1,8 +1,6 @@
 #define MANGLED 0
 #include "mangle.h"
 
-//#include <RP2040.h> // NVIC_SystemReset() to reboot cpu
-
 #include <pico.h>
 
 #include <pico/stdlib.h>
@@ -37,9 +35,3 @@ typedef queue_t pico_queue_t;
 
 #include <stddef.h>
 #include <stdbool.h>
-
-typedef void (*core1_main_t)(void);
-
-extern uint32_t monotonic32(void);
-extern uint64_t monotonic64(void);
-extern void log_set_level(uint8_t level);

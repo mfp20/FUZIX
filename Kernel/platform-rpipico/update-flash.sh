@@ -1,7 +1,8 @@
 #!/bin/sh
+
 set -e
 
-IMG=filesystem.img
+IMG=build/filesystem.img
 
 rm -f ${IMG}
 ../../Standalone/mkfs ${IMG} 32 2547
@@ -451,5 +452,3 @@ cd lib
 EOF
 
 ../../Standalone/fsck -a ${IMG}
-
-

@@ -12,23 +12,6 @@ uaddr_t ramtop = (uaddr_t) PROGTOP;
 uint8_t sys_stubs[sizeof(struct exec)];
 uint16_t swap_dev = 0xffff;
 
-bool fuzix_ready = true;
-
-uint32_t di(void) {
-	fuzix_ready = false;
-	return 0;
-}
-
-void ei(void) {
-	fuzix_ready = true;
-	devvirt_service_quick();
-}
-
-void irqrestore(uint32_t ps) {
-	fuzix_ready = true;
-	devvirt_service_quick();
-}
-
 void set_cpu_type(void) {}
 void map_init(void) {}
 void program_vectors(uint16_t* pageptr) {}
@@ -64,7 +47,7 @@ uint_fast8_t platform_canswapon(uint16_t devno) {
 
 void platform_idle(void) {
 	// flush all virtual devices queues
-	devvirt_service_flush();
+	devvirt_flush();
 	// go into power save
 	//power_set_mode(POWER_LEVEL_SAVE);
 	// wait for interrupt
@@ -78,7 +61,6 @@ void platform_discard(void) {}
 void platform_monitor(void) {}
 
 void platform_reboot(void) {
-	//NVIC_SystemReset();
 	watchdog_reboot(0,0,0);
 }
 

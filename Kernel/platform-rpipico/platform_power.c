@@ -1,5 +1,4 @@
 #include "platform.h"
-#include "devpower.h"
 
 #include <stdio.h>
 

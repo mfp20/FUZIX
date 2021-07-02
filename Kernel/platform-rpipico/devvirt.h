@@ -1,7 +1,7 @@
 #ifndef _DEVVIRT_DOT_H
 #define _DEVVIRT_DOT_H
 
-#include "picosdk.h"
+#include "platform_sdk.h"
 #include "config.h"
 
 #define IRQ_ID_SIGNAL 0
@@ -54,10 +54,11 @@ void clear_byte_irq(softirq_t *irq);
 bool mk_irq(softirq_t *irq, uint8_t irq_id, iop_t *iop, uint8_t dev_id, uint8_t op_id, void *iop_data, uint32_t count);
 void clear_irq(softirq_t *irq);
 
-void devvirt_service_signal(void);
-void devvirt_service_byte(void);
-void devvirt_service_block(void);
-void devvirt_service_quick(void);
-void devvirt_service_flush(void);
+void devvirt_pop_signal(void);
+void devvirt_pop_byte(void);
+void devvirt_pop_block(void);
+
+void devvirt_quick(void);
+void devvirt_flush(void);
 
 #endif
