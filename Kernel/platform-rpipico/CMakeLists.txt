@@ -10,6 +10,12 @@ set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        add_definitions(-DBUILD_DEBUG)
+else()
+        add_definitions(-DBUILD_RELEASE)
+endif()
+
 include_directories(
 	.
 	..
@@ -22,10 +28,10 @@ add_executable(fuzix
 	log.c
 	utils.c
 	platform.c
-	tusb_config.c
 	devvirt.c
 	devvirt_core1.c
 	devvirt_uart.c
+	devvirt_usb.c
 #	devvirt_flash.c
 #	devvirt_sd.c
 #	devvirt_usb.c
@@ -71,9 +77,7 @@ add_executable(fuzix
 )
 
 target_link_libraries(fuzix
-	#cmsis_core
 	tinyusb_device
-	#tinyusb_board
 	pico_stdlib
 	pico_runtime
 	pico_time
@@ -93,4 +97,3 @@ pico_enable_stdio_usb(fuzix 0)
 pico_set_float_implementation(fuzix none)
 pico_set_double_implementation(fuzix none)
 pico_add_extra_outputs(fuzix)
-

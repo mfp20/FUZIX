@@ -6,6 +6,7 @@
 #include <pico.h>
 
 #include <pico/stdlib.h>
+#include <pico/stdio.h>
 #include <pico/types.h>
 #include <pico/unique_id.h>
 #include <pico/multicore.h>

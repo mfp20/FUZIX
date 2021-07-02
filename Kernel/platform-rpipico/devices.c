@@ -75,9 +75,6 @@ void device_init(void) {
 	devsd_spi_init();
 	devsd_init();
 
-    // usb
-    devusb_init(1);
-
     // ticker
     hardware_alarm_claim(0);
     update_us_since_boot(&now, time_us_64());

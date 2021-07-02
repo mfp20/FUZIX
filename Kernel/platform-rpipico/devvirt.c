@@ -97,17 +97,41 @@ void devvirt_service_byte(void) {
     if (irq.id != IRQ_ID_BYTE) {
         // TODO error unknown IRQ
     } else {
-        switch (*((uint8_t*)irq.data)){
+        switch (*((uint8_t*)irq.data)) {
+            case DEV_ID_CORE1:
+                // TODO
+            break;
             case DEV_ID_UART0:
-                if (*((uint8_t*)irq.data+1) == OP_ID_READ)
-                    tty_inproc(minor(BOOT_TTY), *((uint8_t*)irq.data+2));
-                else  
-                    ; // TODO uart write
+                //if (*((uint8_t*)irq.data+1) == OP_ID_READ)
+                //    tty_inproc(minor(BOOT_TTY), *((uint8_t*)irq.data+2));
+                //else  
+                //    ; // TODO uart write
             break;
             case DEV_ID_UART1:
                 // TODO
             break;
-            case DEV_ID_USB:
+            case DEV_ID_I2C0:
+                // TODO
+            break;
+            case DEV_ID_I2C1:
+                // TODO
+            break;
+            case DEV_ID_SPI0:
+                // TODO
+            break;
+            case DEV_ID_SPI1:
+                // TODO
+            break;
+            case DEV_ID_USB_CDC0:
+                // TODO
+            break;
+            case DEV_ID_USB_CDC1:
+                // TODO
+            break;
+            case DEV_ID_USB_CDC2:
+                // TODO
+            break;
+            case DEV_ID_USB_CDC3:
                 // TODO
             break;
             default:
@@ -131,13 +155,19 @@ void devvirt_service_block(void) {
         iop = (iop_t *)irq.data;
         switch (iop->dev){
             case DEV_ID_FLASH:
-                // TODO trigger Fuzix
+                // TODO
             break;
             case DEV_ID_SD:
-                // TODO trigger Fuzix
+                // TODO
             break;
-            case DEV_ID_USB:
-                // TODO trigger Fuzix
+            case DEV_ID_USB_VEND0:
+                // TODO
+            break;
+            case DEV_ID_USB_VEND1:
+                // TODO
+            break;
+            case DEV_ID_USB_VEND2:
+                // TODO
             break;
             default:
                 // TODO error unknown irq

@@ -10,15 +10,21 @@
 
 #define DEV_ID_TIMER 0
 #define DEV_ID_CORE1 1
-#define DEV_ID_FLASH 2
-#define DEV_ID_SD 3
-#define DEV_ID_USB 4
-#define DEV_ID_UART0 5
-#define DEV_ID_UART1 6
-#define DEV_ID_I2C0 7
-#define DEV_ID_I2C1 8
-#define DEV_ID_SPI0 9
-#define DEV_ID_SPI1 10
+#define DEV_ID_UART0 2
+#define DEV_ID_UART1 3
+#define DEV_ID_I2C0 4
+#define DEV_ID_I2C1 5
+#define DEV_ID_SPI0 6
+#define DEV_ID_SPI1 7
+#define DEV_ID_FLASH 8
+#define DEV_ID_SD 9
+#define DEV_ID_USB_CDC0 10
+#define DEV_ID_USB_CDC1 11
+#define DEV_ID_USB_CDC2 12
+#define DEV_ID_USB_CDC3 13
+#define DEV_ID_USB_VEND0 14
+#define DEV_ID_USB_VEND1 15
+#define DEV_ID_USB_VEND2 16
 
 #define OP_ID_READ 0
 #define OP_ID_WRITE 1

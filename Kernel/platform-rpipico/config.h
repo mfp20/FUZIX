@@ -3,53 +3,66 @@
 
 #include <stdint.h>
 
-/* Enable to make ^Z dump the inode table for debug */
+// Enable to make ^Z dump the inode table for debug
 #undef CONFIG_IDUMP
-/* Enable to make ^A drop back into the monitor */
+
+// Enable to make ^A drop back into the monitor
 #undef CONFIG_MONITOR
-/* Profil syscall support (not yet complete) */
+
+// Profil syscall support (not yet complete)
 #undef CONFIG_PROFIL
-/* Multiple processes in memory at once */
+
+// Multiple processes in memory at once
 #define CONFIG_MULTI
-/* 32bit with flat memory */
+
+// 32bit with flat memory
 #undef CONFIG_FLAT
-/* Pure swap */
+
+// Pure swap
 #define CONFIG_BANKS 1
-/* brk() calls pagemap_realloc() to get more memory. */
+
+// brk() calls pagemap_realloc() to get more memory.
 #define CONFIG_BRK_CALLS_REALLOC
-/* Inlined irq handling */
+
+// Inlined irq handling
 #define CONFIG_INLINE_IRQ
-/* Trim disk blocks when no longer used */
+
+// Trim disk blocks when no longer used
 #define CONFIG_TRIM
-/* Enable single tasking */
+
+// Enable single tasking
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
-/* Enable SD card code. */
+
+// Enable SD card code.
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
-/* Enable dynamic swap. */
+
+// Enable dynamic swap.
 #define CONFIG_PLATFORM_SWAPCTL
 
+//
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT
-/* Serial TTY, no VT or font */
-#undef CONFIG_VT
-#undef CONFIG_FONT8X8
-/* Use soft irqs, ie: hard irqs are managed by underlying RT env */
+
+// Use soft irqs, ie: hard irqs are managed by underlying RT env
 #define CONFIG_SOFT_IRQ
 
+// Serial TTY, no VT or font
+#undef CONFIG_VT
+#undef CONFIG_FONT8X8
+#define NUM_DEV_TTY 2
+#define BOOT_TTY (512 + 1)  // the device you will use as your 'console' at boot time (513 is the first tty, 514 the second, etc)
+#define TTYDEV   (512 + 2)  // device init will use as input/output (usually BOOT_TTY)
 
-/* Program layout */
-
+// Program layout
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define USERMEM (128*1024)
 #define PROGSIZE (65536 - UDATA_SIZE)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
-
 #define USERSTACK (4*1024) /* 4kB */
-
 #define CONFIG_CUSTOM_VALADDR
 #define PROGBASE ((uaddr_t)&progbase[0])
 #define PROGLOAD ((uaddr_t)&progbase[UDATA_SIZE])
@@ -59,25 +72,19 @@ extern uint8_t progbase[USERMEM];
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
-#define BOOT_TTY (512 + 1)  /* Set this to default device for stdio, stderr */
-                            /* In this case, the default is the first TTY device */
-
 #define TICKSPERSEC 200   /* Ticks per second */
-/* We need a tidier way to do this from the loader */
-#define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0000 /* hda */
-#define SWAPDEV    (swap_dev) /* dynamic swap */
+// Location of root dev name
+// TODO we need a tidier way to do this from the loader
+#define CMDLINE	NULL
 
-/* 
- * Devices parameters
- */
-#define NUM_DEV_TTY 1
-#define TTYDEV   BOOT_TTY   // Device used by kernel for messages, panics
-#define NBUFS    20         // Number of block buffers
-#define NMOUNTS	 4          // Number of mounts at a time
+#define BOOTDEVICE  0x0000      // hda
+#define SWAPDEV     (swap_dev)  // dynamic swap
+#define NBUFS       20          // Number of block buffers
+#define NMOUNTS     4           // Number of mounts at a time
 #define MAX_BLKDEV	4
 
+// USB interfaces
 #define USB_DEV_CONSOLE (1) // system console
 #define USB_DEV_LOG     (1) // system log
 #define USB_DEV_MPLEX   (1) // system binary multiplexer for multiple binary streams (ex: external fs, RPC, ...)

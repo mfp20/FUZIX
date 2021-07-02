@@ -44,19 +44,23 @@ int main(void) {
 
     // init ttys
     devtty_init();
-    // early fuzix kprintf: use uart0 on tty1
-    devvirt_uart0_init(0, 1, 115200, kgetchar);
-    devtty_bind(0, devvirt_uart0_read, devvirt_uart0_write, devvirt_uart0_writable);
-    // early hw logging: use uart1
-    devvirt_uart1_init(4, 5, 115200, NULL);
-    devvirt_uart_stdio(1, true);
+
+    // early init uart0 for tty1
+    uart0_init(0, 1, 115200, tty0_putc);
+    devtty_bind(0, uart0_read, uart0_write, uart0_writable);
+
+    // early init uart1 for logging
+    uart1_init(4, 5, 115200, NULL);
+    uart_stdio(1, true);
+
+    // usb
+    usb_init(1);
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
         (P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)) ||
-        (UDATA_SIZE_ASM != UDATA_SIZE))
-	{
+        (UDATA_SIZE_ASM != UDATA_SIZE)) {
 		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
 		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
 		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));

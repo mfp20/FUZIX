@@ -1,28 +1,13 @@
 #include "platform.h"
 
-static byte_tx_t tx = NULL;
+static byte_tx_t rx_core1_cb = NULL;
 
-bool devvirt_core1_readable(void) {
-	return multicore_fifo_rvalid();
-}
-
-bool devvirt_core1_writable(void) {
-	return multicore_fifo_wready();
-}
-
-uint8_t devvirt_core1_read(void) {
-	return multicore_fifo_pop_blocking();
-}
-
-void devvirt_core1_write(uint8_t b) {
-	multicore_fifo_push_blocking(b);
-}
-
+// isr code
 static void core1_on_rx_isr(void) {
-	char c = devvirt_core1_read();
+	char c = core1_read();
 	
     if (fuzix_ready&&queue_is_empty(&devvirt_byte_q)) {
-		if (tx) tx(c);
+		if (rx_core1_cb) rx_core1_cb(c);
     } else {
         softirq_t irq;
         // get core1 byte and evelope for softirq
@@ -39,7 +24,23 @@ static void core1_on_rx_isr(void) {
 	multicore_fifo_clear_irq();
 }
 
-void devvirt_core1_init(core1_main_t c1main, byte_tx_t rx_cb) {
+bool core1_readable(void) {
+	return multicore_fifo_rvalid();
+}
+
+bool core1_writable(void) {
+	return multicore_fifo_wready();
+}
+
+uint8_t core1_read(void) {
+	return multicore_fifo_pop_blocking();
+}
+
+void core1_write(uint8_t b) {
+	multicore_fifo_push_blocking(b);
+}
+
+void core1_init(core1_main_t c1main, byte_tx_t rx_cb) {
 	multicore_launch_core1(c1main);
 
 	// rx irq
@@ -48,5 +49,5 @@ void devvirt_core1_init(core1_main_t c1main, byte_tx_t rx_cb) {
     irq_set_enabled(SIO_IRQ_PROC1, true);
 
     //
-    tx = rx_cb;
+    rx_core1_cb = rx_cb;
 }

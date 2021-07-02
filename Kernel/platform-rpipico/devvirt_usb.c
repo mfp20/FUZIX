@@ -1,13 +1,7 @@
+#include "platform.h"
 #include "log.h"
 
-#include "tusb_config.h"
 #include <tusb.h>
-
-#include <pico.h>
-#include <pico/stdlib.h>
-#include <pico/stdio.h>
-#include <pico/unique_id.h>
-#include <pico/stdio/driver.h>
 
 #define EPNUM0  0x80 // usb control endpoint, not usable for interfaces
 #define EPNUM1  0x81
@@ -101,78 +95,6 @@ const uint8_t *tud_descriptor_device_cb(void) {
 
 
 //--------------------------------------------------------------------+
-// String Descriptors
-//--------------------------------------------------------------------+
-
-// C string for iSerialNumber in USB Device Descriptor, two chars per byte + terminating NULL
-char usb_serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
-// convert pico_id into a string to be used as descriptor
-void tusb_id2str(void) {
-  // Why a uint8_t[8] array inside a struct instead of an uint64_t an inquiring mind might wonder
-  pico_unique_board_id_t pico_id;
-  // get board id for later use in USB descriptor array
-  pico_get_unique_board_id(&pico_id);
-
-  for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2; i++) {
-    // Byte index inside the uid array
-    int bi = i / 2;
-    // Use high nibble first to keep memory order (just cosmetics)
-    uint8_t nibble = (pico_id.id[bi] >> 4) & 0x0F;
-    pico_id.id[bi] <<= 4;
-    // Binary to hex digit
-    usb_serial[i] = nibble < 10 ? nibble + '0' : nibble + 'A' - 10;
-  }
-}
-
-static const char *const string_desc_arr[] = {
-    [USBD_STR_LANG]     = (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-    [USBD_STR_MANUF]    = "Raspberry Pi",
-    [USBD_STR_PRODUCT]  = "Pico Fuzix",
-    [USBD_STR_SERIAL]   = usb_serial,
-    [USBD_STR_CONSOLE]  = "Fuzix Console",
-    [USBD_STR_LOG]      = "Fuzix Log",
-    [USBD_STR_MPLEX]    = "Fuzix Multiplexer",
-    [USBD_STR_CDC1]      = "User defined CDC 1",
-    [USBD_STR_VENDOR1]   = "User defined Vendor 1",
-    [USBD_STR_CDC2]      = "User defined CDC 2",
-    [USBD_STR_VENDOR2]   = "User defined Vendor 2"
-};
-
-// Invoked when received GET STRING DESCRIPTOR request
-// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
-const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
-    static uint16_t _desc_str[32];
-    (void) langid;
-
-    uint8_t chr_count;
-
-    if ( index == 0) {
-        _desc_str[1] = 0x0409; // supported language is English
-        //memcpy(&_desc_str[1], string_desc_arr[0], 2);
-        chr_count = 1;
-    } else {
-        // Convert ASCII string into UTF-16
-        if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
-
-        const char* str = string_desc_arr[index];
-
-        // Cap at max char
-        chr_count = strlen(str);
-        if ( chr_count > 31 ) chr_count = 31;
-
-        for(uint8_t i=0; i<chr_count; i++) {
-            _desc_str[1+i] = str[i];
-        }
-    }
-
-    // first byte is length (including header), second byte is string type
-    _desc_str[0] = (TUSB_DESC_STRING << 8 ) | (2*chr_count + 2);
-
-    return _desc_str;
-}
-
-
-//--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
 
@@ -242,10 +164,85 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index) {
 
 
 //--------------------------------------------------------------------+
+// String Descriptors
+//--------------------------------------------------------------------+
+
+// C string for iSerialNumber in USB Device Descriptor, two chars per byte + terminating NULL
+char usb_serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
+
+// convert pico_id into a string to be used as descriptor
+void tusb_id2str(void) {
+  // Why a uint8_t[8] array inside a struct instead of an uint64_t an inquiring mind might wonder
+  pico_unique_board_id_t pico_id;
+  // get board id for later use in USB descriptor array
+  pico_get_unique_board_id(&pico_id);
+
+  for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2; i++) {
+    // Byte index inside the uid array
+    int bi = i / 2;
+    // Use high nibble first to keep memory order (just cosmetics)
+    uint8_t nibble = (pico_id.id[bi] >> 4) & 0x0F;
+    pico_id.id[bi] <<= 4;
+    // Binary to hex digit
+    usb_serial[i] = nibble < 10 ? nibble + '0' : nibble + 'A' - 10;
+  }
+}
+
+static const char *const string_desc_arr[] = {
+    [USBD_STR_LANG]     = (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
+    [USBD_STR_MANUF]    = "Raspberry Pi",
+    [USBD_STR_PRODUCT]  = "Pico Fuzix",
+    [USBD_STR_SERIAL]   = usb_serial,
+    [USBD_STR_CONSOLE]  = "Fuzix Console",
+    [USBD_STR_LOG]      = "Fuzix Log",
+    [USBD_STR_MPLEX]    = "Fuzix Multiplexer",
+    [USBD_STR_CDC1]      = "User defined CDC 1",
+    [USBD_STR_VENDOR1]   = "User defined Vendor 1",
+    [USBD_STR_CDC2]      = "User defined CDC 2",
+    [USBD_STR_VENDOR2]   = "User defined Vendor 2"
+};
+
+// Invoked when received GET STRING DESCRIPTOR request
+// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
+const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
+    static uint16_t _desc_str[32];
+    (void) langid;
+
+    uint8_t chr_count;
+
+    if ( index == 0) {
+        _desc_str[1] = 0x0409; // supported language is English
+        //memcpy(&_desc_str[1], string_desc_arr[0], 2);
+        chr_count = 1;
+    } else {
+        // Convert ASCII string into UTF-16
+        if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
+
+        const char* str = string_desc_arr[index];
+
+        // Cap at max char
+        chr_count = strlen(str);
+        if ( chr_count > 31 ) chr_count = 31;
+
+        for(uint8_t i=0; i<chr_count; i++) {
+            _desc_str[1+i] = str[i];
+        }
+    }
+
+    // first byte is length (including header), second byte is string type
+    _desc_str[0] = (TUSB_DESC_STRING << 8 ) | (2*chr_count + 2);
+
+    return _desc_str;
+}
+
+
+//--------------------------------------------------------------------+
 // stdio drivers
 //--------------------------------------------------------------------+
 
 #define STDIO_USB_STDOUT_TIMEOUT_US 500000
+
+static uint8_t cdc_log = 1;
 
 static void stdio_usb_out_chars(uint8_t itf, const char *buf, int length) {
     static uint64_t last_avail_time;
@@ -374,12 +371,42 @@ void devusb_cdc_stdio(uint8_t id, bool stdio) {
 
 
 //--------------------------------------------------------------------+
+// tty helpers
+//--------------------------------------------------------------------+
+
+uint8_t usb_cdc0_read(void) {
+  if (tud_cdc_n_connected(0)) {
+    if (tud_cdc_n_available(0))
+      return (uint8_t)tud_cdc_n_read_char(0);
+  }
+  return 0;
+}
+
+void usb_cdc0_write(uint8_t b) {
+  if (tud_cdc_n_connected(0)) {
+    if (tud_cdc_n_write_available(0)>0)
+      tud_cdc_n_write_char(0, b);
+  }
+}
+
+bool usb_cdc0_writable(void) {
+  if (tud_cdc_n_connected(0)) {
+    return (tud_cdc_n_write_available(0)>0);
+  }
+  return false;
+}
+
+
+//--------------------------------------------------------------------+
 // callbacks
 //--------------------------------------------------------------------+
 
 // CDC: Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf) {
-  printf("tud_cdc_rx_cb %d\n", itf);
+  //printf("tud_cdc_rx_cb %d\n", itf);
+  if (itf==0) {
+    tty1_putc((uint8_t)tud_cdc_n_read_char(itf));
+  }
 }
 
 // CDC: Invoked when received `wanted_char`
@@ -392,17 +419,24 @@ void tud_cdc_tx_complete_cb(uint8_t itf) {
 
 // CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
-  printf("tud_cdc_line_state_cb %d\n", itf);
+  if (dtr) { // on connect
+    //if (itf == cdc_log) devusb_cdc_stdio(itf, true);
+  } else { // on disconnect
+    //if (itf == cdc_log) devusb_cdc_stdio(itf, false);
+  }
+
+  //
+  printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
 }
 
-// CDC: Invoked when line coding is change via SET_LINE_CODING
+// CDC: Invoked when line coding is changed via SET_LINE_CODING
 void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* line_coding) {
-  printf("tud_cdc_line_coding_cb %d\n", itf);
+  printf("CDC %d: new baud rate %d\n", itf, line_coding->bit_rate);
 }
 
 // CDC: Invoked when received send break
 void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {
-  printf("tud_cdc_send_break_cb %d\n", itf);
+  //printf("tud_cdc_send_break_cb %d\n", itf);
 }
 
 // Vendor: Invoked when received new data
@@ -422,17 +456,14 @@ static bool tusb_handler(repeating_timer_t *rt) {
   return true;
 }
 
-repeating_timer_t tusb_test;
-
-void devusb_init(uint8_t stdio) {  
+void usb_init(uint8_t log) {  
   tusb_id2str();
   tusb_init();
   add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
 
-  if (stdio&&(stdio<=CFG_TUD_CDC)) {
-    devusb_cdc_stdio(stdio, true);
-  } else if (stdio) {
-    LOG_WAR("%d out of bounduaries, USB CDC number must be between 1 and %d", stdio, CFG_TUD_CDC);
-    return;
-  }
+  // bind cdc0 to tty2
+  devtty_bind(1, usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
+
+  // bind cdc1 to stdio
+  devusb_cdc_stdio(log, true);
 }

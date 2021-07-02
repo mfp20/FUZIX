@@ -6,6 +6,7 @@
 #include <vt.h>
 #include <tty.h>
 
+// virtual tty definition
 typedef struct tty_def_s {
     uint8_t buf[TTYSIZ];
     byte_rx_t rx;
@@ -13,18 +14,17 @@ typedef struct tty_def_s {
     byte_ready_t writable;
 } tty_def_t;
 
+// all virtual ttys
 static tty_def_t tty[NUM_DEV_TTY];
+
+// console virtual tty
 static uint8_t console = 0;
 
-// ttyinq[0] is never used
+// fuzix ttys, note: ttyinq[0] is never used
 struct s_queue ttyinq[NUM_DEV_TTY+1];
 tcflag_t termios_mask[NUM_DEV_TTY+1];
 
-void kgetchar(uint8_t c) {
-	tty_inproc(minor((512 + console + 1)), c);
-}
-
-// Output for the system console (kprintf etc)
+// output for the system console (kprintf etc)
 void kputchar(uint_fast8_t c) {
     if (tty[console].tx) {
         if (c=='\n')
@@ -50,13 +50,13 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c) {
     } 
 }
 
-// called on tty_open() and 1 ioctl
+// called on tty_open() and ioctl
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
 
 // return 1 if connected
 int tty_carrier(uint_fast8_t minor) {
     // tty0 is always connected so that
-    // it is easier to connect 2 pins only
+    // it is easier to connect 2 pins uart
     if (minor==1)
         return 1;
     
@@ -66,6 +66,11 @@ int tty_carrier(uint_fast8_t minor) {
 
 // called at the end of tty_read()
 void tty_data_consumed(uint_fast8_t minor) {}
+
+
+//--------------------------------------------------------------------+
+// 
+//--------------------------------------------------------------------+
 
 void devtty_init(void) {
     // ttyinq[0] is never used
@@ -88,6 +93,14 @@ void devtty_bind(uint8_t n, byte_rx_t r, byte_tx_t t, byte_ready_t w) {
 
 void devtty_set_console(uint8_t con) {
     console = con;
+}
+
+void tty0_putc(uint8_t c) {
+	tty_inproc(minor((512 + 1)), c);
+}
+
+void tty1_putc(uint8_t c) {
+	tty_inproc(minor((512 + 2)), c);
 }
 
 /* vim: sw=4 ts=4 et: */
