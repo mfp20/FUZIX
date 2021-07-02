@@ -1,4 +1,5 @@
 #include "platform.h"
+
 #include <kernel.h>
 #include <kdata.h>
 #include <kernel-armm0.def>
@@ -38,10 +39,17 @@ int main(void) {
     queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
     queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
     
-    // init tty and uart0 -> tty1, for early kprintf
+    // init pico stdio
+    stdio_init_all();
+
+    // init ttys
     devtty_init();
+    // early fuzix kprintf: use uart0 on tty1
     devvirt_uart0_init(0, 1, 115200, kgetchar);
     devtty_bind(0, devvirt_uart0_read, devvirt_uart0_write, devvirt_uart0_writable);
+    // early hw logging: use uart1
+    devvirt_uart1_init(4, 5, 115200, NULL);
+    devvirt_uart_stdio(1, true);
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||

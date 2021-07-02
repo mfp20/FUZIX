@@ -1,4 +1,61 @@
 #include "platform.h"
+#include "log.h"
+
+//--------------------------------------------------------------------+
+// stdio drivers
+//--------------------------------------------------------------------+
+
+static void stdio_uart0_out_chars(const char *buf, int len) {
+    uart_write_blocking(uart0, buf, len);
+}
+static int stdio_uart0_in_chars(char *buf, int len) {
+    uart_read_blocking(uart0, buf, len);
+    return len;
+}
+static void stdio_uart1_out_chars(const char *buf, int len) {
+    uart_write_blocking(uart1, buf, len);
+}
+static int stdio_uart1_in_chars(char *buf, int len) {
+    uart_read_blocking(uart1, buf, len);
+    return len;
+}
+
+static stdio_driver_t stdio_uart_driver[2] = {
+  {
+  .out_chars = stdio_uart0_out_chars,
+  .in_chars = stdio_uart0_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_uart1_out_chars,
+  .in_chars = stdio_uart1_in_chars,
+  .crlf_enabled = true
+  }
+};
+
+void devvirt_uart_stdio(uint8_t id, bool stdio) {
+  stdio_set_driver_enabled(&stdio_uart_driver[id], stdio);
+  if (stdio) {
+    LOG_INF("stdio on USB CDC %d", id);
+    LOG_EME("emergency log entry");
+    LOG_ALE("alert log entry");
+    LOG_CRI("critical log entry");
+    LOG_ERR("error log entry");
+    LOG_WAR("warning log entry");
+    LOG_NOT("notice log entry");
+    LOG_INF("info log entry");
+    LOG_DEB("debug log entry");
+    unsigned char data[20] = {32, 1, 24, 56, 102, 5, 78, 92, 200, 0, 32, 1, 24, 56, 102, 5, 78, 92, 200, 0};
+    LOG_HEX(data, 20, "hex %s", "log entry");
+  } else {
+    LOG_INF("UART%d free'd from stdio", id);
+  }
+}
+
+
+//--------------------------------------------------------------------+
+// devvirt drivers
+//--------------------------------------------------------------------+
 
 static byte_tx_t tx0 = NULL;
 static byte_tx_t tx1 = NULL;
@@ -77,6 +134,9 @@ void devvirt_uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_
 
     //
     tx0 = rx_cb;
+
+    // register stdio driver (disabled)
+    devvirt_uart_stdio(0, false);
 }
 
 
@@ -114,7 +174,10 @@ void devvirt_uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_
 
     //
     tx1 = rx_cb;
+
+    // register stdio driver (disabled)
+    devvirt_uart_stdio(1, false);
 }
 
-/* vim: sw=4 ts=4 et: */
 
+/* vim: sw=4 ts=4 et: */

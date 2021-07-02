@@ -19,6 +19,8 @@ include_directories(
 )
 
 add_executable(fuzix
+	log.c
+	utils.c
 	platform.c
 	tusb_config.c
 	devvirt.c

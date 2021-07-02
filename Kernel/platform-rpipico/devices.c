@@ -76,7 +76,7 @@ void device_init(void) {
 	devsd_init();
 
     // usb
-    devusb_init();
+    devusb_init(1);
 
     // ticker
     hardware_alarm_claim(0);

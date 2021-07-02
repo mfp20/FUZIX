@@ -1,9 +1,13 @@
+#include "log.h"
+
 #include "tusb_config.h"
 #include <tusb.h>
 
 #include <pico.h>
 #include <pico/stdlib.h>
+#include <pico/stdio.h>
 #include <pico/unique_id.h>
+#include <pico/stdio/driver.h>
 
 #define EPNUM0  0x80 // usb control endpoint, not usable for interfaces
 #define EPNUM1  0x81
@@ -24,41 +28,33 @@
 
 #define USBD_VID                (0x2E8A) // Raspberry Pi
 // Temporary setup until I figure out how to dynamically reconfigure USB at runtime
-// PID depends on the 32 endpoints usage, packed in couples (I/O), 16 bits:
-// (MSb) 0--- ---- ---- ---1 (LSb)
-//       |||| |||| |||| |||`-----  usb config (always 1 by usb design)
-//       |||| |||| |||| ||`------  cdc tty cmd
-//       |||| |||| |||| |`-------  cdc tty data
-//       |||| |||| ||||  `-------  cdc log cmd
-//       |||| |||| |||`----------  cdc log data
-//       |||| |||| ||`-----------  vendor external filesystem out
-//       |||| |||| |`------------  vendor external filesystem in
-//       |||| |||| `-------------  cdc-spare0 cmd
-//       |||| |||`---------------  cdc-spare0 data
-//       |||| ||`----------------  vendor-spare0 out
-//       |||| |`-----------------  vendor-spare0 in
-//       |||| `------------------  cdc-spare1 cmd
-//       |||`--------------------  cdc-spare1 data
-//       ||`---------------------  vendor-spare1 out
-//       |`----------------------  vendor-spare1 in
-//       `-----------------------  unused
-// ie: if all drivers are enabled, the resulting PID is 0x7FFF
+// PID depends on the 8 interfaces availability and we have 16 bits to flag:
+// (MSb) 0--- ---- ---- ---- (LSb)
+//       |||| |||| |||| |||`-----  cdc tty
+//       |||| |||| |||| ||`------  cdc log
+//       |||| |||| |||| |`-------  cdc user1
+//       |||| |||| ||||  `-------  cdc user2
+//       |||| |||| |||`----------  unused
+//       |||| |||| ||`-----------  unused
+//       |||| |||| |`------------  unused
+//       |||| |||| `-------------  unused
+//       |||| |||`---------------  vendor binary multiplexer
+//       |||| ||`----------------  vendor user1
+//       |||| |`-----------------  vendor user2
+//       |||| `------------------  unused
+//       |||`--------------------  unused
+//       ||`---------------------  unused
+//       |`----------------------  unused
+//       `-----------------------  set to 0 to avoid PID 0xFFFF
 #define PID_MAP(dev, nbit)      ( (USB_DEV_##dev) << (nbit) )
-#define USBD_PID                ( 1                  + \
+#define USBD_PID                ( \
                                   PID_MAP(CONSOLE,  1)  + \
-                                  PID_MAP(CONSOLE,  2)  + \
-                                  PID_MAP(LOG,      3)  + \
-                                  PID_MAP(LOG,      4)  + \
-                                  PID_MAP(MPLEX,    5)  + \
-                                  PID_MAP(MPLEX,    6)  + \
-                                  PID_MAP(TTY1,     7)  + \
-                                  PID_MAP(TTY1,     8)  + \
-                                  PID_MAP(RAW1,     9)  + \
-                                  PID_MAP(RAW1,     10) + \
-                                  PID_MAP(TTY2,     11) + \
-                                  PID_MAP(TTY2,     12) + \
-                                  PID_MAP(RAW2,     13) + \
-                                  PID_MAP(RAW2,     14) + \
+                                  PID_MAP(LOG,      2)  + \
+                                  PID_MAP(TTY1,     3)  + \
+                                  PID_MAP(TTY2,     4) + \
+                                  PID_MAP(MPLEX,    9)  + \
+                                  PID_MAP(RAW1,     10)  + \
+                                  PID_MAP(RAW2,     11) + \
                                   0 \
                                 )
 
@@ -68,10 +64,10 @@
 #define USBD_STR_SERIAL (0x03)
 #define USBD_STR_CONSOLE (0x04)
 #define USBD_STR_LOG    (0x05)
-#define USBD_STR_MPLEX  (0x06)
-#define USBD_STR_CDC1    (0x07)
-#define USBD_STR_VENDOR1 (0x08)
-#define USBD_STR_CDC2    (0x09)
+#define USBD_STR_CDC1    (0x06)
+#define USBD_STR_CDC2    (0x07)
+#define USBD_STR_MPLEX  (0x08)
+#define USBD_STR_VENDOR1 (0x09)
 #define USBD_STR_VENDOR2 (0x0a)
 
 
@@ -175,6 +171,7 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return _desc_str;
 }
 
+
 //--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
@@ -186,17 +183,17 @@ enum {
 #if USB_DEV_LOG
   ITFNUM1, ITFNUM1_DATA,
 #endif
-#if USB_DEV_MPLEX
-  ITFNUM2, ITFNUM2_DATA,
-#endif
 #if USB_DEV_TTY1
-  ITFNUM3, ITFNUM3_DATA,
-#endif
-#if USB_DEV_RAW1
-  ITFNUM4, ITFNUM4_DATA,
+  ITFNUM2, ITFNUM3_DATA,
 #endif
 #if USB_DEV_TTY2
-  ITFNUM5, ITFNUM5_DATA,
+  ITFNUM3, ITFNUM5_DATA,
+#endif
+#if USB_DEV_MPLEX
+  ITFNUM4, ITFNUM2_DATA,
+#endif
+#if USB_DEV_RAW1
+  ITFNUM5, ITFNUM4_DATA,
 #endif
 #if USB_DEV_RAW2
   ITFNUM6, ITFNUM6_DATA,
@@ -218,30 +215,161 @@ static const uint8_t desc_configuration[] = {
 #if USB_DEV_LOG
     TUD_CDC_DESCRIPTOR(ITFNUM1, USBD_STR_LOG, EPNUM3, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM4 & 0x7F, EPNUM4, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
-#if USB_DEV_MPLEX
-    TUD_VENDOR_DESCRIPTOR(ITFNUM2, USBD_STR_MPLEX, EPNUM5 & 0x7F, EPNUM6, USB_PACKET_MAX_SIZE_DATA_JUMBO),
-#endif
 #if USB_DEV_TTY1
-    TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC1, EPNUM7, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM8 & 0x7F, EPNUM8, USB_PACKET_MAX_SIZE_DATA_SINGLE),
-#endif
-#if USB_DEV_RAW1
-    TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_VENDOR1, EPNUM9 & 0x7F, EPNUM10, USB_PACKET_MAX_SIZE_DATA_MEDIUM),
+    TUD_CDC_DESCRIPTOR(ITFNUM2, USBD_STR_CDC1, EPNUM5, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM6 & 0x7F, EPNUM6, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_TTY2
-    TUD_CDC_DESCRIPTOR(ITFNUM5, USBD_STR_CDC2, EPNUM11, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM12 & 0x7F, EPNUM12, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+    TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC2, EPNUM7, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM8 & 0x7F, EPNUM8, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#endif
+#if USB_DEV_MPLEX
+    TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_MPLEX, EPNUM9 & 0x7F, EPNUM10, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#endif
+#if USB_DEV_RAW1
+    TUD_VENDOR_DESCRIPTOR(ITFNUM5, USBD_STR_VENDOR1, EPNUM11 & 0x7F, EPNUM12, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_RAW2
-    TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR2, EPNUM13 & 0x7F, EPNUM14, USB_PACKET_MAX_SIZE_DATA_MEDIUM),
+    TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR2, EPNUM13 & 0x7F, EPNUM14, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 // Application return pointer to descriptor
 // Descriptor contents must exist long enough for transfer to complete
-uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
-{
+uint8_t const * tud_descriptor_configuration_cb(uint8_t index) {
   (void) index; // for multiple configurations
   return desc_configuration;
+}
+
+
+//--------------------------------------------------------------------+
+// stdio drivers
+//--------------------------------------------------------------------+
+
+#define STDIO_USB_STDOUT_TIMEOUT_US 500000
+
+static void stdio_usb_out_chars(uint8_t itf, const char *buf, int length) {
+    static uint64_t last_avail_time;
+    if (tud_cdc_n_connected(itf)) {
+        for (int i = 0; i < length;) {
+            int n = length - i;
+            int avail = tud_cdc_n_write_available(itf);
+            if (n > avail) n = avail;
+            if (n) {
+                int n2 = tud_cdc_n_write(itf, buf + i, n);
+                tud_task();
+                tud_cdc_n_write_flush(itf);
+                i += n2;
+                last_avail_time = time_us_64();
+            } else {
+                tud_task();
+                tud_cdc_n_write_flush(itf);
+                if (!tud_cdc_n_connected(itf) ||
+                    (!tud_cdc_n_write_available(itf) && time_us_64() > last_avail_time + STDIO_USB_STDOUT_TIMEOUT_US)) {
+                    break;
+                }
+            }
+        }
+    } else {
+        // reset our timeout
+        last_avail_time = 0;
+    }
+}
+static int stdio_usb_in_chars(uint8_t itf, char *buf, int length) {
+    int rc = PICO_ERROR_NO_DATA;
+    if (tud_cdc_n_connected(itf) && tud_cdc_n_available(itf)) {
+        int count = tud_cdc_n_read(itf, buf, length);
+        rc =  count ? count : PICO_ERROR_NO_DATA;
+    }
+    return rc;
+}
+
+static void stdio_usb_cdc0_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(0, buf, len);
+}
+static int stdio_usb_cdc0_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(0, buf, len);
+}
+static void stdio_usb_cdc1_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(1, buf, len);
+}
+static int stdio_usb_cdc1_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(1, buf, len);
+}
+static void stdio_usb_cdc2_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(2, buf, len);
+}
+static int stdio_usb_cdc2_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(2, buf, len);
+}
+static void stdio_usb_cdc3_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(3, buf, len);
+}
+static int stdio_usb_cdc3_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(3, buf, len);
+}
+static void stdio_usb_cdc4_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(4, buf, len);
+}
+static int stdio_usb_cdc4_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(4, buf, len);
+}
+static void stdio_usb_cdc5_out_chars(const char *buf, int len) {
+  stdio_usb_out_chars(5, buf, len);
+}
+static int stdio_usb_cdc5_in_chars(char *buf, int len) {
+  return stdio_usb_in_chars(5, buf, len);
+}
+
+static stdio_driver_t stdio_usb_cdc_driver[6] = {
+  {
+  .out_chars = stdio_usb_cdc0_out_chars,
+  .in_chars = stdio_usb_cdc0_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_usb_cdc1_out_chars,
+  .in_chars = stdio_usb_cdc1_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_usb_cdc2_out_chars,
+  .in_chars = stdio_usb_cdc2_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_usb_cdc3_out_chars,
+  .in_chars = stdio_usb_cdc3_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_usb_cdc4_out_chars,
+  .in_chars = stdio_usb_cdc4_in_chars,
+  .crlf_enabled = true
+  },
+  {
+  .out_chars = stdio_usb_cdc5_out_chars,
+  .in_chars = stdio_usb_cdc5_in_chars,
+  .crlf_enabled = true
+  }
+};
+
+void devusb_cdc_stdio(uint8_t id, bool stdio) {
+  stdio_set_driver_enabled(&stdio_usb_cdc_driver[id], stdio);
+  if (stdio) {
+    LOG_INF("stdio on USB CDC %d", id);
+    LOG_EME("emergency log entry");
+    LOG_ALE("alert log entry");
+    LOG_CRI("critical log entry");
+    LOG_ERR("error log entry");
+    LOG_WAR("warning log entry");
+    LOG_NOT("notice log entry");
+    LOG_INF("info log entry");
+    LOG_DEB("debug log entry");
+    unsigned char data[20] = {32, 1, 24, 56, 102, 5, 78, 92, 200, 0, 32, 1, 24, 56, 102, 5, 78, 92, 200, 0};
+    LOG_HEX(data, 20, "hex %s", "log entry");
+  } else {
+    LOG_INF("USB CDC %d free'd from stdio", id);
+  }
 }
 
 
@@ -249,23 +377,38 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // callbacks
 //--------------------------------------------------------------------+
 
-// Invoked when received new data
-//void tud_cdc_rx_cb(uint8_t itf) {}
+// CDC: Invoked when received new data
+void tud_cdc_rx_cb(uint8_t itf) {
+  printf("tud_cdc_rx_cb %d\n", itf);
+}
 
-// Invoked when received `wanted_char`
+// CDC: Invoked when received `wanted_char`
 //void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char) {}
 
-// Invoked when space becomes available in TX buffer
-//void tud_cdc_tx_complete_cb(uint8_t itf) {}
+// CDC: Invoked when space becomes available in TX buffer
+void tud_cdc_tx_complete_cb(uint8_t itf) {
+  //printf("tud_cdc_tx_complete_cb %d\n", itf);
+}
 
-// Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
-//void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {}
+// CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
+  printf("tud_cdc_line_state_cb %d\n", itf);
+}
 
-// Invoked when line coding is change via SET_LINE_CODING
-//void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* line_coding) {}
+// CDC: Invoked when line coding is change via SET_LINE_CODING
+void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* line_coding) {
+  printf("tud_cdc_line_coding_cb %d\n", itf);
+}
 
-// Invoked when received send break
-//void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {}
+// CDC: Invoked when received send break
+void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {
+  printf("tud_cdc_send_break_cb %d\n", itf);
+}
+
+// Vendor: Invoked when received new data
+void tud_vendor_rx_cb(uint8_t itf) {
+  printf("tud_vendor_rx_cb %d\n", itf);
+}
 
 
 //--------------------------------------------------------------------+
@@ -276,24 +419,20 @@ repeating_timer_t tusb_timer;
 
 static bool tusb_handler(repeating_timer_t *rt) {
   tud_task();
-  // TODO read/write
-
-  //for (int i=0;i<CFG_TUD_VENDOR;i++) {
-  //  if ( tud_vendor_n_available(i) ) {
-  //    uint count = tud_vendor_n_read(i, NULL, 64);
-  //  }
-  //}
-
   return true;
 }
 
-void devusb_init(void) {  
+repeating_timer_t tusb_test;
+
+void devusb_init(uint8_t stdio) {  
   tusb_id2str();
   tusb_init();
-
   add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
 
-  //for (int i=0;i<CFG_TUD_VENDOR;i++) {
-  //  tud_vendor_n_write(i, NULL, 64);
-  //}
+  if (stdio&&(stdio<=CFG_TUD_CDC)) {
+    devusb_cdc_stdio(stdio, true);
+  } else if (stdio) {
+    LOG_WAR("%d out of bounduaries, USB CDC number must be between 1 and %d", stdio, CFG_TUD_CDC);
+    return;
+  }
 }
