@@ -2,6 +2,7 @@
 #define _SDK_VIRTDEV_UART_DOT_H
 
 #include "rt.h"
+#include "rt_chardev.h"
 
 extern void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb);
 extern uint8_t uart0_read(void);

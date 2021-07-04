@@ -1,10 +1,11 @@
+#include "rt_log.h"
 #include "rt_chardev.h"
 
 #include <stdlib.h>
 
 // all available chardevs
 chardev_t *chardev = NULL;
-uint8_t chardev_no = 0;
+static uint8_t chardev_no = 0;
 
 uint8_t chardev_add(byte_rx_t r, byte_tx_t t, byte_ready_t w)
 {

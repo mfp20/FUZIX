@@ -35,49 +35,13 @@ bool validdev(uint16_t dev)
 		return true;
 }
 
-static repeating_timer_t systick_timer;
-
-static bool systick_timer_handler(repeating_timer_t *rt)
-{
-	if (fuzix_ready && queue_is_empty(&devvirt_signal_q))
-	{
-		timer_interrupt();
-	}
-	else
-	{
-		softirq_t irq;
-		// TODO use for something useful the unused 2 bytes
-		if (!mk_byte_irq(&irq, IRQ_ID_SIGNAL, NULL, DEV_ID_TIMER, 0, 0))
-		{
-			// TODO out of memory error
-			return false;
-		}
-		// queue softirq
-		if (!queue_try_add(&devvirt_signal_q, &irq))
-		{
-			// TODO queue full error -> lag -> data lost
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void device_init(void)
 {
-	// power
-	//power_set_mode(POWER_DEFAULT);
-
-	// ticker
-	add_repeating_timer_us((1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
-
 	// usb
 	usb_init();
-	chardev_add(usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
-	chardev_add(usb_cdc1_read, usb_cdc1_write, usb_cdc1_writable);
 
-	// Flash device is too small to be useful, and a corrupt flash will cause a crash on startup... oddly.
-	devflash_init();
+	// flash device is mounted first as root device.
+	virtual_flash_init();
 
 	// SD, if any
 	devsd_spi_init();

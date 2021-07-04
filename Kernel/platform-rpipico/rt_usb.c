@@ -1,11 +1,10 @@
 #include "rt_log.h"
+#include "rt_softirq.h"
 #include "rt_chardev.h"
 #include "rt_blockdev.h"
-#include "rt_virtdev.h"
-#include "rt_virtdev_uart.h"
-#include "rt_virtdev_usb.h"
-
-#include "fuzix_helpers.h"
+#include "rt_uart.h"
+#include "rt_usb.h"
+#include "rt_fuzix.h"
 
 #include <tusb.h>
 
@@ -88,7 +87,8 @@ tusb_desc_device_t const desc_device = {
 	.iManufacturer = USBD_STR_MANUF,
 	.iProduct = USBD_STR_PRODUCT,
 	.iSerialNumber = USBD_STR_SERIAL,
-	.bNumConfigurations = 0x01};
+	.bNumConfigurations = 0x01
+};
 
 // Invoked when received GET DEVICE DESCRIPTOR
 // Application return pointer to descriptor
@@ -469,23 +469,19 @@ void tud_cdc_rx_cb(uint8_t itf)
 	//printf("tud_cdc_rx_cb %d\n", itf);
 	if (itf == 0)
 	{
-		uint8_t c = usb_cdc0_read();
+		uint8_t b = usb_cdc0_read();
 		// route char
-		if (fuzix_ready && queue_is_empty(&devvirt_byte_q))
+		if (fuzix_ready && queue_is_empty(&softirq_out_q))
 		{
-			tty1_inproc(c);
+			tty2_inproc(b);
 		}
 		else
 		{
+			// evelope cdc0 byte for softirq
 			softirq_t irq;
-			// get uart byte and evelope for softirq
-			if (!mk_byte_irq(&irq, IRQ_ID_BYTE, NULL, DEV_ID_USB_CDC0, OP_ID_READ, c))
-			{
-				// TODO out of memory error -> data lost
-				return;
-			}
+			mk_softirq(&irq, DEV_ID_USB_CDC0, b, 0, NULL);
 			// queue softirq
-			if (!queue_try_add(&devvirt_byte_q, &irq))
+			if (!queue_try_add(&softirq_out_q, &irq))
 			{
 				// TODO queue full error -> lag -> data lost
 			}
@@ -497,10 +493,7 @@ void tud_cdc_rx_cb(uint8_t itf)
 //void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char) {}
 
 // CDC: Invoked when space becomes available in TX buffer
-void tud_cdc_tx_complete_cb(uint8_t itf)
-{
-	//printf("tud_cdc_tx_complete_cb %d\n", itf);
-}
+//void tud_cdc_tx_complete_cb(uint8_t itf) {}
 
 // CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
@@ -509,7 +502,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 	{ // on connect
 		if (itf == 1)
 		{
-			usb_cdc_stdio(1, true);
+			//usb_cdc_stdio(1, true);
 			//uart_stdio(1, false);
 		}
 	}
@@ -518,25 +511,19 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 		if (itf == 1)
 		{
 			//uart_stdio(1, true);
-			usb_cdc_stdio(2, false);
+			//usb_cdc_stdio(1, false);
 		}
 	}
 
 	//
-	printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
+	//printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
 }
 
 // CDC: Invoked when line coding is changed via SET_LINE_CODING
-void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *line_coding)
-{
-	printf("CDC %d: new baud rate %d\n", itf, line_coding->bit_rate);
-}
+//void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *line_coding) {}
 
 // CDC: Invoked when received send break
-void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms)
-{
-	//printf("tud_cdc_send_break_cb %d\n", itf);
-}
+//void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {}
 
 // Vendor: Invoked when received new data
 void tud_vendor_rx_cb(uint8_t itf)
@@ -561,4 +548,12 @@ void usb_init(void)
 	tusb_id2str();
 	tusb_init();
 	add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
+
+	// register chardevs
+	chardev_add(usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
+	chardev_add(usb_cdc1_read, usb_cdc1_write, usb_cdc1_writable);
+	//chardev_add(usb_cdc2_read, usb_cdc2_write, usb_cdc2_writable);
+	//chardev_add(usb_cdc3_read, usb_cdc3_write, usb_cdc3_writable);
+
+	// register blockdevs
 }

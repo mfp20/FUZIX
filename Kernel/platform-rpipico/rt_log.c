@@ -9,7 +9,7 @@ void log_set_level(uint8_t level)
 	log_level = level;
 }
 
-void printk_hex(unsigned char *in, unsigned int count, char *out)
+void printf_hex(unsigned char *in, unsigned int count, char *out)
 {
 	unsigned int size = 0;
 	char ascii[16] = {};

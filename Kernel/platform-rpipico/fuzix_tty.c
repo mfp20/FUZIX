@@ -27,10 +27,20 @@ void tty_prepare(void)
     }
 }
 
+void tty1_inproc(uint8_t c)
+{
+    tty_inproc(minor((512 + 1)), c);
+}
+
+void tty2_inproc(uint8_t c)
+{
+    tty_inproc(minor((512 + 2)), c);
+}
+
 // called on tty_open() and ioctl
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
-    kprintf("tty_setup minor: %d\n", minor);
+    //kprintf("tty_setup minor: %d\n", minor);
 }
 
 // return 1 if connected
@@ -75,16 +85,6 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 void tty_sleeping(uint_fast8_t minor)
 {
     kprintf("tty_sleeping minor: %d\n", minor);
-}
-
-//
-void tty0_inproc(uint8_t c)
-{
-    tty_inproc(minor((512 + 1)), c);
-}
-void tty1_inproc(uint8_t c)
-{
-    tty_inproc(minor((512 + 2)), c);
 }
 
 /* vim: sw=4 ts=4 et: */

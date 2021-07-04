@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include "fuzix_rt.h"
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -54,8 +56,8 @@ uint_fast8_t platform_canswapon(uint16_t devno) {
 }
 
 void platform_idle(void) {
-	// flush all virtual devices queues
-	devvirt_flush();
+	// flush softirqs
+	fuzix_softirq();
 	// go into power save
 	//power_set_mode(POWER_LEVEL_SAVE);
 	// wait for interrupt

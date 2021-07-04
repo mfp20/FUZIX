@@ -25,27 +25,30 @@ include_directories(
 )
 
 add_executable(fuzix
-	rt_log.c
 	rt_stdio.c
-	rt_power.c
 	rt_time.c
+	rt_log.c
 	rt_chardev.c
-#	rt_blockdev.c
-	rt_virtdev.c
-	rt_virtdev_core1.c
-	rt_virtdev_uart.c
-	rt_virtdev_usb.c
-#	rt_virtdev_flash.c
-#	rt_virtdev_sd.c
-	platform_fs_dhara.c
-	devflash.c
+	rt_blockdev.c
+	rt_softirq.c
+	rt_power.c
+	rt_core1.c
+	rt_uart.c
+	rt_usb.c
+	rt_flash.c
+#	platform_fs_dhara.c
+#	devflash.c
+#	rt_sd.c
 	devsdspi.c
-	devices.c
 	fuzix_elf.c 
 	fuzix_tty.c
-	fuzix_softirq.c
 	fuzix_swapper.c
+	fuzix_softirq.c
+	fuzix_ticker.c
+#	fuzix_chardev.c
+	fuzix_blockdev.c
 	fuzix_misc.c
+	devices.c
 	main.c
 	tricks.S
 	../dev/blkdev.c

@@ -85,10 +85,14 @@ int main(void)
 	// init pico stdio
 	stdio_init_all();
 
-	// softirq queues for virtual devices
-	queue_init(&devvirt_signal_q, sizeof(softirq_t), UINT8_MAX);
-	queue_init(&devvirt_byte_q, sizeof(softirq_t), UINT8_MAX);
-	queue_init(&devvirt_block_q, sizeof(softirq_t), UINT8_MAX);
+	// init softirq
+	softirq_init();
+
+	// power
+	//power_set_mode(POWER_DEFAULT);
+
+	// ticker
+	ticker_init();
 
 	// fill tty data
 	tty_prepare();
@@ -97,15 +101,12 @@ int main(void)
 	chardev_add(NULL, NULL, NULL);
 
 	// uart0 early init
-	uart0_init(0, 1, 115200, tty0_inproc);
+	uart0_init(0, 1, 115200, tty1_inproc);
 	chardev_add(uart0_read, uart0_write, uart0_writable);
 	// fill console placeholder with uart0 methods
 	chardev_mod(0, uart0_read, uart0_write, uart0_writable);
-
-	// uart1 early init
-	uart1_init(4, 5, 115200, NULL);
-	// log on uart1
-	uart_stdio(1, true);
+	// log on uart0
+	uart_stdio(0, true);
 
 	// sanity check
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
@@ -125,7 +126,9 @@ int main(void)
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
+
 	// disable interrupts and run fuzix
+	stdio_printf("fuzix_main()\n");
 	di();
 	fuzix_main();
 }

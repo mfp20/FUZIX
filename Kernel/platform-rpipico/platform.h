@@ -7,14 +7,17 @@
 #include "rt.h"
 #include "rt_stdio.h"
 #include "rt_time.h"
-#include "rt_power.h"
 #include "rt_chardev.h"
 #include "rt_blockdev.h"
-#include "rt_virtdev.h"
-#include "rt_virtdev_core1.h"
-#include "rt_virtdev_uart.h"
-#include "rt_virtdev_usb.h"
+#include "rt_softirq.h"
+#include "rt_power.h"
+#include "rt_core1.h"
+#include "rt_uart.h"
+#include "rt_usb.h"
+#include "rt_flash.h"
 
-#include "fuzix_helpers.h"
+#include "rt_fuzix.h"
+
+#include "fuzix_rt.h"
 
 #endif

@@ -1,12 +1,13 @@
 #ifndef _SDK_FUZIX_DOT_H
 #define _SDK_FUZIX_DOT_H
 
-#include "rt.h"
+// softirq
+extern bool fuzix_ready;
 
 // tty
 extern void tty_prepare(void);
-extern void tty0_inproc(uint8_t c);
 extern void tty1_inproc(uint8_t c);
+extern void tty2_inproc(uint8_t c);
 
 // SPIs
 extern void devsd_spi_init(void);
