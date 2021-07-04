@@ -1,8 +1,7 @@
-#include "devvirt.h"
+#include "rt_log.h"
+#include "rt_virtdev.h"
 
 #include <stdlib.h>
-#include <kernel.h>
-#include <tty.h>
 
 pico_queue_t devvirt_signal_q;
 pico_queue_t devvirt_byte_q;
@@ -78,7 +77,7 @@ void devvirt_pop_signal(void) {
     } else {
         switch (*((uint8_t*)irq.data)) {
             case DEV_ID_TIMER:
-                timer_interrupt();
+                // TODO timer_interrupt();
             break;
             default:
                 // TODO error unknown irq
@@ -102,10 +101,7 @@ void devvirt_pop_byte(void) {
                 // TODO
             break;
             case DEV_ID_UART0:
-                //if (*((uint8_t*)irq.data+1) == OP_ID_READ)
-                //    tty_inproc(minor(BOOT_TTY), *((uint8_t*)irq.data+2));
-                //else  
-                //    ; // TODO uart write
+                // TODO
             break;
             case DEV_ID_UART1:
                 // TODO
@@ -209,6 +205,6 @@ void devvirt_flush(void) {
     // flush best effort queue
 	while (!queue_is_empty(&devvirt_block_q)) {
         devvirt_pop_block();
-        switchout();
+        // TODO switchout();
 	}
 }

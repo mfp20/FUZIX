@@ -32,6 +32,14 @@ usize_t valaddr(const uint8_t *base, usize_t size) {
 	return size;
 }
 
+// output for the system log (kprintf etc)
+void kputchar(uint_fast8_t c)
+{
+	if (c == '\n')
+		stdio_putchar('\r');
+	stdio_putchar(c);
+}
+
 void platform_copyright(void) {
 	kprintf("RP2040 platform Copyright (c) 2021 RPi Fundation, David Given, Anichang\n");
 }

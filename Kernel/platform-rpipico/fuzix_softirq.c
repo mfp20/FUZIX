@@ -1,5 +1,6 @@
 #include "platform.h"
 
+// signal fuzix is in 'ei'/'irqrestore', ie: core code can be used freely
 bool fuzix_ready = true;
 
 uint32_t di(void) {

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Pull in SDK (must be before project)
+# Pull in rt (must be before project)
 include(pico_sdk_import.cmake)
 
 project(fuzix C CXX ASM)
@@ -25,18 +25,19 @@ include_directories(
 )
 
 add_executable(fuzix
-	platform_log.c
-	platform_time.c
-	platform_chardev.c
-	platform_blockdev.c
-	platform_power.c
+	rt_log.c
+	rt_stdio.c
+	rt_power.c
+	rt_time.c
+	rt_chardev.c
+#	rt_blockdev.c
+	rt_virtdev.c
+	rt_virtdev_core1.c
+	rt_virtdev_uart.c
+	rt_virtdev_usb.c
+#	rt_virtdev_flash.c
+#	rt_virtdev_sd.c
 	platform_fs_dhara.c
-	devvirt.c
-	devvirt_core1.c
-	devvirt_uart.c
-	devvirt_usb.c
-#	devvirt_flash.c
-#	devvirt_sd.c
 	devflash.c
 	devsdspi.c
 	devices.c

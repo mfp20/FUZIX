@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "rt_time.h"
 
 uint32_t monotonic32(void) {
     return time_us_32();

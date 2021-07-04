@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "rt_blockdev.h"
 
 #include <stdlib.h>
 

@@ -1,4 +1,7 @@
-#include "platform.h"
+#include "rt_log.h"
+#include "rt_chardev.h"
+#include "rt_virtdev.h"
+#include "rt_virtdev_core1.h"
 
 static byte_tx_t rx_core1_cb = NULL;
 

@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "rt_power.h"
 
 #include <stdio.h>
 

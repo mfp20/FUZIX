@@ -1,8 +1,7 @@
-#ifndef _DEVVIRT_DOT_H
-#define _DEVVIRT_DOT_H
+#ifndef _SDK_VIRTDEV_DOT_H
+#define _SDK_VIRTDEV_DOT_H
 
-#include "platform_sdk.h"
-#include "config.h"
+#include "rt.h"
 
 #define IRQ_ID_SIGNAL 0
 #define IRQ_ID_BYTE 1
@@ -43,6 +42,8 @@ typedef struct iop_s {
     uint32_t count;
     bool free;
 } iop_t;
+
+extern bool fuzix_ready;
 
 extern pico_queue_t devvirt_signal_q;
 extern pico_queue_t devvirt_byte_q;
