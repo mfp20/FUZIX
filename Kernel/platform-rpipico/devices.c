@@ -37,15 +37,26 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+	// power level
+	//power_set_mode(POWER_DEFAULT);
+
+	// time
+	ticker_init();
+
 	// usb
 	usb_init();
 
-	// flash device is mounted first as root device.
+	// flash device is mounted first and will be the fallback root device in the case
+	// no SD and no USB external filesystems are found.
 	virtual_flash_init();
 
 	// SD, if any
 	devsd_spi_init();
 	devsd_init();
+	//virtual_sd_init();
+
+	// USB, if any
+	// virtual_usb_fs_init();
 
 	// led on, signal hw init complete
 	gpio_init(PICO_DEFAULT_LED_PIN);

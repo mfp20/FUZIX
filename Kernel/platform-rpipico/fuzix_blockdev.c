@@ -16,19 +16,15 @@ static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req) {
 	}
 
 	// wait for response
-	while (1) {
-		if (queue_try_peek(&softirq_in_q, &irq)) {
-			if (irq.dev == dev) {
-				queue_remove_blocking(&softirq_in_q, &irq);
-				return irq.sig;
-			}
-		}
+	while (!flash_irq_done) {
 		// handle cpu to other processes while waiting
+		//stdio_printf("waiting for flash\n");
 		switchout();
 	}
+    //stdio_printf("FLASH ok\n");
+	flash_irq_done = false;
 
-	// never gets here
-	return 0; // fail
+	return 1; // success
 }
 
 static uint_fast8_t blockdev_flash_signal(uint8_t req) {

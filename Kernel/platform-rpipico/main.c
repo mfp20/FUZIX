@@ -88,15 +88,8 @@ int main(void)
 	// init softirq
 	softirq_init();
 
-	// power
-	//power_set_mode(POWER_DEFAULT);
-
-	// ticker
-	ticker_init();
-
 	// fill tty data
 	tty_prepare();
-
 	// placeholder for console chardev
 	chardev_add(NULL, NULL, NULL);
 
@@ -107,6 +100,8 @@ int main(void)
 	chardev_mod(0, uart0_read, uart0_write, uart0_writable);
 	// log on uart0
 	uart_stdio(0, true);
+
+	INFO("* Realtime backend ready");
 
 	// sanity check
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
@@ -126,9 +121,8 @@ int main(void)
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
-
 	// disable interrupts and run fuzix
-	stdio_printf("fuzix_main()\n");
+	INFO("* fuzix_main()\n");
 	di();
 	fuzix_main();
 }

@@ -1,6 +1,8 @@
 #include "config.h"
 #include "rt_log.h"
 #include "rt_softirq.h"
+#include "rt_chardev.h"
+#include "rt_blockdev.h"
 #include "rt_core1.h"
 #include "rt_uart.h"
 #include "rt_usb.h"
@@ -34,9 +36,10 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
         queue_remove_blocking(&softirq_in_q, &irq);
         switch (irq.dev) {
             case DEV_ID_TIMER:
-                // no input
+                INFO("softirq_timer_handler TIMER sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_CORE1:
+                INFO("softirq_timer_handler CORE1 sig %d count %d", irq.sig, irq.count);
                 if (irq.count) {
                     // TODO
                 }
@@ -48,6 +51,7 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_UART0:
+                INFO("softirq_timer_handler UART0 sig %d count %d", irq.sig, irq.count);
                 if (irq.count) {
                     // TODO
                 }
@@ -59,6 +63,7 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_UART1:
+                INFO("softirq_timer_handler UART1 sig %d count %d", irq.sig, irq.count);
                 if (irq.count) {
                     // TODO
                 }
@@ -78,6 +83,29 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
             case DEV_ID_SPI1:
             break;
             case DEV_ID_FLASH:
+                if (irq.sig == SIG_ID_TRANSFER_REQ) {
+                	//stdio_printf("\nFLASH TRANSFER\n");
+                    uint_fast8_t res = blockdev[blockdev_id_flash].transfer();
+                    softirq_t irq;
+                    mk_softirq(&irq, DEV_ID_FLASH, res, 0, NULL);
+                    // queue softirq
+                    if (!queue_try_add(&softirq_out_q, &irq))
+                    {
+                        // TODO queue full error -> lag -> data lost
+                    }
+                }
+                else if (irq.sig == SIG_ID_TRIM_REQ)
+                {
+                	//stdio_printf("\nFLASH TRIM\n");
+                    int res = blockdev[blockdev_id_flash].trim();
+                    softirq_t irq;
+                    mk_softirq(&irq, DEV_ID_FLASH, res, 0, NULL);
+                    // queue softirq
+                    if (!queue_try_add(&softirq_out_q, &irq))
+                    {
+                        // TODO queue full error -> lag -> data lost
+                    }
+                }
             break;
             case DEV_ID_SD:
             break;

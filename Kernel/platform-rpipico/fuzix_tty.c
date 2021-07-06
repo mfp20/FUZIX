@@ -72,7 +72,7 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-    //kprintf("tty_putc minor: %d\n", minor);
+    kprintf("tty_putc minor: %d\n", minor);
     if (chardev[minor - 1].tx)
     {
         if (c == '\n')

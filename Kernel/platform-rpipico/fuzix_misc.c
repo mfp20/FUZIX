@@ -43,7 +43,7 @@ void kputchar(uint_fast8_t c)
 }
 
 void platform_copyright(void) {
-	kprintf("RP2040 platform Copyright (c) 2021 RPi Fundation, David Given, Anichang\n");
+	kprintf("RP2040 platform Copyright (c) 2021 Raspberry Pi Fundation, David Given, Anichang\n");
 }
 
 uint_fast8_t platform_param(char* p) {

@@ -10,6 +10,7 @@ set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
 
+# TODO need to fix the log in order to be pure macro
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         add_definitions(-DBUILD_DEBUG)
 else()

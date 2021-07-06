@@ -381,17 +381,8 @@ void usb_cdc_stdio(uint8_t id, bool stdio)
 	stdio_set_driver_enabled(&stdio_usb_cdc_driver[id], stdio);
 	if (stdio)
 	{
+		if (LOG_COLOR) log_test_color();
 		LOG_INF("stdio on USB CDC %d", id);
-		LOG_EME("emergency log entry");
-		LOG_ALE("alert log entry");
-		LOG_CRI("critical log entry");
-		LOG_ERR("error log entry");
-		LOG_WAR("warning log entry");
-		LOG_NOT("notice log entry");
-		LOG_INF("info log entry");
-		LOG_DEB("debug log entry");
-		unsigned char data[20] = {32, 1, 24, 56, 102, 5, 78, 92, 200, 0, 32, 1, 24, 56, 102, 5, 78, 92, 200, 0};
-		LOG_HEX(data, 20, "hex %s", "log entry");
 	}
 	else
 	{

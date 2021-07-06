@@ -48,7 +48,12 @@
 // Use soft irqs, ie: hard irqs are managed by underlying RT env
 #define CONFIG_SOFT_IRQ
 
-// serial terminal conf
+// log config
+#ifdef BUILD_DEBUG
+#define LOG_LEVEL (7)
+#else
+#define LOG_LEVEL (6)
+#endif
 #define LOG_COLOR (1)
 
 // Serial TTY, no VT or font

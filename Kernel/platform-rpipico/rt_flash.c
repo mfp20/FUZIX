@@ -12,6 +12,7 @@
 #include <string.h>
 
 uint8_t blockdev_id_flash = 0;
+bool flash_irq_done = false;
 
 static critical_section_t flash_critical;
 static const struct dhara_nand nand = {

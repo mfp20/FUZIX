@@ -4,6 +4,7 @@
 #include "rt.h"
 
 extern uint8_t blockdev_id_flash;
+extern bool flash_irq_done;
 
 uint32_t flash_init(void *blk_op);
 
