@@ -3,23 +3,24 @@
 
 #include "rt.h"
 
-#define DEV_ID_TIMER 0
-#define DEV_ID_CORE1 1
-#define DEV_ID_UART0 2
-#define DEV_ID_UART1 3
-#define DEV_ID_I2C0 4
-#define DEV_ID_I2C1 5
-#define DEV_ID_SPI0 6
-#define DEV_ID_SPI1 7
-#define DEV_ID_FLASH 8
-#define DEV_ID_SD 9
-#define DEV_ID_USB_CDC0 10
-#define DEV_ID_USB_CDC1 11
-#define DEV_ID_USB_CDC2 12
-#define DEV_ID_USB_CDC3 13
-#define DEV_ID_USB_VEND0 14
-#define DEV_ID_USB_VEND1 15
-#define DEV_ID_USB_VEND2 16
+#define DEV_ID_STDIO 0
+#define DEV_ID_TIMER 1
+#define DEV_ID_CORE1 2
+#define DEV_ID_UART0 3
+#define DEV_ID_UART1 4
+#define DEV_ID_I2C0 5
+#define DEV_ID_I2C1 6
+#define DEV_ID_SPI0 7
+#define DEV_ID_SPI1 8
+#define DEV_ID_FLASH 9
+#define DEV_ID_SD 10
+#define DEV_ID_USB_CDC0 11
+#define DEV_ID_USB_CDC1 12
+#define DEV_ID_USB_CDC2 13
+#define DEV_ID_USB_CDC3 14
+#define DEV_ID_USB_VEND0 15
+#define DEV_ID_USB_VEND1 16
+#define DEV_ID_USB_VEND2 17
 
 #define SIG_ID_TICK 0
 #define SIG_ID_RX 1
@@ -33,7 +34,7 @@ typedef struct softirq_s {
     uint8_t dev;
     uint8_t sig;
 	uint32_t count;
-	void *data;
+	uint8_t *data;
 } softirq_t;
 
 extern pico_queue_t softirq_in_q;

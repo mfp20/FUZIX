@@ -59,7 +59,7 @@ int tty_carrier(uint_fast8_t minor)
 // called at the end of tty_read()
 void tty_data_consumed(uint_fast8_t minor)
 {
-    kprintf("tty_data_consumed minor: %d\n", minor);
+    //kprintf("tty_data_consumed minor: %d\n", minor);
 }
 
 ttyready_t tty_writeready(uint_fast8_t minor)
@@ -72,7 +72,7 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-    kprintf("tty_putc minor: %d\n", minor);
+    //kprintf("tty_putc minor: %d\n", minor);
     if (chardev[minor - 1].tx)
     {
         if (c == '\n')

@@ -1,17 +1,18 @@
 #include "rt_stdio.h"
 #include "rt_log.h"
+#include "rt_softirq.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 
 void stdio_putchar(uint8_t c) {
-	putchar(c);
+    putchar(c);
 }
 
 void stdio_printf(const char *fmt, ...) {
     va_list arglist;
     va_start( arglist, fmt );
-    vprintf( fmt, arglist );
+    vprintf(fmt, arglist);
     va_end( arglist );
 }
 

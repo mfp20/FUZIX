@@ -31,10 +31,13 @@ void clear_softirq(softirq_t *irq) {
 
 static bool softirq_timer_handler(repeating_timer_t *rt)
 {
+    //NOTICE("softirq_timer_handler");
 	while (!queue_is_empty(&softirq_in_q)) {
         softirq_t irq;
         queue_remove_blocking(&softirq_in_q, &irq);
         switch (irq.dev) {
+            case DEV_ID_STDIO:
+            break;
             case DEV_ID_TIMER:
                 INFO("softirq_timer_handler TIMER sig %d count %d", irq.sig, irq.count);
             break;
@@ -75,14 +78,19 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_I2C0:
+                INFO("softirq_timer_handler I2C0 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_I2C1:
+                INFO("softirq_timer_handler I2C1 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_SPI0:
+                INFO("softirq_timer_handler SPI0 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_SPI1:
+                INFO("softirq_timer_handler SPI1 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_FLASH:
+                //INFO("softirq_timer_handler FLASH sig %d count %d", irq.sig, irq.count);
                 if (irq.sig == SIG_ID_TRANSFER_REQ) {
                 	//stdio_printf("\nFLASH TRANSFER\n");
                     uint_fast8_t res = blockdev[blockdev_id_flash].transfer();
@@ -108,8 +116,10 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_SD:
+                INFO("softirq_timer_handler SD sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_USB_CDC0:
+                INFO("softirq_timer_handler CDC0 sig %d count %d", irq.sig, irq.count);
                 if (irq.count) {
                     // TODO
                 }
@@ -121,6 +131,7 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_USB_CDC1:
+                INFO("softirq_timer_handler CDC1 sig %d count %d", irq.sig, irq.count);
                 if (irq.count) {
                     // TODO
                 }
@@ -132,17 +143,22 @@ static bool softirq_timer_handler(repeating_timer_t *rt)
                 }
             break;
             case DEV_ID_USB_CDC2:
+                INFO("softirq_timer_handler CDC2 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_USB_CDC3:
+                INFO("softirq_timer_handler CDC3 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_USB_VEND0:
+                INFO("softirq_timer_handler VEND0 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_USB_VEND1:
+                INFO("softirq_timer_handler VEND1 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_USB_VEND2:
+                INFO("softirq_timer_handler VEND2 sig %d count %d", irq.sig, irq.count);
             break;
             default:
-                // TODO error unknown irq
+                ERR("softirq_timer_handler unknown irq sig %d count %d", irq.sig, irq.count);
             break;
         }
         clear_softirq(&irq);

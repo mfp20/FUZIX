@@ -5,7 +5,7 @@
 #include <kernel.h>
 #include <blkdev.h>
 
-// virtual devices softirq dispatchers
+// virtual devices softirq dispatcher
 extern void fuzix_softirq(void);
 
 // ticker

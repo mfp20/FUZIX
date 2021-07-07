@@ -4,10 +4,14 @@
 bool fuzix_ready = true;
 
 void fuzix_softirq(void) {
+    //NOTICE("fuzix_softirq");
 	while (!queue_is_empty(&softirq_out_q)) {
         softirq_t irq;
         queue_remove_blocking(&softirq_out_q, &irq);
         switch (irq.dev) {
+            case DEV_ID_STDIO:
+                INFO("fuzix_softirq STDIO sig %d count %d", irq.sig, irq.count);
+            break;
             case DEV_ID_TIMER:
                 timer_interrupt();
             break;

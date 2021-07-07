@@ -23,7 +23,6 @@ extern void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
 extern void stdio_putchar(uint8_t c);
 extern void stdio_printf(const char *fmt, ...);
 
-void pippo(uint8_t level, const char *fmt, ...);
 extern void stdio_log(uint8_t level, const char *fmt, ...);
 
 #define EMERG(fmt, ...) stdio_log(LEVEL_EMERG, fmt, ##__VA_ARGS__)

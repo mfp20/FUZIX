@@ -19,7 +19,8 @@ static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req) {
 	while (!flash_irq_done) {
 		// handle cpu to other processes while waiting
 		//stdio_printf("waiting for flash\n");
-		switchout();
+		//switchout();
+		fuzix_softirq();
 	}
     //stdio_printf("FLASH ok\n");
 	flash_irq_done = false;

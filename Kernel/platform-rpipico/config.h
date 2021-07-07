@@ -61,7 +61,7 @@
 #undef CONFIG_FONT8X8
 #define NUM_DEV_TTY 2
 #define BOOT_TTY (512 + 1)  // the device you will use as your 'console' at boot time (513 is the first tty, 514 the second, etc)
-#define TTYDEV   (512 + 2)  // device init will use as input/output (usually BOOT_TTY)
+#define TTYDEV   (512 + 1)  // device init will use as input/output (usually BOOT_TTY)
 
 // Program layout
 #define UDATA_BLKS  3
