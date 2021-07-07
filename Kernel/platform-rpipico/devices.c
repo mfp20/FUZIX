@@ -41,22 +41,16 @@ void device_init(void)
 	//power_set_mode(POWER_DEFAULT);
 
 	// time
-	ticker_init();
+	virtual_ticker_init();
 
-	// usb
+	// usb, CDCs and external fs, if any
 	usb_init();
 
-	// flash device is mounted first and will be the fallback root device in the case
-	// no SD and no USB external filesystems are found.
-	virtual_flash_init();
-
 	// SD, if any
-	devsd_spi_init();
-	devsd_init();
-	//virtual_sd_init();
+	virtual_sd_init();
 
-	// USB, if any
-	// virtual_usb_fs_init();
+	// flash device is mounted last, it is the fallback root device
+	virtual_flash_init();
 
 	// led on, signal hw init complete
 	gpio_init(PICO_DEFAULT_LED_PIN);

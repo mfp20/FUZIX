@@ -29,6 +29,6 @@ static bool systick_timer_handler(repeating_timer_t *rt)
 	return true;
 }
 
-void ticker_init(void) {
+void virtual_ticker_init(void) {
 	add_repeating_timer_us((1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
 }

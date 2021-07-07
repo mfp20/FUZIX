@@ -87,8 +87,7 @@ tusb_desc_device_t const desc_device = {
 	.iManufacturer = USBD_STR_MANUF,
 	.iProduct = USBD_STR_PRODUCT,
 	.iSerialNumber = USBD_STR_SERIAL,
-	.bNumConfigurations = 0x01
-};
+	.bNumConfigurations = 0x01};
 
 // Invoked when received GET DEVICE DESCRIPTOR
 // Application return pointer to descriptor
@@ -376,17 +375,19 @@ static stdio_driver_t stdio_usb_cdc_driver[6] = {
 	 .in_chars = stdio_usb_cdc5_in_chars,
 	 .crlf_enabled = true}};
 
-void usb_cdc_stdio(uint8_t id, bool stdio)
+void usb_cdc_stdio(uint8_t id, bool stdio, bool test)
 {
 	stdio_set_driver_enabled(&stdio_usb_cdc_driver[id], stdio);
 	if (stdio)
 	{
-		if (LOG_COLOR) log_test_color();
-		LOG_INF("stdio on USB CDC %d", id);
+		if (test&&(LOG_COLOR)) {
+			log_test_color();
+			INFO("stdio on USB CDC %d", id);
+		}
 	}
 	else
 	{
-		LOG_INF("USB CDC %d free'd from stdio", id);
+		INFO("USB CDC %d free'd from stdio", id);
 	}
 }
 
@@ -394,65 +395,121 @@ void usb_cdc_stdio(uint8_t id, bool stdio)
 // sdk drivers
 //--------------------------------------------------------------------+
 
-uint8_t usb_cdc0_read(void)
+static uint8_t usb_cdc_read(uint8_t cdc)
 {
-	if (tud_cdc_n_connected(0))
+	if (tud_cdc_n_connected(cdc))
 	{
-		if (tud_cdc_n_available(0) > 0)
-			return (uint8_t)tud_cdc_n_read_char(0);
+		if (tud_cdc_n_available(cdc) > 0)
+			return (uint8_t)tud_cdc_n_read_char(cdc);
+		else
+			; // TODO warning buffer full
+	}
+	else
+	{
+		// TODO warning cdc not connected
 	}
 	return 0;
+}
+
+static void usb_cdc_write(uint8_t cdc, uint8_t b)
+{
+	if (tud_cdc_n_connected(cdc))
+	{
+		if (tud_cdc_n_write_available(cdc) > 0) {
+			tud_cdc_n_write_char(cdc, b);
+			tud_cdc_n_write_flush(cdc);
+		}
+		else
+		{
+			// TODO error buffer full
+			stdio_printf("warning cdc%d error buffer full\n", cdc);
+		}
+	}
+	else
+	{
+		// TODO warning cdc not connected
+		stdio_printf("warning cdc%d not connected\n", cdc);
+	}
+}
+
+static bool usb_cdc_writable(uint8_t cdc)
+{
+	if (tud_cdc_n_connected(cdc))
+	{
+		return (tud_cdc_n_write_available(cdc) > 0);
+	}
+	return false;
+}
+
+uint8_t usb_cdc0_read(void)
+{
+	return usb_cdc_read(0);
 }
 
 void usb_cdc0_write(uint8_t b)
 {
-	if (tud_cdc_n_connected(0))
-	{
-		if (tud_cdc_n_write_available(0) > 0)
-			tud_cdc_n_write_char(0, b);
-	}
+	usb_cdc_write(0, b);
 }
 
 bool usb_cdc0_writable(void)
 {
-	if (tud_cdc_n_connected(0))
-	{
-		return (tud_cdc_n_write_available(0) > 0);
-	}
-	return false;
+	return usb_cdc_writable(0);
 }
 
 uint8_t usb_cdc1_read(void)
 {
-	if (tud_cdc_n_connected(1))
-	{
-		if (tud_cdc_n_available(1) > 0)
-			return (uint8_t)tud_cdc_n_read_char(1);
-	}
-	return 0;
+	return usb_cdc_read(1);
 }
 
 void usb_cdc1_write(uint8_t b)
 {
-	if (tud_cdc_n_connected(1))
-	{
-		if (tud_cdc_n_write_available(1) > 0)
-			tud_cdc_n_write_char(1, b);
-	}
+	usb_cdc_write(1, b);
 }
 
 bool usb_cdc1_writable(void)
 {
-	if (tud_cdc_n_connected(1))
-	{
-		return (tud_cdc_n_write_available(1) > 0);
-	}
-	return false;
+	return usb_cdc_writable(1);
+}
+
+uint8_t usb_cdc2_read(void)
+{
+	return usb_cdc_read(2);
+}
+
+void usb_cdc2_write(uint8_t b)
+{
+	usb_cdc_write(2, b);
+}
+
+bool usb_cdc2_writable(void)
+{
+	return usb_cdc_writable(2);
+}
+
+uint8_t usb_cdc3_read(void)
+{
+	return usb_cdc_read(3);
+}
+
+void usb_cdc3_write(uint8_t b)
+{
+	usb_cdc_write(3, b);
+}
+
+bool usb_cdc3_writable(void)
+{
+	return usb_cdc_writable(3);
 }
 
 //--------------------------------------------------------------------+
 // tinyusb callbacks
 //--------------------------------------------------------------------+
+
+// callbacks for received data
+static byte_tx_t cdc0_cb = NULL;
+static byte_tx_t cdc1_cb = NULL;
+static byte_tx_t cdc2_cb = NULL;
+static byte_tx_t cdc3_cb = NULL;
 
 // CDC: Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf)
@@ -462,21 +519,37 @@ void tud_cdc_rx_cb(uint8_t itf)
 	{
 		uint8_t b = usb_cdc0_read();
 		// route char
-		if (fuzix_ready && queue_is_empty(&softirq_out_q))
+		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc0_cb)
 		{
-			tty2_inproc(b);
+			stdio_printf("tud_cdc_rx_cb TODO direct route\n");
+			cdc0_cb(b);
 		}
 		else
 		{
 			// evelope cdc0 byte for softirq
 			softirq_t irq;
-			mk_softirq(&irq, DEV_ID_USB_CDC0, b, 0, NULL);
+			mk_softirq(&irq, DEV_ID_TTY1, b, 0, NULL);
 			// queue softirq
-			if (!queue_try_add(&softirq_out_q, &irq))
-			{
-				// TODO queue full error -> lag -> data lost
-			}
+			while (!queue_try_add(&softirq_out_q, &irq)) ; // TODO queue full error -> lag -> data lost
 		}
+	}
+	else if (itf == 1)
+	{
+		uint8_t b = usb_cdc1_read();
+		if (cdc1_cb)
+			cdc1_cb(b);
+	}
+	else if (itf == 2)
+	{
+		uint8_t b = usb_cdc2_read();
+		if (cdc2_cb)
+			cdc2_cb(b);
+	}
+	else if (itf == 3)
+	{
+		uint8_t b = usb_cdc3_read();
+		if (cdc3_cb)
+			cdc3_cb(b);
 	}
 }
 
@@ -491,23 +564,33 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
 	if (dtr)
 	{ // on connect
+		if (itf == 0)
+		{
+		}
 		if (itf == 1)
 		{
-			//usb_cdc_stdio(1, true);
-			//uart_stdio(1, false);
+			// add kputchar to cdc1
+			usb_cdc_stdio(1, true, false);
+			// remove kputchar from uart0
+			uart_stdio(0, false, false);
 		}
 	}
 	else
 	{ // on disconnect
+		if (itf == 0)
+		{
+		}
 		if (itf == 1)
 		{
-			//uart_stdio(1, true);
-			//usb_cdc_stdio(1, false);
+			// remove kputchar from cdc1
+			usb_cdc_stdio(1, false, false);
+			// restore kputchar to uart0
+			uart_stdio(0, true, false);
 		}
 	}
 
 	//
-	//printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
+	printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
 }
 
 // CDC: Invoked when line coding is changed via SET_LINE_CODING
@@ -541,10 +624,10 @@ void usb_init(void)
 	add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
 
 	// register chardevs
-	chardev_add(usb_cdc0_read, usb_cdc0_write, usb_cdc0_writable);
-	chardev_add(usb_cdc1_read, usb_cdc1_write, usb_cdc1_writable);
-	//chardev_add(usb_cdc2_read, usb_cdc2_write, usb_cdc2_writable);
-	//chardev_add(usb_cdc3_read, usb_cdc3_write, usb_cdc3_writable);
+	virtual_tty2_init();
+	virtual_tty3_init();
+	virtual_tty4_init();
 
 	// register blockdevs
+	virtual_usb_fs_init();
 }

@@ -82,24 +82,17 @@ void syscall_handler(struct svc_frame *eh)
 
 int main(void)
 {
-	// init pico stdio
-	stdio_init_all();
+	// stdio early init
+	virtual_stdio_init();
 
 	// init softirq
 	softirq_init();
 
-	// fill tty data
+	// fill TTYs default data
 	tty_prepare();
-	// placeholder for console chardev
-	chardev_add(NULL, NULL, NULL);
 
-	// uart0 early init
-	uart0_init(0, 1, 115200, tty1_inproc);
-	chardev_add(uart0_read, uart0_write, uart0_writable);
-	// fill console placeholder with uart0 methods
-	chardev_mod(0, uart0_read, uart0_write, uart0_writable);
-	// log on uart0
-	uart_stdio(0, true);
+	// tty1 early init
+	virtual_tty1_init();
 
 	INFO("* Realtime backend ready");
 

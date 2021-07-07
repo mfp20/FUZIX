@@ -14,17 +14,15 @@
 #define LEVEL_INFO (6)
 #define LEVEL_DEBUG (7)
 
-// log
-extern void log_set_level(uint8_t level);
-extern void log_test_color(void);
-extern void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
-
 // stdio helpers
 extern void stdio_putchar(uint8_t c);
 extern void stdio_printf(const char *fmt, ...);
-
 extern void stdio_log(uint8_t level, const char *fmt, ...);
 
+// log helpers
+extern void log_set_level(uint8_t level);
+extern void log_test_color(void);
+extern void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
 #define EMERG(fmt, ...) stdio_log(LEVEL_EMERG, fmt, ##__VA_ARGS__)
 #define ALERT(fmt, ...) stdio_log(LEVEL_ALERT, fmt, ##__VA_ARGS__)
 #define CRIT(fmt, ...) stdio_log(LEVEL_CRIT, fmt, ##__VA_ARGS__)

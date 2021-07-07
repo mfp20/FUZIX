@@ -38,17 +38,19 @@ static stdio_driver_t stdio_uart_driver[2] = {
 	 .in_chars = stdio_uart1_in_chars,
 	 .crlf_enabled = true}};
 
-void uart_stdio(uint8_t id, bool stdio)
+void uart_stdio(uint8_t id, bool stdio, bool test)
 {
 	stdio_set_driver_enabled(&stdio_uart_driver[id], stdio);
 	if (stdio)
 	{
-		if (LOG_COLOR) log_test_color();
-		LOG_INF("stdio on UART%d", id);
+		if (test&&(LOG_COLOR)) {
+			log_test_color();
+			INFO("stdio on UART%d", id);
+		}
 	}
 	else
 	{
-		LOG_INF("UART%d free'd from stdio", id);
+		INFO("UART%d free'd from stdio", id);
 	}
 }
 
@@ -56,12 +58,48 @@ void uart_stdio(uint8_t id, bool stdio)
 // fuzix drivers
 //--------------------------------------------------------------------+
 
+// uart0
+uint8_t uart0_read(void)
+{
+	return uart_getc(uart0);
+}
+
+void uart0_write(uint8_t b)
+{
+	uart_putc(uart0, b);
+}
+
+bool uart0_writable(void)
+{
+	return uart_is_writable(uart0);
+}
+
+// uart1
+uint8_t uart1_read(void)
+{
+	return uart_getc(uart1);
+}
+
+void uart1_write(uint8_t b)
+{
+	uart_putc(uart1, b);
+}
+
+bool uart1_writable(void)
+{
+	return uart_is_writable(uart1);
+}
+
+//--------------------------------------------------------------------+
+// init and isr
+//--------------------------------------------------------------------+
+
 // isr code
 static void on_rx_isr(uint8_t uart_id)
 {
 	uint8_t dev_id;
 	uint8_t b;
-	byte_tx_t cb;
+	byte_tx_t cb = NULL;
 
 	// select uart
 	if (uart_id)
@@ -80,18 +118,17 @@ static void on_rx_isr(uint8_t uart_id)
 	// route char
 	if (fuzix_ready && queue_is_empty(&softirq_out_q) && cb)
 	{
+		stdio_printf("on_rx_isr direct input TODO\n");
 		cb(b);
 	}
 	else
 	{
+		//stdio_printf("on_rx_isr queued\n");
         // evelope uart byte for softirq
         softirq_t irq;
         mk_softirq(&irq, dev_id, b, 0, NULL);
 		// queue softirq
-		if (!queue_try_add(&softirq_out_q, &irq))
-		{
-			// TODO queue full error -> lag -> data lost
-		}
+		while (!queue_try_add(&softirq_out_q, &irq)) ; // TODO queue full error -> lag -> data lost
 	}
 }
 static void on_rx_isr_uart0(void)
@@ -101,22 +138,6 @@ static void on_rx_isr_uart0(void)
 static void on_rx_isr_uart1(void)
 {
 	on_rx_isr(1);
-}
-
-// uart0
-uint8_t uart0_read(void)
-{
-	return uart_getc(uart0);
-}
-
-void uart0_write(uint8_t b)
-{
-	uart_putc(uart0, b);
-}
-
-bool uart0_writable(void)
-{
-	return uart_is_writable(uart0);
 }
 
 void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb)
@@ -139,20 +160,8 @@ void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_
 	rx0_cb = rx_cb;
 }
 
-// uart1
-uint8_t uart1_read(void)
-{
-	return uart_getc(uart1);
-}
-
-void uart1_write(uint8_t b)
-{
-	uart_putc(uart1, b);
-}
-
-bool uart1_writable(void)
-{
-	return uart_is_writable(uart1);
+void uart0_set_cb(byte_tx_t rx_cb) {
+	rx0_cb = rx_cb;
 }
 
 void uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb)
@@ -172,6 +181,10 @@ void uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_
 	uart_set_irq_enables(uart1, true, false);
 
 	//
+	rx1_cb = rx_cb;
+}
+
+void uart1_set_cb(byte_tx_t rx_cb) {
 	rx1_cb = rx_cb;
 }
 

@@ -3,16 +3,23 @@
 
 // softirq
 extern bool fuzix_ready;
+extern void fuzix_softirq(void);
 
-// tty
+// ticker
+extern void virtual_ticker_init(void);
+
+// chardev
+extern uint8_t tty_cd[5];
 extern void tty_prepare(void);
-extern void tty1_inproc(uint8_t c);
-extern void tty2_inproc(uint8_t c);
+extern void virtual_stdio_init(void);
+extern void virtual_tty1_init(void);
+extern void virtual_tty2_init(void);
+extern void virtual_tty3_init(void);
+extern void virtual_tty4_init(void);
 
-// SPIs
-extern void devsd_spi_init(void);
-
-// flash
-extern void devflash_init(void);
+// blockdev
+extern void virtual_flash_init(void);
+extern void virtual_sd_init(void);
+extern void virtual_usb_fs_init(void);
 
 #endif

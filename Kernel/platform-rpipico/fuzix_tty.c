@@ -1,18 +1,14 @@
 #include "platform.h"
 
-#include <kernel.h>
 #include <kdata.h>
-#include <printf.h>
 #include <vt.h>
-#include <tty.h>
-
-extern chardev_t *chardev;
-extern uint8_t chardev_no;
 
 // fuzix ttys, note: ttyinq[0] is never used
 struct s_queue ttyinq[NUM_DEV_TTY + 1];
 tcflag_t termios_mask[NUM_DEV_TTY + 1];
 uint8_t buf[NUM_DEV_TTY][TTYSIZ];
+
+uint8_t tty_cd[5] = {0, 0, 1, 2, 3};
 
 // setup ttys
 void tty_prepare(void)
@@ -27,26 +23,16 @@ void tty_prepare(void)
     }
 }
 
-void tty1_inproc(uint8_t c)
-{
-    tty_inproc(minor((512 + 1)), c);
-}
-
-void tty2_inproc(uint8_t c)
-{
-    tty_inproc(minor((512 + 2)), c);
-}
-
 // called on tty_open() and ioctl
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
-    //kprintf("tty_setup minor: %d\n", minor);
+    //kprintf("tty%d setup\n", minor);
 }
 
 // return 1 if connected
 int tty_carrier(uint_fast8_t minor)
 {
-    kprintf("tty_carrier minor: %d\n", minor);
+    kprintf("tty%d carrier\n", minor);
     // tty0 is always connected so that
     // it is easier to connect 2-pins uart
     if (minor == 1)
@@ -59,25 +45,25 @@ int tty_carrier(uint_fast8_t minor)
 // called at the end of tty_read()
 void tty_data_consumed(uint_fast8_t minor)
 {
-    //kprintf("tty_data_consumed minor: %d\n", minor);
+    //kprintf("tty%d data_consumed\n", minor);
 }
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-    //kprintf("tty_writeready minor: %d\n", minor);
-    if (chardev[minor - 1].ready)
-        return chardev[minor - 1].ready() ? TTY_READY_NOW : TTY_READY_SOON;
+    //kprintf("tty%d writeready\n", minor);
+    if (chardev[tty_cd[minor]].ready)
+        return chardev[tty_cd[minor]].ready() ? TTY_READY_NOW : TTY_READY_SOON;
     return TTY_READY_LATER;
 }
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-    //kprintf("tty_putc minor: %d\n", minor);
-    if (chardev[minor - 1].tx)
+    //kprintf("tty%d putc '%c' in chardev[%d]\n", minor, c, tty_cd[minor]);
+    if (chardev[tty_cd[minor]].tx)
     {
         if (c == '\n')
             chardev[minor - 1].tx('\r');
-        chardev[minor - 1].tx(c);
+        chardev[tty_cd[minor]].tx(c);
     }
 }
 

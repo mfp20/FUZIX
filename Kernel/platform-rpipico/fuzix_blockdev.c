@@ -3,7 +3,7 @@
 #include <kernel.h>
 #include <blkdev.h>
 
-static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req) {
+static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
 	// evelope blockdev reqeust for softirq
 	softirq_t irq;
 	mk_softirq(&irq, dev, req, 0, NULL);
@@ -16,28 +16,24 @@ static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req) {
 	}
 
 	// wait for response
-	while (!flash_irq_done) {
-		// handle cpu to other processes while waiting
-		//stdio_printf("waiting for flash\n");
-		//switchout();
+	while (!(*flag)) {
 		fuzix_softirq();
 	}
-    //stdio_printf("FLASH ok\n");
-	flash_irq_done = false;
+	*flag = false;
 
 	return 1; // success
 }
 
 static uint_fast8_t blockdev_flash_signal(uint8_t req) {
-	return blockdev_signal( DEV_ID_FLASH, req);
+	return blockdev_signal( DEV_ID_FLASH, req, &flash_irq_done);
 }
 
 static uint_fast8_t blockdev_sd_signal(uint8_t req) {
-	blockdev_signal( DEV_ID_SD, req);
+	blockdev_signal( DEV_ID_SD, req, &sd_irq_done);
 }
 
 static uint_fast8_t blockdev_usb_signal(uint8_t req) {
-	blockdev_signal( DEV_ID_USB_VEND0, req);
+	//blockdev_signal( DEV_ID_USB_VEND0, req, &usb_irq_done);
 }
 
 static uint_fast8_t virtual_flash_transfer(void) {
@@ -92,13 +88,13 @@ void virtual_flash_init(void) {
 
 void virtual_sd_init(void) {
 	// init real device
-	// TODO uint32_t lba = sd_init(&blk_op);
+	uint32_t lba = sd_init(&blk_op);
 
 	// init virtual device
 	//blkdev_add(virtual_sd_transfer, NULL, virtual_sd_trim, lba);
 }
 
-void virtual_usb_init(void) {
+void virtual_usb_fs_init(void) {
 	// init real device
 	// TODO uint32_t lba = usb_init(&blk_op);
 

@@ -26,6 +26,10 @@ typedef struct blockdev_s
 
 extern blockdev_t *blockdev;
 
+extern bool flash_irq_done;
+extern bool sd_irq_done;
+extern bool usb_irq_done;
+
 uint8_t blockdev_add(uint_fast8_t (*transfer)(void), int (*flush)(void), int (*trim)(void), uint32_t lba, void *op);
 
 #endif

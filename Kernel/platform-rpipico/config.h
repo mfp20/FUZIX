@@ -36,7 +36,7 @@
 
 // Enable SD card code.
 #define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+#define SD_DRIVE_COUNT 0
 
 // Enable dynamic swap.
 #define CONFIG_PLATFORM_SWAPCTL
@@ -59,7 +59,7 @@
 // Serial TTY, no VT or font
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
-#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY 4
 #define BOOT_TTY (512 + 1)  // the device you will use as your 'console' at boot time (513 is the first tty, 514 the second, etc)
 #define TTYDEV   (512 + 1)  // device init will use as input/output (usually BOOT_TTY)
 

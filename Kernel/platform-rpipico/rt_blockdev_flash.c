@@ -3,7 +3,7 @@
 #include "rt_log.h"
 #include "rt_softirq.h"
 #include "rt_blockdev.h"
-#include "rt_flash.h"
+#include "rt_blockdev_flash.h"
 
 #include <lib/dhara/map.h>
 #include <lib/dhara/nand.h>
@@ -12,7 +12,6 @@
 #include <string.h>
 
 uint8_t blockdev_id_flash = 0;
-bool flash_irq_done = false;
 
 static critical_section_t flash_critical;
 static const struct dhara_nand nand = {
@@ -92,7 +91,6 @@ static uint_fast8_t flash_transfer(void) {
 	else
 		dhara_map_write(&dhara, blockdev[blockdev_id_flash].op->lba, blockdev[blockdev_id_flash].op->addr, &err);
 
-	// TODO push op in queue
 	return (err == DHARA_E_NONE);
 }
 
@@ -101,7 +99,6 @@ static int flash_trim(void) {
 	if (sector < (nand.num_blocks << nand.log2_ppb))
 		dhara_map_trim(&dhara, sector, NULL);
 
-	// TODO push op in queue
 	return 0;
 }
 
