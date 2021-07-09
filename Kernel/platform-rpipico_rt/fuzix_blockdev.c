@@ -5,15 +5,7 @@
 
 static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
 	// evelope blockdev reqeust for softirq
-	softirq_t irq;
-	mk_softirq(&irq, dev, req, 0, NULL);
-
-	// queue request
-	if (!queue_try_add(&softirq_in_q, &irq))
-	{
-		// TODO queue full error -> lag
-		return 0;
-	}
+	irq_in(dev, req, 0, NULL);
 
 	// wait for response
 	while (!(*flag)) {

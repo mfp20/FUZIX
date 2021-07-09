@@ -15,10 +15,6 @@ void fuzix_softirq(void) {
             case DEV_ID_CORE1:
                 INFO("fuzix_softirq CORE1 sig %d count %d", irq.sig, irq.count);
             break;
-            case DEV_ID_UART0:
-                //INFO("fuzix_softirq UART0 sig %d count %d", irq.sig, irq.count);
-                tty_inproc(minor((512 + 1)), irq.sig);
-            break;
             case DEV_ID_FLASH:
                 //INFO("fuzix_softirq FLASH sig %d count %d\n", irq.sig, irq.count);
                 flash_irq_done = true;
@@ -35,7 +31,7 @@ void fuzix_softirq(void) {
                 WARNING("fuzix_softirq STDIO sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_TTY1:
-                INFO("fuzix_softirq TTY1 sig %d count %d", irq.sig, irq.count);
+                //INFO("fuzix_softirq TTY1 sig %d count %d", irq.sig, irq.count);
                 tty_inproc(minor((512 + 1)), irq.sig);
             break;
             case DEV_ID_TTY2:

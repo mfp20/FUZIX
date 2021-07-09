@@ -1,10 +1,6 @@
 #include "platform.h"
 
-#include "fuzix_rt.h"
-
-#include <kernel.h>
 #include <kdata.h>
-#include <printf.h>
 #include <exec.h>
 
 uint8_t sys_cpu = A_ARM;
@@ -22,6 +18,7 @@ uaddr_t pagemap_base(void) {
     return PROGBASE;
 }
 
+// This checks to see if a user-supplied address is legitimate
 usize_t valaddr(const uint8_t *base, usize_t size) {
 	if (base + size < base)
 		size = MAXUSIZE - (usize_t)base + 1;
@@ -38,8 +35,8 @@ usize_t valaddr(const uint8_t *base, usize_t size) {
 void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
-		stdio_putchar('\r');
-	stdio_putchar(c);
+		chardev[tty_cd[0]].tx('\r');
+	chardev[tty_cd[0]].tx(c);
 }
 
 void platform_copyright(void) {
@@ -64,7 +61,7 @@ void platform_idle(void) {
 	__wfi();
 	// resume normal power level
 	//power_set_mode(POWER_LEVEL_USER);
-} 
+}
 
 void platform_discard(void) {}
 

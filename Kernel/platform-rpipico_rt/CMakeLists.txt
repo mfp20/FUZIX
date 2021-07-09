@@ -26,8 +26,8 @@ include_directories(
 )
 
 add_executable(fuzix
-	rt_stdio.c
 	rt_time.c
+	rt_stdio.c
 	rt_softirq.c
 	rt_power.c
 	rt_chardev.c

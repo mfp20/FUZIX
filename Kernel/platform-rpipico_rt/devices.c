@@ -46,7 +46,10 @@ void device_init(void)
 	// usb, CDCs and external fs, if any
 	usb_init();
 
-	// SD, if any
+	// USB external storage, if any
+	virtual_usb_fs_init();
+
+	// SD external storage, if any
 	virtual_sd_init();
 
 	// flash device is mounted last, it is the fallback root device

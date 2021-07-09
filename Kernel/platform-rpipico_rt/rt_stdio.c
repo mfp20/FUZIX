@@ -2,10 +2,42 @@
 #include "rt_log.h"
 #include "rt_softirq.h"
 
+#include <tusb.h>
+
 #include <stdio.h>
 #include <stdarg.h>
 
 uint8_t log_level = LOG_LEVEL;
+
+void stdio_putchar(uint8_t b) {
+	if (tud_cdc_n_connected(1))
+	{
+		if (b == '\n')
+	        tud_cdc_n_write_char(1, '\r');
+		tud_cdc_n_write_char(1, b);
+		tud_cdc_n_write_flush(1);
+		return;
+	}
+	if (b == '\n')
+        putchar('\r');
+	putchar(b);
+}
+
+void stdio_printf(const char *fmt, ...) {
+    va_list arglist;
+    va_start( arglist, fmt );
+	if (tud_cdc_n_connected(1))
+	{
+    	char buffer[256];
+    	vsnprintf(buffer, 256, fmt, arglist);
+	    va_end( arglist );
+		tud_cdc_n_write(1, buffer, strlen(buffer));
+		tud_cdc_n_write_flush(1);
+		return;
+	}
+    vprintf(fmt, arglist);
+    va_end( arglist );
+}
 
 void log_set_level(uint8_t level)
 {
@@ -78,23 +110,15 @@ void log_test_color(void) {
 	stdio_printf("\t\t\t------ stdio color test end ------\n");
 }
 
-void stdio_putchar(uint8_t c) {
-    putchar(c);
-}
-
-void stdio_printf(const char *fmt, ...) {
-    va_list arglist;
-    va_start( arglist, fmt );
-    vprintf(fmt, arglist);
-    va_end( arglist );
-}
-
-void stdio_log(uint8_t level, const char *fmt, ...) {
+void log_stdio(uint8_t level, const char *fmt, ...) {
     char buffer[strlen(fmt)*3];
     va_list arglist;
     va_start( arglist, fmt );
     vsnprintf(buffer, strlen(fmt)*3, fmt, arglist);
     va_end( arglist );
+
+	stdio_printf("%s\n\r", buffer);
+	return;
 
     switch (level) {
         case LEVEL_EMERG:

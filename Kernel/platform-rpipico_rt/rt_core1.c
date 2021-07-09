@@ -3,9 +3,33 @@
 #include "rt_core1.h"
 #include "rt_fuzix.h"
 
+// callback for received data
 static byte_tx_t rx_core1_cb = NULL;
 
-// isr code
+//--------------------------------------------------------------------+
+// chardev drivers
+//--------------------------------------------------------------------+
+
+uint8_t core1_read(void) {
+	return multicore_fifo_pop_blocking();
+}
+
+void core1_write(uint8_t b) {
+	multicore_fifo_push_blocking(b);
+}
+
+bool core1_readable(void) {
+	return multicore_fifo_rvalid();
+}
+
+bool core1_writable(void) {
+	return multicore_fifo_wready();
+}
+
+//--------------------------------------------------------------------+
+// isr, init, helpers
+//--------------------------------------------------------------------+
+
 static void core1_on_rx_isr(void) {	
     uint8_t b = core1_read();
 
@@ -13,12 +37,7 @@ static void core1_on_rx_isr(void) {
 		rx_core1_cb(b);
     } else {
         // evelope core1 byte for softirq
-        softirq_t irq;
-        mk_softirq(&irq, DEV_ID_CORE1, b, 0, NULL);
-        // queue softirq
-        if (!queue_try_add(&softirq_out_q, &irq)) {
-            // TODO queue full error -> lag -> data lost
-        }
+        irq_out(DEV_ID_CORE1, b, 0, NULL);
     }
 
 	multicore_fifo_clear_irq();
@@ -36,18 +55,6 @@ void core1_init(core1_main_t c1main, byte_tx_t rx_cb) {
     rx_core1_cb = rx_cb;
 }
 
-bool core1_readable(void) {
-	return multicore_fifo_rvalid();
-}
-
-bool core1_writable(void) {
-	return multicore_fifo_wready();
-}
-
-uint8_t core1_read(void) {
-	return multicore_fifo_pop_blocking();
-}
-
-void core1_write(uint8_t b) {
-	multicore_fifo_push_blocking(b);
+void core1_set_cb(byte_tx_t rx_cb) {
+	rx_core1_cb = rx_cb;
 }

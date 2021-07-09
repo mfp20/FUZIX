@@ -17,19 +17,19 @@
 // stdio helpers
 extern void stdio_putchar(uint8_t c);
 extern void stdio_printf(const char *fmt, ...);
-extern void stdio_log(uint8_t level, const char *fmt, ...);
 
 // log helpers
 extern void log_set_level(uint8_t level);
 extern void log_test_color(void);
 extern void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
-#define EMERG(fmt, ...) stdio_log(LEVEL_EMERG, fmt, ##__VA_ARGS__)
-#define ALERT(fmt, ...) stdio_log(LEVEL_ALERT, fmt, ##__VA_ARGS__)
-#define CRIT(fmt, ...) stdio_log(LEVEL_CRIT, fmt, ##__VA_ARGS__)
-#define ERR(fmt, ...) stdio_log(LEVEL_ERR, fmt, ##__VA_ARGS__)
-#define WARNING(fmt, ...) stdio_log(LEVEL_WARNING, fmt, ##__VA_ARGS__)
-#define NOTICE(fmt, ...) stdio_log(LEVEL_NOTICE, fmt, ##__VA_ARGS__)
-#define INFO(fmt, ...) stdio_log(LEVEL_INFO, fmt, ##__VA_ARGS__)
-#define DEBUG(fmt, ...) stdio_log(LEVEL_DEBUG, fmt, ##__VA_ARGS__)
+extern void log_stdio(uint8_t level, const char *fmt, ...);
+#define EMERG(fmt, ...) log_stdio(LEVEL_EMERG, fmt, ##__VA_ARGS__)
+#define ALERT(fmt, ...) log_stdio(LEVEL_ALERT, fmt, ##__VA_ARGS__)
+#define CRIT(fmt, ...) log_stdio(LEVEL_CRIT, fmt, ##__VA_ARGS__)
+#define ERR(fmt, ...) log_stdio(LEVEL_ERR, fmt, ##__VA_ARGS__)
+#define WARNING(fmt, ...) log_stdio(LEVEL_WARNING, fmt, ##__VA_ARGS__)
+#define NOTICE(fmt, ...) log_stdio(LEVEL_NOTICE, fmt, ##__VA_ARGS__)
+#define INFO(fmt, ...) log_stdio(LEVEL_INFO, fmt, ##__VA_ARGS__)
+#define DEBUG(fmt, ...) log_stdio(LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 
 #endif

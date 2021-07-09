@@ -46,9 +46,9 @@ typedef struct softirq_s {
 extern pico_queue_t softirq_in_q;
 extern pico_queue_t softirq_out_q;
 
-bool mk_softirq(softirq_t *irq, uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data);
-void clear_softirq(softirq_t *irq);
-
 void softirq_init(void);
+void irq_out(uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data);
+void irq_in(uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data);
+void clear_softirq(softirq_t *irq);
 
 #endif

@@ -4,6 +4,10 @@
 #include "rt.h"
 
 void usb_init(void);
+void usb_cdc0_set_cb(byte_tx_t rx_cb);
+void usb_cdc1_set_cb(byte_tx_t rx_cb);
+void usb_cdc2_set_cb(byte_tx_t rx_cb);
+void usb_cdc3_set_cb(byte_tx_t rx_cb);
 void usb_cdc_stdio(uint8_t id, bool stdio, bool test);
 
 uint8_t usb_cdc0_read(void);

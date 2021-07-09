@@ -113,33 +113,15 @@ void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
 		LOG_HEX_UNFILTERED(D, N, M, ##__VA_ARGS__);
 
 // add \n
-#define LOG_EME(M, ...)            \
-	LOG_EME_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_ALE(M, ...)            \
-	LOG_ALE_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_CRI(M, ...)            \
-	LOG_CRI_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_ERR(M, ...)            \
-	LOG_ERR_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_WAR(M, ...)            \
-	LOG_WAR_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_NOT(M, ...)            \
-	LOG_NOT_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_INF(M, ...)            \
-	LOG_INF_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_DEB(M, ...)            \
-	LOG_DEB_NON(M, ##__VA_ARGS__); \
-	stdio_printf("\n");
-#define LOG_HEX(D, N, M, ...)            \
-	LOG_HEX_NON(D, N, M, ##__VA_ARGS__); \
-	stdio_printf("\n");
+#define LOG_EME(M, ...) LOG_EME_NON(M "\n", ##__VA_ARGS__);
+#define LOG_ALE(M, ...) LOG_ALE_NON(M "\n", ##__VA_ARGS__);
+#define LOG_CRI(M, ...) LOG_CRI_NON(M "\n", ##__VA_ARGS__);
+#define LOG_ERR(M, ...) LOG_ERR_NON(M "\n", ##__VA_ARGS__);
+#define LOG_WAR(M, ...) LOG_WAR_NON(M "\n", ##__VA_ARGS__);
+#define LOG_NOT(M, ...) LOG_NOT_NON(M "\n", ##__VA_ARGS__);
+#define LOG_INF(M, ...) LOG_INF_NON(M "\n", ##__VA_ARGS__);
+#define LOG_DEB(M, ...) LOG_DEB_NON(M "\n", ##__VA_ARGS__);
+#define LOG_HEX(D, N, M, ...) LOG_HEX_NON(D, N, M "\n", ##__VA_ARGS__);
 
 // undefine levels according to configuration
 #if LOG_LEVEL < LEVEL_DEBUG

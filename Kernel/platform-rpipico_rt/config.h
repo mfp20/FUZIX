@@ -80,7 +80,8 @@ extern uint8_t progbase[USERMEM];
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
-#define TICKSPERSEC 200   /* Ticks per second */
+// Ticks per second
+#define TICKSPERSEC 1000
 
 // Location of root dev name
 // TODO we need a tidier way to do this from the loader

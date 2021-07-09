@@ -8,8 +8,6 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1];
 tcflag_t termios_mask[NUM_DEV_TTY + 1];
 uint8_t buf[NUM_DEV_TTY][TTYSIZ];
 
-uint8_t tty_cd[5] = {0, 0, 1, 2, 3};
-
 // setup ttys
 void tty_prepare(void)
 {
@@ -58,7 +56,6 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-    //kprintf("tty%d putc '%c' in chardev[%d]\n", minor, c, tty_cd[minor]);
     if (chardev[tty_cd[minor]].tx)
     {
         if (c == '\n')

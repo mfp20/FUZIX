@@ -30,6 +30,10 @@ extern uint8_t tty4_byte;
 uint8_t chardev_add(byte_rx_t r, byte_tx_t t, byte_ready_t w);
 void chardev_mod(uint8_t chardev_id, byte_rx_t r, byte_tx_t t, byte_ready_t w);
 
+uint8_t stdio_select_read(void);
+void stdio_select_write(uint8_t b);
+bool stdio_select_writable(void);
+
 uint8_t tty1_select_read(void);
 void tty1_select_write(uint8_t b);
 bool tty1_select_writable(void);

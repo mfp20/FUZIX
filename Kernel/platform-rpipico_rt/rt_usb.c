@@ -392,7 +392,7 @@ void usb_cdc_stdio(uint8_t id, bool stdio, bool test)
 }
 
 //--------------------------------------------------------------------+
-// sdk drivers
+// chardev drivers
 //--------------------------------------------------------------------+
 
 static uint8_t usb_cdc_read(uint8_t cdc)
@@ -402,11 +402,11 @@ static uint8_t usb_cdc_read(uint8_t cdc)
 		if (tud_cdc_n_available(cdc) > 0)
 			return (uint8_t)tud_cdc_n_read_char(cdc);
 		else
-			; // TODO warning buffer full
+			WARNING("CDC%d warning buffer full", cdc);
 	}
 	else
 	{
-		// TODO warning cdc not connected
+		WARNING("CDC%d warning not connected", cdc);
 	}
 	return 0;
 }
@@ -420,16 +420,10 @@ static void usb_cdc_write(uint8_t cdc, uint8_t b)
 			tud_cdc_n_write_flush(cdc);
 		}
 		else
-		{
-			// TODO error buffer full
-			stdio_printf("warning cdc%d error buffer full\n", cdc);
-		}
+			WARNING("CDC%d warning buffer full", cdc);
 	}
 	else
-	{
-		// TODO warning cdc not connected
-		stdio_printf("warning cdc%d not connected\n", cdc);
-	}
+		WARNING("CDC%d warning not connected", cdc);
 }
 
 static bool usb_cdc_writable(uint8_t cdc)
@@ -514,40 +508,37 @@ static byte_tx_t cdc3_cb = NULL;
 // CDC: Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf)
 {
-	//printf("tud_cdc_rx_cb %d\n", itf);
+	//INFO("tud_cdc_rx_cb %d\n", itf);
 	if (itf == 0)
 	{
-		uint8_t b = usb_cdc0_read();
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(0);
 		// route char
 		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc0_cb)
 		{
-			stdio_printf("tud_cdc_rx_cb TODO direct route\n");
+			INFO("tud_cdc_rx_cb TODO direct route\n");
 			cdc0_cb(b);
 		}
 		else
 		{
 			// evelope cdc0 byte for softirq
-			softirq_t irq;
-			mk_softirq(&irq, DEV_ID_TTY1, b, 0, NULL);
-			// queue softirq
-			while (!queue_try_add(&softirq_out_q, &irq)) ; // TODO queue full error -> lag -> data lost
+			irq_out(DEV_ID_TTY1, b, 0, NULL);
 		}
 	}
 	else if (itf == 1)
 	{
-		uint8_t b = usb_cdc1_read();
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(1);
 		if (cdc1_cb)
 			cdc1_cb(b);
 	}
 	else if (itf == 2)
 	{
-		uint8_t b = usb_cdc2_read();
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(2);
 		if (cdc2_cb)
 			cdc2_cb(b);
 	}
 	else if (itf == 3)
 	{
-		uint8_t b = usb_cdc3_read();
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(3);
 		if (cdc3_cb)
 			cdc3_cb(b);
 	}
@@ -562,35 +553,15 @@ void tud_cdc_rx_cb(uint8_t itf)
 // CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
+	//INFO("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
 	if (dtr)
 	{ // on connect
-		if (itf == 0)
-		{
-		}
-		if (itf == 1)
-		{
-			// add kputchar to cdc1
-			usb_cdc_stdio(1, true, false);
-			// remove kputchar from uart0
-			uart_stdio(0, false, false);
-		}
+		INFO("CDC%d connect", itf);
 	}
 	else
 	{ // on disconnect
-		if (itf == 0)
-		{
-		}
-		if (itf == 1)
-		{
-			// remove kputchar from cdc1
-			usb_cdc_stdio(1, false, false);
-			// restore kputchar to uart0
-			uart_stdio(0, true, false);
-		}
+		INFO("CDC%d disconnect", itf);
 	}
-
-	//
-	printf("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
 }
 
 // CDC: Invoked when line coding is changed via SET_LINE_CODING
@@ -602,7 +573,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 // Vendor: Invoked when received new data
 void tud_vendor_rx_cb(uint8_t itf)
 {
-	printf("tud_vendor_rx_cb %d\n", itf);
+	INFO("tud_vendor_rx_cb %d\n", itf);
 }
 
 //--------------------------------------------------------------------+
@@ -619,15 +590,29 @@ static bool tusb_handler(repeating_timer_t *rt)
 
 void usb_init(void)
 {
+	// setup tinyusb
 	tusb_id2str();
 	tusb_init();
-	add_repeating_timer_us(1000, tusb_handler, NULL, &tusb_timer);
+	add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
 
-	// register chardevs
+	//
 	virtual_tty2_init();
 	virtual_tty3_init();
 	virtual_tty4_init();
+}
 
-	// register blockdevs
-	virtual_usb_fs_init();
+void usb_cdc0_set_cb(byte_tx_t rx_cb) {
+	cdc0_cb = rx_cb;
+}
+
+void usb_cdc1_set_cb(byte_tx_t rx_cb) {
+	cdc1_cb = rx_cb;
+}
+
+void usb_cdc2_set_cb(byte_tx_t rx_cb) {
+	cdc2_cb = rx_cb;
+}
+
+void usb_cdc3_set_cb(byte_tx_t rx_cb) {
+	cdc3_cb = rx_cb;
 }

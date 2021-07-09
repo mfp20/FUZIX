@@ -3,6 +3,8 @@
 #include "rt_uart.h"
 #include "rt_fuzix.h"
 
+#include <tusb.h>
+
 // callbacks for received data
 static byte_tx_t rx0_cb = NULL;
 static byte_tx_t rx1_cb = NULL;
@@ -55,7 +57,7 @@ void uart_stdio(uint8_t id, bool stdio, bool test)
 }
 
 //--------------------------------------------------------------------+
-// fuzix drivers
+// chardev drivers
 //--------------------------------------------------------------------+
 
 // uart0
@@ -91,53 +93,23 @@ bool uart1_writable(void)
 }
 
 //--------------------------------------------------------------------+
-// init and isr
+// isr, init, helpers
 //--------------------------------------------------------------------+
 
 // isr code
-static void on_rx_isr(uint8_t uart_id)
+static void on_uart0_rx_isr(void)
 {
-	uint8_t dev_id;
-	uint8_t b;
-	byte_tx_t cb = NULL;
+	uint8_t b = uart0_read();
 
-	// select uart
-	if (uart_id)
+	if (tud_cdc_n_connected(0))
 	{
-		dev_id = DEV_ID_UART1;
-		b = uart1_read();
-		cb = rx1_cb;
+		if (rx0_cb) rx0_cb(b);
 	}
 	else
 	{
-		dev_id = DEV_ID_UART0;
-		b = uart0_read();
-		cb = rx0_cb;
+		// evelope uart0 byte for softirq
+		irq_out(DEV_ID_TTY1, b, 0, NULL);
 	}
-
-	// route char
-	if (fuzix_ready && queue_is_empty(&softirq_out_q) && cb)
-	{
-		stdio_printf("on_rx_isr direct input TODO\n");
-		cb(b);
-	}
-	else
-	{
-		//stdio_printf("on_rx_isr queued\n");
-        // evelope uart byte for softirq
-        softirq_t irq;
-        mk_softirq(&irq, dev_id, b, 0, NULL);
-		// queue softirq
-		while (!queue_try_add(&softirq_out_q, &irq)) ; // TODO queue full error -> lag -> data lost
-	}
-}
-static void on_rx_isr_uart0(void)
-{
-	on_rx_isr(0);
-}
-static void on_rx_isr_uart1(void)
-{
-	on_rx_isr(1);
 }
 
 void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb)
@@ -152,7 +124,7 @@ void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_
 	uart_set_fifo_enabled(uart0, false);
 
 	// uart irq
-	irq_set_exclusive_handler(UART0_IRQ, on_rx_isr_uart0);
+	irq_set_exclusive_handler(UART0_IRQ, on_uart0_rx_isr);
 	irq_set_enabled(UART0_IRQ, true);
 	uart_set_irq_enables(uart0, true, false);
 
@@ -162,30 +134,6 @@ void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_
 
 void uart0_set_cb(byte_tx_t rx_cb) {
 	rx0_cb = rx_cb;
-}
-
-void uart1_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb)
-{
-	// uart gpios
-	gpio_set_function(tx_pin, GPIO_FUNC_UART);
-	gpio_set_function(rx_pin, GPIO_FUNC_UART);
-
-	// uart device
-	uart_init(uart1, baudrate);
-	uart_set_translate_crlf(uart1, true);
-	uart_set_fifo_enabled(uart1, false);
-
-	// uart irq
-	irq_set_exclusive_handler(UART1_IRQ, on_rx_isr_uart1);
-	irq_set_enabled(UART1_IRQ, true);
-	uart_set_irq_enables(uart1, true, false);
-
-	//
-	rx1_cb = rx_cb;
-}
-
-void uart1_set_cb(byte_tx_t rx_cb) {
-	rx1_cb = rx_cb;
 }
 
 /* vim: sw=4 ts=4 et: */

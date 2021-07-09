@@ -82,19 +82,8 @@ void syscall_handler(struct svc_frame *eh)
 
 int main(void)
 {
-	// stdio early init
+	// stdio
 	virtual_stdio_init();
-
-	// init softirq
-	softirq_init();
-
-	// fill TTYs default data
-	tty_prepare();
-
-	// tty1 early init
-	virtual_tty1_init();
-
-	INFO("* Realtime backend ready");
 
 	// sanity check
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
@@ -109,10 +98,22 @@ int main(void)
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
+	//
+	INFO("* Sanity checks passed");
 
 	// TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
+	//
+	INFO("* Memory sized");
+
+	// softirq
+	softirq_init();
+	// ttys
+	tty_prepare();
+	virtual_tty1_init();
+	//
+	INFO("* Realtime backend ready");
 
 	// disable interrupts and run fuzix
 	INFO("* fuzix_main()\n");

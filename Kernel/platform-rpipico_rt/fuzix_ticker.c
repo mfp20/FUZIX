@@ -10,20 +10,7 @@ static bool systick_timer_handler(repeating_timer_t *rt)
 	}
 	else
 	{
-		softirq_t irq;
-		// TODO use the unused byte
-		if (!mk_softirq(&irq, DEV_ID_TIMER, SIG_ID_TICK, 0, NULL))
-		{
-			// TODO out of memory error -> tick lost
-			return false;
-		}
-        //INFO("systick_timer_handler TIMER sig %d count %d", irq.sig, irq.count);
-		// queue softirq
-		if (!queue_try_add(&softirq_out_q, &irq))
-		{
-			// TODO queue full error -> lag -> tick lost
-			return false;
-		}
+		irq_out(DEV_ID_TIMER, SIG_ID_TICK, 0, NULL);
 	}
 
 	return true;
