@@ -72,8 +72,7 @@
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #endif
 
-//#ifdef BUILD_DEBUG
-#if false
+#ifdef BUILD_DEBUG
 #define LOG_CONTENT_ERRFILE_FMT "%s::%d::%s\t"
 #define LOG_CONTENT_ERRFILE_VARS __FILENAME__, __LINE__, __func__
 #define LOG_CONTENT_FMT(level)		LOG_CONTENT_TIME_FMT LOG_##level LOG_CONTENT_ERRFILE_FMT
