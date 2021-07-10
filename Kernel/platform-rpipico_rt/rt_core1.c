@@ -37,7 +37,7 @@ static void core1_on_rx_isr(void) {
 		rx_core1_cb(b);
     } else {
         // evelope core1 byte for softirq
-        irq_out(DEV_ID_CORE1, b, 0, NULL);
+        softirq_out(DEV_ID_CORE1, b, 0, NULL);
     }
 
 	multicore_fifo_clear_irq();

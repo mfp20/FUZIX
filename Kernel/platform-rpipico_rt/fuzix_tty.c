@@ -59,7 +59,7 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
     if (chardev[tty_cd[minor]].tx)
     {
         if (c == '\n')
-            chardev[minor - 1].tx('\r');
+            chardev[tty_cd[minor]].tx('\r');
         chardev[tty_cd[minor]].tx(c);
     }
 }

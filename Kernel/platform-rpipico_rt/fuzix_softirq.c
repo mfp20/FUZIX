@@ -16,38 +16,27 @@ void fuzix_softirq(void) {
                 INFO("fuzix_softirq CORE1 sig %d count %d", irq.sig, irq.count);
             break;
             case DEV_ID_FLASH:
-                //INFO("fuzix_softirq FLASH sig %d count %d\n", irq.sig, irq.count);
                 flash_irq_done = true;
             break;
             case DEV_ID_SD:
-                INFO("fuzix_softirq SD sig %d count %d\n", irq.sig, irq.count);
+                INFO("fuzix_softirq SD sig %d count %d", irq.sig, irq.count);
                 sd_irq_done = true;
             break;
             case DEV_ID_USB_VEND0:
-                INFO("fuzix_softirq VEND0 sig %d count %d\n", irq.sig, irq.count);
+                INFO("fuzix_softirq VEND0 sig %d count %d", irq.sig, irq.count);
                 usb_irq_done = true;
             break;
-            case DEV_ID_STDIO:
-                WARNING("fuzix_softirq STDIO sig %d count %d", irq.sig, irq.count);
-            break;
             case DEV_ID_TTY1:
-                //INFO("fuzix_softirq TTY1 sig %d count %d", irq.sig, irq.count);
                 tty_inproc(minor((512 + 1)), irq.sig);
             break;
             case DEV_ID_TTY2:
-                INFO("fuzix_softirq TTY2 sig %d count %d", irq.sig, irq.count);
-                tty_inproc(minor((512 + 2)), irq.sig);
+                tty_putc(minor((512 + 2)), irq.sig);
             break;
             case DEV_ID_TTY3:
-                INFO("fuzix_softirq TTY3 sig %d count %d", irq.sig, irq.count);
-                tty_inproc(minor((512 + 3)), irq.sig);
-            break;
-            case DEV_ID_TTY4:
-                INFO("fuzix_softirq TTY4 sig %d count %d", irq.sig, irq.count);
-                tty_inproc(minor((512 + 4)), irq.sig);
+                tty_putc(minor((512 + 3)), irq.sig);
             break;
             default:
-                ERR("fuzix_softirq unknown irq sig %d count %d\n", irq.sig, irq.count);
+                ERR("fuzix_softirq unknown irq sig %d count %d", irq.sig, irq.count);
             break;
 	    }
     }

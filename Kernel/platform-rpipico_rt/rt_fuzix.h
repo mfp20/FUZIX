@@ -9,13 +9,8 @@ extern void fuzix_softirq(void);
 extern void virtual_ticker_init(void);
 
 // chardev
-extern uint8_t tty_cd[5];
 extern void tty_prepare(void);
 extern void virtual_stdio_init(void);
-extern void virtual_tty1_init(void);
-extern void virtual_tty2_init(void);
-extern void virtual_tty3_init(void);
-extern void virtual_tty4_init(void);
 
 // blockdev
 extern void virtual_flash_init(void);

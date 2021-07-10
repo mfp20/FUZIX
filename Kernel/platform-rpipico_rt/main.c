@@ -82,7 +82,7 @@ void syscall_handler(struct svc_frame *eh)
 
 int main(void)
 {
-	// stdio
+	//
 	virtual_stdio_init();
 
 	// sanity check
@@ -98,25 +98,28 @@ int main(void)
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
-	//
-	INFO("* Sanity checks passed");
 
 	// TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
-	//
-	INFO("* Memory sized");
 
 	// softirq
 	softirq_init();
+
 	// ttys
 	tty_prepare();
-	virtual_tty1_init();
+
+	// power
+	//power_set_mode(POWER_DEFAULT);
+
+	// usb
+	usb_init();
+
 	//
+	log_test_color();
 	INFO("* Realtime backend ready");
 
 	// disable interrupts and run fuzix
-	INFO("* fuzix_main()\n");
 	di();
 	fuzix_main();
 }

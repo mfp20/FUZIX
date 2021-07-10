@@ -37,14 +37,8 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-	// power level
-	//power_set_mode(POWER_DEFAULT);
-
 	// time
 	virtual_ticker_init();
-
-	// usb, CDCs and external fs, if any
-	usb_init();
 
 	// USB external storage, if any
 	virtual_usb_fs_init();

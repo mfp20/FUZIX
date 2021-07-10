@@ -5,7 +5,7 @@
 
 static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
 	// evelope blockdev reqeust for softirq
-	irq_in(dev, req, 0, NULL);
+	softirq_in(dev, req, 0, NULL);
 
 	// wait for response
 	while (!(*flag)) {

@@ -12,21 +12,19 @@ chardev_t *chardev = NULL;
 static uint8_t chardev_no = 0;
 
 // map chardevs to ttys
-uint8_t tty_cd[5] = {0, 0, 1, 2, 3};
+uint8_t tty_cd[4] = {0, 1, 2, 3};
 
 //
 uint8_t stdio_byte = 0;
 uint8_t tty1_byte = 0;
 uint8_t tty2_byte = 0;
 uint8_t tty3_byte = 0;
-uint8_t tty4_byte = 0;
 
 //
 bool stdio_irq_done = false;
 bool tty1_irq_done = false;
 bool tty2_irq_done = false;
 bool tty3_irq_done = false;
-bool tty4_irq_done = false;
 
 uint8_t chardev_add(byte_rx_t r, byte_tx_t t, byte_ready_t w)
 {
@@ -49,84 +47,66 @@ void chardev_mod(uint8_t chardev_id, byte_rx_t r, byte_tx_t t, byte_ready_t w)
 	chardev[chardev_id].ready = w;
 }
 
-uint8_t stdio_select_read(void)
-{
-	if (tud_cdc_n_connected(1))
-	{
-		return usb_cdc1_read();
-	}
-	return getchar();
-}
+//--------------------------------------------------------------------+
+// real chardevs
+//--------------------------------------------------------------------+
 
-void stdio_select_write(uint8_t b)
+// uart0/usb0 selection for kputchar+tty1
+uint8_t fuzix_select_read(void)
 {
-	stdio_putchar(b);
-}
-
-bool stdio_select_writable(void)
-{
-	if (tud_cdc_n_connected(1))
-	{
-		return usb_cdc1_writable();
-	}
-	return true;
-}
-
-uint8_t tty1_select_read(void)
-{
-	printf("tty1_select_read \n");
 	if (tud_cdc_n_connected(0))
 	{
 		return usb_cdc0_read();
 	}
-	return uart0_read();
+	return uart_getc(uart0);
 }
 
-void tty1_select_write(uint8_t b)
+void fuzix_select_write(uint8_t b)
 {
 	if (tud_cdc_n_connected(0))
 	{
 		usb_cdc0_write(b);
 		return;
 	}
-	uart0_write(b);
+	uart_putc(uart0, b);
 }
 
-bool tty1_select_writable(void)
+bool fuzix_select_writable(void)
 {
 	if (tud_cdc_n_connected(0))
 	{
 		return usb_cdc0_writable();
 	}
-	return uart0_writable();
+	return uart_is_writable(uart0);
 }
 
-uint8_t tty2_select_read(void)
+// uart0/usb1 selection for kputchar+tty2
+uint8_t rt_select_read(void)
 {
 	if (tud_cdc_n_connected(1))
 	{
 		return usb_cdc1_read();
 	}
-	return uart0_read();
+	return uart_getc(uart0);
 }
 
-void tty2_select_write(uint8_t b)
+void rt_select_write(uint8_t b)
 {
 	if (tud_cdc_n_connected(1))
 	{
 		usb_cdc1_write(b);
 		return;
 	}
-	uart0_write(b);
+	uart_putc(uart0, b);
 }
 
-bool tty2_select_writable(void)
+bool rt_select_writable(void)
 {
 	if (tud_cdc_n_connected(1))
 	{
 		return usb_cdc1_writable();
 	}
-	return uart0_writable();
+	return uart_is_writable(uart0);
 }
 
 /* vim: sw=4 ts=4 et: */

@@ -1,43 +1,40 @@
 #include "rt_stdio.h"
 #include "rt_log.h"
 #include "rt_softirq.h"
-
-#include <tusb.h>
+#include "rt_chardev.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 
+static char buffer[256];
+
 uint8_t log_level = LOG_LEVEL;
 
-void stdio_putchar(uint8_t b) {
-	if (tud_cdc_n_connected(1))
-	{
-		if (b == '\n')
-	        tud_cdc_n_write_char(1, '\r');
-		tud_cdc_n_write_char(1, b);
-		tud_cdc_n_write_flush(1);
-		return;
-	}
-	if (b == '\n')
-        putchar('\r');
-	putchar(b);
+//--------------------------------------------------------------------+
+// stdio driver
+//--------------------------------------------------------------------+
+
+static void stdio_out_chars(const char *buf, int len)
+{
+	for (uint32_t i=0;i<len;i++)
+		rt_select_write(buf[i]);
+}
+static int stdio_in_chars(char *buf, int len)
+{
+	for (uint32_t i=0;i<len;i++)
+		buf[i] = rt_select_read();
+	return len;
 }
 
-void stdio_printf(const char *fmt, ...) {
-    va_list arglist;
-    va_start( arglist, fmt );
-	if (tud_cdc_n_connected(1))
-	{
-    	char buffer[256];
-    	vsnprintf(buffer, 256, fmt, arglist);
-	    va_end( arglist );
-		tud_cdc_n_write(1, buffer, strlen(buffer));
-		tud_cdc_n_write_flush(1);
-		return;
-	}
-    vprintf(fmt, arglist);
-    va_end( arglist );
-}
+stdio_driver_t stdio_driver = {
+	.out_chars = stdio_out_chars,
+	.in_chars = stdio_in_chars,
+	.crlf_enabled = true
+};
+
+//--------------------------------------------------------------------+
+// enhanced logging
+//--------------------------------------------------------------------+
 
 void log_set_level(uint8_t level)
 {
@@ -110,11 +107,27 @@ void log_test_color(void) {
 	stdio_printf("\t\t\t------ stdio color test end ------\n");
 }
 
-void log_stdio(uint8_t level, const char *fmt, ...) {
-    char buffer[strlen(fmt)*3];
+void stdio_putchar(uint8_t b) {
+	rt_select_write(b);
+}
+
+void stdio_printf(const char *fmt, ...) {
     va_list arglist;
     va_start( arglist, fmt );
-    vsnprintf(buffer, strlen(fmt)*3, fmt, arglist);
+    int len = vsnprintf(buffer, 256, fmt, arglist);
+    va_end( arglist );
+	if ((len>0)&&(len<256))
+		stdio_out_chars(buffer, len);
+	else {
+		stdio_out_chars(buffer, len);
+		WARNING("Last line truncated to 255 chars");
+	}
+}
+
+void stdio_log(uint8_t level, const char *fmt, ...) {
+    va_list arglist;
+    va_start( arglist, fmt );
+    vsnprintf(buffer, 256, fmt, arglist);
     va_end( arglist );
 
 	stdio_printf("%s\n\r", buffer);

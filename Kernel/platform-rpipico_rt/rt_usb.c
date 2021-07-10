@@ -204,13 +204,13 @@ static const char *const string_desc_arr[] = {
 	[USBD_STR_MANUF] = "Raspberry Pi",
 	[USBD_STR_PRODUCT] = "Pico Fuzix",
 	[USBD_STR_SERIAL] = usb_serial,
-	[USBD_STR_CONSOLE] = "Fuzix Console",
-	[USBD_STR_LOG] = "Fuzix Log",
-	[USBD_STR_MPLEX] = "Fuzix Multiplexer",
-	[USBD_STR_CDC1] = "User defined CDC 1",
-	[USBD_STR_VENDOR1] = "User defined Vendor 1",
-	[USBD_STR_CDC2] = "User defined CDC 2",
-	[USBD_STR_VENDOR2] = "User defined Vendor 2"};
+	[USBD_STR_CONSOLE] = "Fuzix tty1 (system console)",
+	[USBD_STR_LOG] = "Fuzix tty2 (system log)",
+	[USBD_STR_MPLEX] = "Fuzix binary interface",
+	[USBD_STR_CDC1] = "Fuzix tty3 (user chardev)",
+	[USBD_STR_VENDOR1] = "User binary interface",
+	[USBD_STR_CDC2] = "Pico chardev",
+	[USBD_STR_VENDOR2] = "Pico protocol"};
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -253,142 +253,86 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 }
 
 //--------------------------------------------------------------------+
-// stdio drivers
+// tinyusb callbacks
 //--------------------------------------------------------------------+
 
-#define STDIO_USB_STDOUT_TIMEOUT_US 500000
+// callbacks for received data
+static byte_tx_t cdc0_cb = NULL;
+static byte_tx_t cdc1_cb = NULL;
+static byte_tx_t cdc2_cb = NULL;
+static byte_tx_t cdc3_cb = NULL;
 
-static void stdio_usb_out_chars(uint8_t itf, const char *buf, int length)
+// CDC: Invoked when received new data
+void tud_cdc_rx_cb(uint8_t itf)
 {
-	static uint64_t last_avail_time;
-	if (tud_cdc_n_connected(itf))
+	if (itf == 0)
 	{
-		for (int i = 0; i < length;)
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(0);
+		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc0_cb)
 		{
-			int n = length - i;
-			int avail = tud_cdc_n_write_available(itf);
-			if (n > avail)
-				n = avail;
-			if (n)
-			{
-				int n2 = tud_cdc_n_write(itf, buf + i, n);
-				tud_task();
-				tud_cdc_n_write_flush(itf);
-				i += n2;
-				last_avail_time = time_us_64();
-			}
-			else
-			{
-				tud_task();
-				tud_cdc_n_write_flush(itf);
-				if (!tud_cdc_n_connected(itf) ||
-					(!tud_cdc_n_write_available(itf) && time_us_64() > last_avail_time + STDIO_USB_STDOUT_TIMEOUT_US))
-				{
-					break;
-				}
-			}
+			INFO("tud_cdc_rx_cb TODO direct route\n");
+			cdc0_cb(b);
+		}
+		else
+		{
+			softirq_out(DEV_ID_TTY1, b, 0, NULL);
 		}
 	}
-	else
+	else if (itf == 1)
 	{
-		// reset our timeout
-		last_avail_time = 0;
-	}
-}
-static int stdio_usb_in_chars(uint8_t itf, char *buf, int length)
-{
-	int rc = PICO_ERROR_NO_DATA;
-	if (tud_cdc_n_connected(itf) && tud_cdc_n_available(itf))
-	{
-		int count = tud_cdc_n_read(itf, buf, length);
-		rc = count ? count : PICO_ERROR_NO_DATA;
-	}
-	return rc;
-}
-
-static void stdio_usb_cdc0_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(0, buf, len);
-}
-static int stdio_usb_cdc0_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(0, buf, len);
-}
-static void stdio_usb_cdc1_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(1, buf, len);
-}
-static int stdio_usb_cdc1_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(1, buf, len);
-}
-static void stdio_usb_cdc2_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(2, buf, len);
-}
-static int stdio_usb_cdc2_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(2, buf, len);
-}
-static void stdio_usb_cdc3_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(3, buf, len);
-}
-static int stdio_usb_cdc3_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(3, buf, len);
-}
-static void stdio_usb_cdc4_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(4, buf, len);
-}
-static int stdio_usb_cdc4_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(4, buf, len);
-}
-static void stdio_usb_cdc5_out_chars(const char *buf, int len)
-{
-	stdio_usb_out_chars(5, buf, len);
-}
-static int stdio_usb_cdc5_in_chars(char *buf, int len)
-{
-	return stdio_usb_in_chars(5, buf, len);
-}
-
-static stdio_driver_t stdio_usb_cdc_driver[6] = {
-	{.out_chars = stdio_usb_cdc0_out_chars,
-	 .in_chars = stdio_usb_cdc0_in_chars,
-	 .crlf_enabled = true},
-	{.out_chars = stdio_usb_cdc1_out_chars,
-	 .in_chars = stdio_usb_cdc1_in_chars,
-	 .crlf_enabled = true},
-	{.out_chars = stdio_usb_cdc2_out_chars,
-	 .in_chars = stdio_usb_cdc2_in_chars,
-	 .crlf_enabled = true},
-	{.out_chars = stdio_usb_cdc3_out_chars,
-	 .in_chars = stdio_usb_cdc3_in_chars,
-	 .crlf_enabled = true},
-	{.out_chars = stdio_usb_cdc4_out_chars,
-	 .in_chars = stdio_usb_cdc4_in_chars,
-	 .crlf_enabled = true},
-	{.out_chars = stdio_usb_cdc5_out_chars,
-	 .in_chars = stdio_usb_cdc5_in_chars,
-	 .crlf_enabled = true}};
-
-void usb_cdc_stdio(uint8_t id, bool stdio, bool test)
-{
-	stdio_set_driver_enabled(&stdio_usb_cdc_driver[id], stdio);
-	if (stdio)
-	{
-		if (test&&(LOG_COLOR)) {
-			log_test_color();
-			INFO("stdio on USB CDC %d", id);
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(1);
+		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc1_cb)
+		{
+			INFO("tud_cdc_rx_cb TODO direct route\n");
+			cdc1_cb(b);
+		}
+		else
+		{
+			softirq_out(DEV_ID_TTY2, b, 0, NULL);
 		}
 	}
-	else
+	else if (itf == 2)
 	{
-		INFO("USB CDC %d free'd from stdio", id);
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(2);
+		if (cdc2_cb) cdc2_cb(b);
 	}
+	else if (itf == 3)
+	{
+		uint8_t b = (uint8_t)tud_cdc_n_read_char(3);
+		if (cdc3_cb) cdc3_cb(b);
+	}
+}
+
+// CDC: Invoked when received `wanted_char`
+//void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char) {}
+
+// CDC: Invoked when space becomes available in TX buffer
+//void tud_cdc_tx_complete_cb(uint8_t itf) {}
+
+// CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
+{
+	//INFO("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
+	if (dtr)
+	{ // on connect
+		//INFO("CDC%d connect", itf);
+	}
+	else
+	{ // on disconnect
+		//INFO("CDC%d disconnect", itf);
+	}
+}
+
+// CDC: Invoked when line coding is changed via SET_LINE_CODING
+//void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *line_coding) {}
+
+// CDC: Invoked when received send break
+//void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {}
+
+// Vendor: Invoked when received new data
+void tud_vendor_rx_cb(uint8_t itf)
+{
+	INFO("tud_vendor_rx_cb %d\n", itf);
 }
 
 //--------------------------------------------------------------------+
@@ -480,107 +424,11 @@ bool usb_cdc2_writable(void)
 	return usb_cdc_writable(2);
 }
 
-uint8_t usb_cdc3_read(void)
-{
-	return usb_cdc_read(3);
-}
-
-void usb_cdc3_write(uint8_t b)
-{
-	usb_cdc_write(3, b);
-}
-
-bool usb_cdc3_writable(void)
-{
-	return usb_cdc_writable(3);
-}
-
 //--------------------------------------------------------------------+
-// tinyusb callbacks
+// helpers
 //--------------------------------------------------------------------+
 
-// callbacks for received data
-static byte_tx_t cdc0_cb = NULL;
-static byte_tx_t cdc1_cb = NULL;
-static byte_tx_t cdc2_cb = NULL;
-static byte_tx_t cdc3_cb = NULL;
-
-// CDC: Invoked when received new data
-void tud_cdc_rx_cb(uint8_t itf)
-{
-	//INFO("tud_cdc_rx_cb %d\n", itf);
-	if (itf == 0)
-	{
-		uint8_t b = (uint8_t)tud_cdc_n_read_char(0);
-		// route char
-		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc0_cb)
-		{
-			INFO("tud_cdc_rx_cb TODO direct route\n");
-			cdc0_cb(b);
-		}
-		else
-		{
-			// evelope cdc0 byte for softirq
-			irq_out(DEV_ID_TTY1, b, 0, NULL);
-		}
-	}
-	else if (itf == 1)
-	{
-		uint8_t b = (uint8_t)tud_cdc_n_read_char(1);
-		if (cdc1_cb)
-			cdc1_cb(b);
-	}
-	else if (itf == 2)
-	{
-		uint8_t b = (uint8_t)tud_cdc_n_read_char(2);
-		if (cdc2_cb)
-			cdc2_cb(b);
-	}
-	else if (itf == 3)
-	{
-		uint8_t b = (uint8_t)tud_cdc_n_read_char(3);
-		if (cdc3_cb)
-			cdc3_cb(b);
-	}
-}
-
-// CDC: Invoked when received `wanted_char`
-//void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char) {}
-
-// CDC: Invoked when space becomes available in TX buffer
-//void tud_cdc_tx_complete_cb(uint8_t itf) {}
-
-// CDC: Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
-void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
-{
-	//INFO("CDC %d: dtr %d, rts %d\n", itf, dtr, rts);
-	if (dtr)
-	{ // on connect
-		INFO("CDC%d connect", itf);
-	}
-	else
-	{ // on disconnect
-		INFO("CDC%d disconnect", itf);
-	}
-}
-
-// CDC: Invoked when line coding is changed via SET_LINE_CODING
-//void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *line_coding) {}
-
-// CDC: Invoked when received send break
-//void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms) {}
-
-// Vendor: Invoked when received new data
-void tud_vendor_rx_cb(uint8_t itf)
-{
-	INFO("tud_vendor_rx_cb %d\n", itf);
-}
-
-//--------------------------------------------------------------------+
-// tinyusb wrapper
-//--------------------------------------------------------------------+
-
-repeating_timer_t tusb_timer;
+static repeating_timer_t tusb_timer;
 
 static bool tusb_handler(repeating_timer_t *rt)
 {
@@ -594,11 +442,6 @@ void usb_init(void)
 	tusb_id2str();
 	tusb_init();
 	add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
-
-	//
-	virtual_tty2_init();
-	virtual_tty3_init();
-	virtual_tty4_init();
 }
 
 void usb_cdc0_set_cb(byte_tx_t rx_cb) {
