@@ -1,4 +1,4 @@
-# The Raspberry Pi Pico port
+# The Raspberry Pi Pico port and realtime layer
 
 ## Introduction
 
@@ -8,10 +8,11 @@ cores, 2MB of onboard NAND flash which can be used for code via a demand-paging
 system, and 264kB of RAM.
 
 The Fuzix port runs in cooperative multitasking mode with the root filesystem
-on NAND, and with an optional SD card on the second SPI interface for anything
-else. It supports both console over UART and it'll also pretend to be a USB
-serial device. There's enough memory to run four or five processes at once, and
-you can enable swapping to the SD card for up to 15.
+on USB (optional), SD card (optional) or (as fallback) on the internal NAND.
+It starts with console over UART0 and will pop multiple USB devices on host;
+once a terminal connects on USB CDC devices, the UART0 will be free to user applications.
+There's enough memory to run four or five processes at once, 
+and you can enable swapping to USB or SD card for up to 15.
 
 ## Configuration
 
@@ -23,7 +24,9 @@ Out of the box:
   - /dev/hdb is the SD card. Fuzix understands DOS partition tables. It's not
 	hot swappable as the SD card is only probed at boot time.
 
-If you have an SD card reader, connect the SD card to the following pins:
+  - /dev/hdc is the USB virtual filesystem. (NOTE: not implemented yet)
+
+SD card default pins:
 
         Pico pin     RP2040 pin    SD card pin
         --------------------------------------
@@ -36,9 +39,15 @@ Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 3.3V. Not 5V, or it won't work.
 
 The console is accessible either via UART0 (at 115200 baud) or by connecting
-the Pico up via USB to a PC, at which point it'll present itself as a standard
-USB CDC serial device. Both work simultaneously although odd things can happen
-if you type on both concurrently.
+the Pico up via USB to a PC, at which point it'll present itself as a few standard
+USB CDC serial devices and a few USB Vendor devices.
+USB CDC0 is Fuzix's tty1, USB CDC1 is Fuzix's log device (accessible in-system on tty2),
+USB CDC2 is Fuzix's tty3 for user applications. USB CDC3 isn't mapped on Fuzix's ttys
+and it is available for user applications relying on pico-sdk only.
+USB Vendor0 is Fuzix's binary multiplexer for external filesystem and other purposes.
+USB Vendor1 uses the same protocol of Vendor0 and it is available to user applications.
+USB Vendor2 isn't mapped on Fuzix and it is available to user applications.
+Both USB CDC3 and USB Vendor2 can be reconfigured as other USB classes.
 
 **Note:** when using the USB console, you're unlikely to be able to connect
 quickly enough after boot to see the startup messages. Most likely when you
@@ -52,18 +61,21 @@ RETURN a few times to get to the getty login prompt.
 You need to install the [Raspberry Pi Pico SDK](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
 ```
-cd Kernel/platform-rpipico
+cd Kernel/platform-rpipico_rt
 vi Makefile
 # At this point, you need to edit the Makefile to tell it where the Raspberry Pi Pico SDK lives.
 make image -j
 ```
 
-You should now end up with `build/fuzix.uf2` and `filesystem.uf2`. The `uf2`
-files can be flashed onto the Pico in the usual way (i.e. connect it up as a
-mass storage device and copy the files on). Alternatively, you can use OpenOCD
-to load `build/fuzix.elf`. Once the board has rebooted it will appear as a USB
-serial device which you can connect to. Alternatively, connect a terminal to
-UART 0 on the Pico.
+You should now end up with `build/fuzix.uf2` and `build/filesystem.uf2`.
+Both the `uf2` files must be flashed onto the Pico in the usual way; if it doesn't work
+run the flash_nuke example from pico-examples repository in order to clean the flash first.
+(i.e. connect it up as a mass storage device and copy the files on).
+Alternatively, you can use OpenOCD to load `build/fuzix.elf`. 
+If it doesn't work after the second file has been flashed in, run the flash_nuke example from pico-examples repository in order to clean the flash;
+then upload both files again.
+Once the board has rebooted it will appear as a USB serial devices which you can connect to. 
+Alternatively, connect a terminal to UART0 on the Pico.
 
 If you want to use an SD card, note that only filesystems up to 32MB are
 supported. To format a file system, do this from the Fuzix shell:
@@ -91,6 +103,10 @@ it would render the binaries non-portable.
 
 There's a Forth interpreter as `fforth` (use capital letters) and some games
 are in `/usr/games`.
+
+You can customized the filesystem by modifing the `update-flash.sh` script 
+to include/exclude libraries and other binaries existing and built by default
+from `[FUZIX]/Library` and `[FUZIX]/Applications`.
 
 ## Swap
 
@@ -123,8 +139,7 @@ You probably can swap to the NAND flash, but it's a terrible idea.
 
 ## Using the NAND flash
 
-The Pico's built-in NAND flash is supported, appearing as `/dev/hda` insize
-Fuzix (the SD card is on `/dev/hdb`).  It's mapped via the Dhara FTL library,
+The Pico's built-in NAND flash is mapped via the Dhara FTL library,
 so you get proper wear levelling.  The FTL library requires empty flash sectors
 to work efficiently; the Fuzix filesystem has trim support, so the FTL library
 gets notified when sectors become free, but if the filesystem gets very full
@@ -142,4 +157,3 @@ There are many, the biggest of which are:
 ## Postscript
 
 dg@cowlark.com
-
