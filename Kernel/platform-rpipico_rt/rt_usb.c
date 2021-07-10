@@ -346,11 +346,11 @@ static uint8_t usb_cdc_read(uint8_t cdc)
 		if (tud_cdc_n_available(cdc) > 0)
 			return (uint8_t)tud_cdc_n_read_char(cdc);
 		else
-			WARNING("CDC%d warning buffer full", cdc);
+			WARN("CDC%d WARN buffer full", cdc);
 	}
 	else
 	{
-		WARNING("CDC%d warning not connected", cdc);
+		WARN("CDC%d WARN not connected", cdc);
 	}
 	return 0;
 }
@@ -364,10 +364,10 @@ static void usb_cdc_write(uint8_t cdc, uint8_t b)
 			tud_cdc_n_write_flush(cdc);
 		}
 		else
-			WARNING("CDC%d warning buffer full", cdc);
+			WARN("CDC%d WARN buffer full", cdc);
 	}
 	else
-		WARNING("CDC%d warning not connected", cdc);
+		WARN("CDC%d WARN not connected", cdc);
 }
 
 static bool usb_cdc_writable(uint8_t cdc)

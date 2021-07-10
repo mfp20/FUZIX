@@ -35,7 +35,7 @@ static int usb_trim(void) {
 uint32_t usb_vend0_init(void *blk_op) {
 	critical_section_init(&usb_critical);
 
-	printf("USB blockdev, ");
+	WARN("USB blockdev, NOT IMPLEMENTED");
 
 	// TODO
     //devsd_spi_init();

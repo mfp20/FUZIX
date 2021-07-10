@@ -6,35 +6,63 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-static char buffer[256];
+char stdio_buffer[256];
+static int stdio_buffer_index = 0;
 
 uint8_t log_level = LOG_LEVEL;
 
 //--------------------------------------------------------------------+
-// stdio driver
-//--------------------------------------------------------------------+
-
-static void stdio_out_chars(const char *buf, int len)
-{
-	for (uint32_t i=0;i<len;i++)
-		rt_select_write(buf[i]);
-}
-static int stdio_in_chars(char *buf, int len)
-{
-	for (uint32_t i=0;i<len;i++)
-		buf[i] = rt_select_read();
-	return len;
-}
-
-stdio_driver_t stdio_driver = {
-	.out_chars = stdio_out_chars,
-	.in_chars = stdio_in_chars,
-	.crlf_enabled = true
-};
-
-//--------------------------------------------------------------------+
 // enhanced logging
 //--------------------------------------------------------------------+
+
+static void stdio_buffer_flush(void) {
+	for (uint32_t i=0;i<stdio_buffer_index;i++)
+		rt_select_write(stdio_buffer[i]);
+	stdio_buffer_index = 0;
+}
+
+void stdio_putchar(uint8_t b) {
+	stdio_buffer[stdio_buffer_index] = b;
+	stdio_buffer_index++;
+	// truncate and print
+	if (stdio_buffer_index==254) {
+		if (stdio_buffer[stdio_buffer_index] != '\n') {
+			stdio_buffer[stdio_buffer_index] = '\n';
+		}
+		stdio_buffer[stdio_buffer_index+1] = '\0';
+		stdio_buffer_flush();
+		WARN("Previous stdio buffer truncated to 255 chars.");
+		return;
+	}
+	// terminate string and print
+	if (b == '\n') {
+		stdio_buffer[stdio_buffer_index] = '\0';
+		stdio_buffer_flush();
+		return;
+	}
+}
+
+void stdio_kputchar(uint8_t b) {
+	if (stdio_buffer_index==0) {
+		FUZIX_LOG_HEADER;
+	}
+	stdio_putchar(b);
+}
+
+void stdio_printf(const char *fmt, ...) {
+    va_list arglist;
+    va_start( arglist, fmt );
+    stdio_buffer_index = vsnprintf(stdio_buffer, 256, fmt, arglist);
+    va_end( arglist );
+	if ((stdio_buffer_index>0)&&(stdio_buffer_index<256)) {
+		stdio_buffer_flush();
+	}
+	else
+	{
+		stdio_buffer_flush();
+		WARN("Previous stdio buffer truncated to 255 chars.");
+	}
+}
 
 void log_set_level(uint8_t level)
 {
@@ -92,73 +120,45 @@ void log_snprintf_hex(unsigned char *in, unsigned int count, char *out)
 }
 
 void log_test_color(void) {
-	stdio_printf("\t\t\t------ stdio color test start ------\n");
-	stdio_printf("\tNOTE: if you have problem to read the folowing lines just disable colors in config.h\n");
+	unsigned char data[20] = {32, 1, 24, 56, 102, 5, 78, 92, 200, 0, 32, 1, 24, 56, 102, 5, 78, 92, 200, 0};
+
+	stdio_printf(LOG_STYLE_CLEAR "------ stdio color test start ------\n");
+	stdio_printf("NOTE: if you have problems reading the folowing lines\n");
+	stdio_printf("      enable ANSI colors on your terminal\n");
+	stdio_printf("      or disable colors in config.h\n");
 	EMERG("emergency log entry");
 	ALERT("alert log entry");
 	CRIT("critical log entry");
 	ERR("error log entry");
-	WARNING("warning log entry");
+	WARN("warning log entry");
+	FUZIX_LOG_HEADER;stdio_printf("fuzix kernel log entry\n");
 	NOTICE("notice log entry");
 	INFO("info log entry");
 	DEBUG("debug log entry");
-	unsigned char data[20] = {32, 1, 24, 56, 102, 5, 78, 92, 200, 0, 32, 1, 24, 56, 102, 5, 78, 92, 200, 0};
-	LOG_HEX(data, 20, "hex %s", "log entry");
-	stdio_printf("\t\t\t------ stdio color test end ------\n");
+	//HEX(data, 20, "hex %s", "log entry");
+	stdio_printf("                ------ stdio color test end ------\n");
 }
 
-void stdio_putchar(uint8_t b) {
-	rt_select_write(b);
+//--------------------------------------------------------------------+
+// stdio driver
+//--------------------------------------------------------------------+
+
+static void stdio_out_chars(const char *buf, int len)
+{
+	stdio_printf("%.*s", len, buf);
 }
 
-void stdio_printf(const char *fmt, ...) {
-    va_list arglist;
-    va_start( arglist, fmt );
-    int len = vsnprintf(buffer, 256, fmt, arglist);
-    va_end( arglist );
-	if ((len>0)&&(len<256))
-		stdio_out_chars(buffer, len);
-	else {
-		stdio_out_chars(buffer, len);
-		WARNING("Last line truncated to 255 chars");
-	}
+static int stdio_in_chars(char *buf, int len)
+{
+	for (uint32_t i=0;i<len;i++)
+		buf[i] = rt_select_read();
+	return len;
 }
 
-void stdio_log(uint8_t level, const char *fmt, ...) {
-    va_list arglist;
-    va_start( arglist, fmt );
-    vsnprintf(buffer, 256, fmt, arglist);
-    va_end( arglist );
-
-	stdio_printf("%s\n\r", buffer);
-	return;
-
-    switch (level) {
-        case LEVEL_EMERG:
-            LOG_EME("%s", buffer);
-        break;
-        case LEVEL_ALERT:
-            LOG_ALE("%s", fmt);
-        break;
-        case LEVEL_CRIT:
-            LOG_CRI("%s", fmt);
-        break;
-        case LEVEL_ERR:
-            LOG_ERR("%s", fmt);
-        break;
-        case LEVEL_WARNING:
-            LOG_WAR("%s", fmt);
-        break;
-        case LEVEL_NOTICE:
-            LOG_NOT("%s", fmt);
-        break;
-        case LEVEL_INFO:
-            LOG_INF("%s", buffer);
-        break;
-        case LEVEL_DEBUG:
-            LOG_DEB("%s", fmt);
-        break;
-    }
-}
+stdio_driver_t stdio_driver = {
+	.out_chars = stdio_out_chars,
+	.in_chars = stdio_in_chars,
+	.crlf_enabled = true
+};
 
 /* vim: sw=4 ts=4 et: */

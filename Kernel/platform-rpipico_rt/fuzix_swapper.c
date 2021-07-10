@@ -74,7 +74,7 @@ static struct mapentry* find_free_block(ptptr p)
         #endif
         if (!swapneeded(p, true))
         {
-            kprintf("warning: out of memory\n");
+            kprintf("WARN: out of memory\n");
             return NULL;
         }
     }

@@ -88,7 +88,7 @@ void virtual_sd_init(void) {
 
 void virtual_usb_fs_init(void) {
 	// init real device
-	// TODO uint32_t lba = usb_init(&blk_op);
+	uint32_t lba = usb_vend0_init(&blk_op);
 
 	// init virtual device
 	//blkdev_add(virtual_usb_transfer, NULL, virtual_usb_trim, lba);

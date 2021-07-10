@@ -51,18 +51,18 @@ static bool rt_softirq(repeating_timer_t *rt)
         queue_remove_blocking(&softirq_in_q, &softirq_in);
         switch (softirq_in.dev) {
             case DEV_ID_TIMER:
-                WARNING("rt_softirq TIMER sig %d count %d", softirq_in.sig, softirq_in.count);
+                WARN("rt_softirq TIMER sig %d count %d", softirq_in.sig, softirq_in.count);
             break;
             case DEV_ID_CORE1:
                 INFO("rt_softirq CORE1 sig %d count %d", softirq_in.sig, softirq_in.count);
                 if (softirq_in.count) {
-                    WARNING("rt_softirq CORE1 sig %d count %d", softirq_in.sig, softirq_in.count);
+                    WARN("rt_softirq CORE1 sig %d count %d", softirq_in.sig, softirq_in.count);
                     // TODO
                 }
                 else
                 {
                     if (softirq_in.sig == SIG_ID_RX) {
-                        WARNING("rt_softirq CORE1 sig %d count %d", softirq_in.sig, softirq_in.count);
+                        WARN("rt_softirq CORE1 sig %d count %d", softirq_in.sig, softirq_in.count);
                         uint8_t c = core1_read();
                         // TODO
                     }
@@ -87,7 +87,7 @@ static bool rt_softirq(repeating_timer_t *rt)
                 }
                 else
                 {
-                    WARNING("rt_softirq FLASH sig %d count %d", softirq_in.sig, softirq_in.count);
+                    WARN("rt_softirq FLASH sig %d count %d", softirq_in.sig, softirq_in.count);
                 }
             break;
             case DEV_ID_SD:
@@ -103,7 +103,7 @@ static bool rt_softirq(repeating_timer_t *rt)
                 }
                 else
                 {
-                    WARNING("rt_softirq SD sig %d count %d", softirq_in.sig, softirq_in.count);
+                    WARN("rt_softirq SD sig %d count %d", softirq_in.sig, softirq_in.count);
                 }
             break;
             case DEV_ID_USB_VEND0:
@@ -119,7 +119,7 @@ static bool rt_softirq(repeating_timer_t *rt)
                 }
                 else
                 {
-                    WARNING("rt_softirq USB sig %d count %d", softirq_in.sig, softirq_in.count);
+                    WARN("rt_softirq USB sig %d count %d", softirq_in.sig, softirq_in.count);
                 }
             break;
             case DEV_ID_STDIO:
@@ -129,10 +129,16 @@ static bool rt_softirq(repeating_timer_t *rt)
                 }
                 else if (softirq_in.sig == SIG_ID_TX)
                 {
-                    if (stdio_byte == '\n')
-                        rt_select_write('\r');
-                    rt_select_write(stdio_byte);
-                    stdio_irq_done = true;
+                    if (softirq_in.count) {
+                        WARN("rt_softirq DEV_ID_STDIO, count > 0, NOT IMPLEMENTED");
+                    }
+                    else
+                    {
+                        if (stdio_byte == '\n')
+                            stdio_kputchar('\r');
+                        stdio_kputchar(stdio_byte);
+                        stdio_irq_done = true;
+                    }
                 }
             break;
             case DEV_ID_TTY1: // 

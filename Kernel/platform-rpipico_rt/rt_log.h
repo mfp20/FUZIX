@@ -1,219 +1,133 @@
-#ifndef _SDK_LOG_DOT_H
-#define _SDK_LOG_DOT_H
+#ifndef _RT_LOG_DOT_H
+#define _RT_LOG_DOT_H
 
-#include "rt.h"
-#include "rt_time.h"
 #include "rt_stdio.h"
+#include "rt_time.h"
 
-#include <stdio.h>	// printf
-#include <errno.h>	// errno
-#include <string.h> // strerror
+#include <string.h>
 
-// compile-time level setup
-#ifndef LOG_LEVEL
-#define LOG_LEVEL (7)
-#endif
-// runtime log level setup
-extern uint8_t log_level;
-
+// colors
 #ifndef LOG_COLOR
 #define LOG_COLOR (0)
 #endif
+#define LOG_COLOR_NONE "\e[0m"
+#define LOG_COLOR_BLACK "\e[0;30m"
+#define LOG_COLOR_L_BLACK "\e[1;30m"
+#define LOG_COLOR_RED "\e[0;31m"
+#define LOG_COLOR_L_RED "\e[1;31m"
+#define LOG_COLOR_GREEN "\e[0;32m"
+#define LOG_COLOR_L_GREEN "\e[1;32m"
+#define LOG_COLOR_BROWN "\e[0;33m"
+#define LOG_COLOR_YELLOW "\e[1;33m"
+#define LOG_COLOR_BLUE "\e[0;34m"
+#define LOG_COLOR_L_BLUE "\e[1;34m"
+#define LOG_COLOR_PURPLE "\e[0;35m"
+#define LOG_COLOR_L_PURPLE "\e[1;35m"
+#define LOG_COLOR_CYAN "\e[0;36m"
+#define LOG_COLOR_L_CYAN "\e[1;36m"
+#define LOG_COLOR_GRAY "\e[0;37m"
+#define LOG_COLOR_WHITE "\e[1;37m"
+#define LOG_STYLE_BOLD "\e[1m"
+#define LOG_STYLE_UNDERLINE "\e[4m"
+#define LOG_STYLE_BLINK "\e[5m"
+#define LOG_STYLE_REVERSE "\e[7m"
+#define LOG_STYLE_HIDE "\e[8m"
+#define LOG_STYLE_CLEAR "\e[2J"
+#define LOG_STYLE_CLRLINE "\r\e[K" //or "\e[1K\r"
 
-// colors
-#define NONE "\e[0m"
-#define BLACK "\e[0;30m"
-#define L_BLACK "\e[1;30m"
-#define RED "\e[0;31m"
-#define L_RED "\e[1;31m"
-#define GREEN "\e[0;32m"
-#define L_GREEN "\e[1;32m"
-#define BROWN "\e[0;33m"
-#define YELLOW "\e[1;33m"
-#define BLUE "\e[0;34m"
-#define L_BLUE "\e[1;34m"
-#define PURPLE "\e[0;35m"
-#define L_PURPLE "\e[1;35m"
-#define CYAN "\e[0;36m"
-#define L_CYAN "\e[1;36m"
-#define GRAY "\e[0;37m"
-#define WHITE "\e[1;37m"
+// levels (syslog-ish)
+#ifndef LOG_LEVEL
+#define LOG_LEVEL (7)
+#endif
+#define LOG_LEVEL_EMERG (0)
+#define LOG_LEVEL_ALERT (1)
+#define LOG_LEVEL_CRIT (2)
+#define LOG_LEVEL_ERR (3)
+#define LOG_LEVEL_WARN (4)
+#define LOG_LEVEL_FUZIX (5)
+#define LOG_LEVEL_NOTICE (6)
+#define LOG_LEVEL_INFO (7)
+#define LOG_LEVEL_DEBUG (8)
 
-#define BOLD "\e[1m"
-#define UNDERLINE "\e[4m"
-#define BLINK "\e[5m"
-#define REVERSE "\e[7m"
-#define HIDE "\e[8m"
-#define CLEAR "\e[2J"
-#define CLRLINE "\r\e[K" //or "\e[1K\r"
+// level
+#define LOG_CONTENT_LEVEL_EMERG		LOG_COLOR_PURPLE LOG_STYLE_REVERSE	"[EMERG]\t" LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_ALERT		LOG_COLOR_PURPLE	"[ALERT]\t" LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_CRIT		LOG_COLOR_RED		"[CRIT]\t"	LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_ERR		LOG_COLOR_BROWN 	"[ERR]\t"	LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_WARN		LOG_COLOR_YELLOW 	"[WARNING]\t" LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_FUZIX		LOG_COLOR_WHITE		"[FUZIX]\t" LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_NOTICE	LOG_COLOR_CYAN		"[NOTICE]\t" LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_INFO		LOG_COLOR_GREEN  	"[INFO]\t"	LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_DEBUG		LOG_COLOR_GREEN LOG_STYLE_REVERSE	"[DEBUG]\t"	LOG_COLOR_NONE
+#define LOG_CONTENT_LEVEL_HEX		LOG_COLOR_GREEN LOG_STYLE_REVERSE	"[HEX]\t"	LOG_COLOR_NONE
 
-#if false
+// time
+#define LOG_CONTENT_TIME_FMT LOG_COLOR_WHITE "%010ld "
+#define LOG_CONTENT_TIME_VARS monotonic32()
+
+// true for windows, false for linux/mac
+#if true
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #else
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #endif
 
-/* safe readable version of errno */
-#define clean_errno() (errno == 0 ? "None" : strerror(errno))
-
-#ifdef BUILD_DEBUG
-#define LOG_CONTENT_FORMAT "(errno: %s) %s::%d::%s\t"
-#define LOG_CONTENT_VARS clean_errno(), __FILENAME__, __LINE__, __func__
+//#ifdef BUILD_DEBUG
+#if false
+#define LOG_CONTENT_ERRFILE_FMT "%s::%d::%s\t"
+#define LOG_CONTENT_ERRFILE_VARS __FILENAME__, __LINE__, __func__
+#define LOG_CONTENT_FMT(level)		LOG_CONTENT_TIME_FMT LOG_##level LOG_CONTENT_ERRFILE_FMT
+#define LOG_CONTENT_VARS			LOG_CONTENT_TIME_VARS, LOG_CONTENT_ERRFILE_VARS
 #else
-#define LOG_CONTENT_FORMAT "(errno: %s) %s\t"
-#define LOG_CONTENT_VARS clean_errno()
+#define LOG_CONTENT_FMT(level)		LOG_CONTENT_TIME_FMT LOG_##level
+#define LOG_CONTENT_VARS			LOG_CONTENT_TIME_VARS
 #endif
 
 //
-#define LOG_EME_UNFILTERED(M, ...) stdio_printf("%010ld " RED "[EMERG]   " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_ALE_UNFILTERED(M, ...) stdio_printf("%010ld " PURPLE "[ALERT]   " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_CRI_UNFILTERED(M, ...) stdio_printf("%010ld " YELLOW "[CRIT]    " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_ERR_UNFILTERED(M, ...) stdio_printf("%010ld " BROWN "[ERR]     " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_WAR_UNFILTERED(M, ...) stdio_printf("%010ld " GREEN "[WARNING] " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_NOT_UNFILTERED(M, ...) stdio_printf("%010ld " L_BLUE "[NOTICE]  " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_INF_UNFILTERED(M, ...) stdio_printf("%010ld " CYAN "[INFO]    " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-#define LOG_DEB_UNFILTERED(M, ...) stdio_printf("%010ld " GRAY "[DEBUG]   " LOG_CONTENT_FORMAT NONE M, monotonic32(), LOG_CONTENT_VARS, ##__VA_ARGS__);
-void log_snprintf_hex(unsigned char *in, unsigned int count, char *out);
-#define LOG_HEX_UNFILTERED(D, N, M, ...)                  \
-	{                                                     \
-		char str_val[N * 15];                             \
-		log_snprintf_hex(D, N, str_val);                        \
-		stdio_printf("%010ld "                            \
-			   "[DEBUG]   (%d Bytes) " M "%s",            \
-			   monotonic32(), N, ##__VA_ARGS__, str_val); \
-	}
-
-// without \n
-#define LOG_EME_NON(M, ...) \
-	if (log_level >= LEVEL_EMERG) \
-		LOG_EME_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_ALE_NON(M, ...) \
-	if (log_level >= LEVEL_ALERT) \
-		LOG_ALE_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_CRI_NON(M, ...) \
-	if (log_level >= LEVEL_CRIT)  \
-		LOG_CRI_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_ERR_NON(M, ...) \
-	if (log_level >= LEVEL_ERR)   \
-		LOG_ERR_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_WAR_NON(M, ...)   \
-	if (log_level >= LEVEL_WARNING) \
-		LOG_WAR_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_NOT_NON(M, ...)  \
-	if (log_level >= LEVEL_NOTICE) \
-		LOG_NOT_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_INF_NON(M, ...) \
-	if (log_level >= LEVEL_INFO)  \
-		LOG_INF_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_DEB_NON(M, ...) \
-	if (log_level >= LEVEL_DEBUG) \
-		LOG_DEB_UNFILTERED(M, ##__VA_ARGS__);
-#define LOG_HEX_NON(D, N, M, ...) \
-	if (log_level >= LEVEL_DEBUG)       \
-		LOG_HEX_UNFILTERED(D, N, M, ##__VA_ARGS__);
-
-// add \n
-#define LOG_EME(M, ...) LOG_EME_NON(M "\n", ##__VA_ARGS__);
-#define LOG_ALE(M, ...) LOG_ALE_NON(M "\n", ##__VA_ARGS__);
-#define LOG_CRI(M, ...) LOG_CRI_NON(M "\n", ##__VA_ARGS__);
-#define LOG_ERR(M, ...) LOG_ERR_NON(M "\n", ##__VA_ARGS__);
-#define LOG_WAR(M, ...) LOG_WAR_NON(M "\n", ##__VA_ARGS__);
-#define LOG_NOT(M, ...) LOG_NOT_NON(M "\n", ##__VA_ARGS__);
-#define LOG_INF(M, ...) LOG_INF_NON(M "\n", ##__VA_ARGS__);
-#define LOG_DEB(M, ...) LOG_DEB_NON(M "\n", ##__VA_ARGS__);
-#define LOG_HEX(D, N, M, ...) LOG_HEX_NON(D, N, M "\n", ##__VA_ARGS__);
-
-// undefine levels according to configuration
-#if LOG_LEVEL < LEVEL_DEBUG
-#undef LOG_DEB_NON
-#define LOG_DEB_NON(M, ...) ((void)0)
-#undef LOG_DEB
-#define LOG_DEB(M, ...) ((void)0)
-#undef LOG_HEX_NON
-#define LOG_HEX_NON(D, N, M, ...) ((void)0)
-#undef LOG_HEX
-#define LOG_HEX(D, N, M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_INFO
-#undef LOG_INF_NON
-#define LOG_INF_NON(M, ...) ((void)0)
-#undef LOG_INF
-#define LOG_INF(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_NOTICE
-#undef LOG_NOT_NON
-#define LOG_NOT_NON(M, ...) ((void)0)
-#undef LOG_NOT
-#define LOG_NOT(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_WARNING
-#undef LOG_WARING_NON
-#define LOG_WARING_NON(M, ...) ((void)0)
-#undef LOG_WARING
-#define LOG_WARING(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_ERR
-#undef LOG_ERR_NON
-#define LOG_ERR_NON(M, ...) ((void)0)
-#undef LOG_ERR
-#define LOG_ERR(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_CRIT
-#undef LOG_CRI_NON
-#define LOG_CRI_NON(M, ...) ((void)0)
-#undef LOG_CRI
-#define LOG_CRI(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_ALERT
-#undef LOG_ALE_NON
-#define LOG_ALE_NON(M, ...) ((void)0)
-#undef LOG_ALE
-#define LOG_ALE(M, ...) ((void)0)
-#endif
-
-#if LOG_LEVEL < LEVEL_EMERG
-#undef LOG_EME_NON
-#define LOG_EME_NON(M, ...) ((void)0)
-#undef LOG_EME
-#define LOG_EME(M, ...) ((void)0)
-#endif
+#define EMERG(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_EMERG)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define ALERT(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_ALERT)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define CRIT(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_CRIT)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define ERR(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_ERR)		STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define WARN(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_WARN)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define FUZIX_LOG_HEADER	stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_FUZIX)	LOG_COLOR_NONE, LOG_CONTENT_VARS)
+#define NOTICE(STR, ...)	stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_NOTICE)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define INFO(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_INFO)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+#define DEBUG(STR, ...)		stdio_printf(LOG_CONTENT_FMT(CONTENT_LEVEL_DEBUG)	STR LOG_COLOR_NONE "\n", LOG_CONTENT_VARS, ##__VA_ARGS__)
+//#define HEX(PTR, LEN, STR, ...)		LOG_FMT_ARGS(LOG_CONTENT_TIME_FMT LOG_CONTENT_LEVEL_HEX LOG_CONTENT_ERRFILE_FMT STR, LOG_CONTENT_VARS, ##__VA_ARGS__)
 
 // undefine colors according to configuration
 #if LOG_COLOR < 1
 
-#undef NONE
-#define NONE
+#undef LOG_COLOR_NONE
+#define LOG_COLOR_NONE
 
-#undef RED
-#define RED
+#undef LOG_COLOR_RED
+#define LOG_COLOR_RED
 
-#undef PURPLE
-#define PURPLE
+#undef LOG_COLOR_PURPLE
+#define LOG_COLOR_PURPLE
 
-#undef YELLOW
-#define YELLOW
+#undef LOG_COLOR_YELLOW
+#define LOG_COLOR_YELLOW
 
-#undef BROWN
-#define BROWN
+#undef LOG_COLOR_BROWN
+#define LOG_COLOR_BROWN
 
-#undef GREEN
-#define GREEN
+#undef LOG_COLOR_GREEN
+#define LOG_COLOR_GREEN
 
-#undef CYAN
-#define CYAN
+#undef LOG_COLOR_CYAN
+#define LOG_COLOR_CYAN
 
-#undef BLUE
-#define BLUE
+#undef LOG_COLOR_BLUE
+#define LOG_COLOR_BLUE
 
-#undef GRAY
-#define GRAY
+#undef LOG_COLOR_GRAY
+#define LOG_COLOR_GRAY
 
 #endif
+
+// runtime log level setup
+extern uint8_t log_level;
 
 #endif

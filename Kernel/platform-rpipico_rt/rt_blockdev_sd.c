@@ -80,7 +80,7 @@ static int sd_trim(void) {
 uint32_t sd_init(void *blk_op) {
 	critical_section_init(&sd_critical);
 
-	printf("SD card, ");
+	WARN("SD card, NOT IMPLEMENTED");
 
 	// TODO
     //devsd_spi_init();

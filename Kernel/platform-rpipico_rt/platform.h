@@ -5,6 +5,7 @@
 #include "tusb_config.h"
 
 #include "rt.h"
+#include "rt_log.h"
 #include "rt_stdio.h"
 #include "rt_time.h"
 #include "rt_power.h"

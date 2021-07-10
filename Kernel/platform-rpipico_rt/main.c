@@ -117,7 +117,7 @@ int main(void)
 
 	//
 	log_test_color();
-	INFO("* Realtime backend ready");
+	INFO("Pico realtime layer initialized");
 
 	// disable interrupts and run fuzix
 	di();
