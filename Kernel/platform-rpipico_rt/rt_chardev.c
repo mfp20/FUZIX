@@ -87,7 +87,7 @@ uint8_t rt_select_read(void)
 	{
 		return usb_cdc1_read();
 	}
-	return uart_getc(uart0);
+	return fuzix_select_read();
 }
 
 void rt_select_write(uint8_t b)
@@ -97,7 +97,7 @@ void rt_select_write(uint8_t b)
 		usb_cdc1_write(b);
 		return;
 	}
-	uart_putc(uart0, b);
+	fuzix_select_write(b);
 }
 
 bool rt_select_writable(void)
@@ -106,7 +106,7 @@ bool rt_select_writable(void)
 	{
 		return usb_cdc1_writable();
 	}
-	return uart_is_writable(uart0);
+	return fuzix_select_writable();
 }
 
 /* vim: sw=4 ts=4 et: */
