@@ -105,12 +105,12 @@ static int flash_trim(void) {
 uint32_t flash_init(void *blk_op) {
 	critical_section_init(&flash_critical);
 
-	NOTICE("NAND flash init");
+	NOTICE("NAND flash: init");
 	dhara_map_init(&dhara, &nand, journal_buf, 10);
 	dhara_error_t err = DHARA_E_NONE;
 	dhara_map_resume(&dhara, &err);
 	uint32_t lba = dhara_map_capacity(&dhara);
-	NOTICE("NAND flash ready: %dkB physical %dkB logical at 0x%p: ", nand.num_blocks * 4, lba / 2, XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET);
+	NOTICE("NAND flash ready: %dkB physical %dkB logical at 0x%p", nand.num_blocks * 4, lba / 2, XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET);
 
 	blockdev_id_flash = blockdev_add(flash_transfer, NULL, flash_trim, lba, blk_op);
 

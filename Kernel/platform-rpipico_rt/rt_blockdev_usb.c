@@ -35,16 +35,19 @@ static int usb_trim(void) {
 uint32_t usb_vend0_init(void *blk_op) {
 	critical_section_init(&usb_critical);
 
-	WARN("USB blockdev, NOT IMPLEMENTED");
+	NOTICE("USB external filesystem: init");
 
-	// TODO
-    //devsd_spi_init();
-	//devsd_init();
-
-	//printf("%dkB physical %dkB logical at 0x%p: ", nand.num_blocks * 4, lba / 2, XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET);
-
-	//blockdev_id_sd = blockdev_add(sd_transfer, NULL, sd_trim, lba, blk_op);
-
+	uint32_t lba = 0;
+	
+	if (lba) {
+		blockdev_id_usb_vend0 = blockdev_add(usb_transfer, NULL, usb_trim, lba, blk_op);
+		NOTICE("USB external filesystem: %dkB logical", lba / 2);
+	}
+	else
+	{
+		NOTICE("USB external filesystem: not found on boot");
+	}
+	WARN("USB external filesystem: NOT IMPLEMENTED");
 	//return lba;
     return 0;
 }

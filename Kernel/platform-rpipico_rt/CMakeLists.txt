@@ -38,6 +38,7 @@ add_executable(fuzix
 	rt_blockdev_sd.c
 	rt_blockdev_usb.c
 	rt_usb.c
+	rt_usb_vendor.c
 	fuzix_elf.c 
 	fuzix_tty.c
 	fuzix_swapper.c

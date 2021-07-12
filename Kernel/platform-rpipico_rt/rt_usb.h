@@ -2,12 +2,23 @@
 #define _RT_USB_DOT_H
 
 #include "rt.h"
+#include "rt_usb_vendor.h"
 
 void usb_init(void);
 void usb_cdc0_set_cb(byte_tx_t rx_cb);
 void usb_cdc1_set_cb(byte_tx_t rx_cb);
 void usb_cdc2_set_cb(byte_tx_t rx_cb);
 void usb_cdc3_set_cb(byte_tx_t rx_cb);
+void usb_vend0_set_cb(usb_packet_control_fptr packet_control,
+						usb_fs_buffer_addr_fptr fs_block_addr,
+						usb_fs_rx_fptr fs_rx,
+						usb_packet_chardev_fptr packet_core1,
+						usb_packet_chardev_fptr packet_tty1,
+						usb_packet_chardev_fptr packet_tty2,
+						usb_packet_chardev_fptr packet_tty3
+						);
+void usb_vend1_set_cb(byte_tx_t rx_cb);
+void usb_vend2_set_cb(byte_tx_t rx_cb);
 
 uint8_t usb_cdc0_read(void);
 void usb_cdc0_write(uint8_t b);

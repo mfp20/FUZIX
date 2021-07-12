@@ -261,6 +261,8 @@ static byte_tx_t cdc0_cb = NULL;
 static byte_tx_t cdc1_cb = NULL;
 static byte_tx_t cdc2_cb = NULL;
 static byte_tx_t cdc3_cb = NULL;
+static byte_tx_t vend1_cb = NULL;
+static byte_tx_t vend2_cb = NULL;
 
 // CDC: Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf)
@@ -333,6 +335,48 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 void tud_vendor_rx_cb(uint8_t itf)
 {
 	INFO("tud_vendor_rx_cb %d\n", itf);
+	if (itf==0) {
+		// dispatch all packets in usb buffer
+		do {
+			uint32_t len = tud_vendor_n_available(itf);
+			// first byte
+			if (vend_expected==0) {
+				usb_packet_set_size();
+				len--;
+			}
+			// whole packet ready
+			if (len>=vend_expected) {
+				usb_packet_dispatch(vend_expected);
+				len = len-vend_expected;
+				// prepare next iteration
+				if (len)
+					usb_packet_set_size();
+				else
+					vend_expected = itf;
+			}
+		} while (vend_expected);
+	}
+	else if (itf==1) {
+		uint8_t b;
+		while (tud_vendor_n_available(itf)>0) {
+			tud_vendor_n_read(itf, &b, 1);
+			if (vend1_cb)
+				vend1_cb(b);
+			else
+                WARN("USB VEND1: packet received but callback is not set");
+		}
+	}
+	else
+	{
+		uint8_t b;
+		while (tud_vendor_n_available(itf)>0) {
+			tud_vendor_n_read(itf, &b, 1);
+			if (vend2_cb)
+				vend2_cb(b);
+			else
+                WARN("USB VEND2: packet received but callback is not set");
+		}
+	}
 }
 
 //--------------------------------------------------------------------+
@@ -425,6 +469,20 @@ bool usb_cdc2_writable(void)
 }
 
 //--------------------------------------------------------------------+
+// vendor interfaces
+//--------------------------------------------------------------------+
+
+/*
+bool     tud_vendor_n_mounted         (uint8_t itf);
+uint32_t tud_vendor_n_available       (uint8_t itf);
+uint32_t tud_vendor_n_read            (uint8_t itf, void* buffer, uint32_t bufsize);
+bool     tud_vendor_n_peek            (uint8_t itf, uint8_t* u8);
+uint32_t tud_vendor_n_write           (uint8_t itf, void const* buffer, uint32_t bufsize);
+uint32_t tud_vendor_n_write_available (uint8_t itf);
+*/
+
+
+//--------------------------------------------------------------------+
 // helpers
 //--------------------------------------------------------------------+
 
@@ -458,4 +516,29 @@ void usb_cdc2_set_cb(byte_tx_t rx_cb) {
 
 void usb_cdc3_set_cb(byte_tx_t rx_cb) {
 	cdc3_cb = rx_cb;
+}
+
+void usb_vend0_set_cb(usb_packet_control_fptr packet_control_rx,
+						usb_fs_buffer_addr_fptr fs_block_addr,
+						usb_fs_rx_fptr fs_rx,
+						usb_packet_chardev_fptr packet_core1_rx,
+						usb_packet_chardev_fptr packet_tty1_rx,
+						usb_packet_chardev_fptr packet_tty2_rx,
+						usb_packet_chardev_fptr packet_tty3_rx
+						) {
+	usb_packet_control_rx = packet_control_rx;
+	usb_fs_block_addr = fs_block_addr;
+	usb_fs_rx = fs_rx;
+	usb_packet_core1_rx = packet_core1_rx;
+	usb_packet_tty1_rx = packet_tty1_rx;
+	usb_packet_tty2_rx = packet_tty2_rx;
+	usb_packet_tty3_rx = packet_tty3_rx;
+}
+
+void usb_vend1_set_cb(byte_tx_t rx_cb) {
+	vend1_cb = rx_cb;
+}
+
+void usb_vend2_set_cb(byte_tx_t rx_cb) {
+	vend2_cb = rx_cb;
 }
