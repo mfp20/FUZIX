@@ -54,6 +54,9 @@ void chardev_mod(uint8_t chardev_id, byte_rx_t r, byte_tx_t t, byte_ready_t w)
 // uart0/usb0 selection for kputchar+tty1
 uint8_t fuzix_select_read(void)
 {
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty1_read();
+	}
 	if (tud_cdc_n_connected(0))
 	{
 		return usb_cdc0_read();
@@ -63,6 +66,10 @@ uint8_t fuzix_select_read(void)
 
 void fuzix_select_write(uint8_t b)
 {
+	if (usb_vend_chardev_connected) {
+		usb_vend_tty1_write(b);
+		return;
+	}
 	if (tud_cdc_n_connected(0))
 	{
 		usb_cdc0_write(b);
@@ -73,6 +80,9 @@ void fuzix_select_write(uint8_t b)
 
 bool fuzix_select_writable(void)
 {
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty1_writable();
+	}
 	if (tud_cdc_n_connected(0))
 	{
 		return usb_cdc0_writable();
@@ -83,6 +93,9 @@ bool fuzix_select_writable(void)
 // uart0/usb1 selection for kputchar+tty2
 uint8_t rt_select_read(void)
 {
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty2_read();
+	}
 	if (tud_cdc_n_connected(1))
 	{
 		return usb_cdc1_read();
@@ -92,6 +105,10 @@ uint8_t rt_select_read(void)
 
 void rt_select_write(uint8_t b)
 {
+	if (usb_vend_chardev_connected) {
+		usb_vend_tty2_write(b);
+		return;
+	}
 	if (tud_cdc_n_connected(1))
 	{
 		usb_cdc1_write(b);
@@ -102,6 +119,9 @@ void rt_select_write(uint8_t b)
 
 bool rt_select_writable(void)
 {
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty2_writable();
+	}
 	if (tud_cdc_n_connected(1))
 	{
 		return usb_cdc1_writable();

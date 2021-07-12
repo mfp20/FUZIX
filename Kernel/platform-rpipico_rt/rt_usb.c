@@ -380,7 +380,7 @@ void tud_vendor_rx_cb(uint8_t itf)
 }
 
 //--------------------------------------------------------------------+
-// chardev drivers
+// cdc chardev drivers
 //--------------------------------------------------------------------+
 
 static uint8_t usb_cdc_read(uint8_t cdc)
@@ -390,11 +390,11 @@ static uint8_t usb_cdc_read(uint8_t cdc)
 		if (tud_cdc_n_available(cdc) > 0)
 			return (uint8_t)tud_cdc_n_read_char(cdc);
 		else
-			WARN("CDC%d WARN buffer full", cdc);
+			WARN("CDC%d buffer full", cdc);
 	}
 	else
 	{
-		WARN("CDC%d WARN not connected", cdc);
+		WARN("CDC%d not connected", cdc);
 	}
 	return 0;
 }
@@ -408,10 +408,10 @@ static void usb_cdc_write(uint8_t cdc, uint8_t b)
 			tud_cdc_n_write_flush(cdc);
 		}
 		else
-			WARN("CDC%d WARN buffer full", cdc);
+			WARN("CDC%d buffer full", cdc);
 	}
 	else
-		WARN("CDC%d WARN not connected", cdc);
+		WARN("CDC%d not connected", cdc);
 }
 
 static bool usb_cdc_writable(uint8_t cdc)
@@ -469,21 +469,105 @@ bool usb_cdc2_writable(void)
 }
 
 //--------------------------------------------------------------------+
-// vendor interfaces
+// vendor chardev interfaces
 //--------------------------------------------------------------------+
 
-/*
-bool     tud_vendor_n_mounted         (uint8_t itf);
-uint32_t tud_vendor_n_available       (uint8_t itf);
-uint32_t tud_vendor_n_read            (uint8_t itf, void* buffer, uint32_t bufsize);
-bool     tud_vendor_n_peek            (uint8_t itf, uint8_t* u8);
-uint32_t tud_vendor_n_write           (uint8_t itf, void const* buffer, uint32_t bufsize);
-uint32_t tud_vendor_n_write_available (uint8_t itf);
-*/
+static uint8_t usb_vend_read(uint8_t tty)
+{
+	// TODO unused?
+	if (tud_vendor_n_mounted(0))
+	{
+		if (tud_vendor_n_available(0) > 0) {
+			uint8_t b = 0;
+			tud_vendor_n_read(0, &b, 1);
+			return b;
+		}
+		else
+			WARN("VEND0 buffer full");
+	}
+	else
+	{
+		WARN("VEND0 not connected");
+	}
+	return 0;
+}
 
+static void usb_vend_write(uint8_t tty, uint8_t b)
+{
+	if (tud_vendor_n_mounted(0))
+	{
+		if (tud_vendor_n_write_available(0) > 2) {
+			uint8_t pid = USB_PACKET_ID_TTY1;
+			if (tty==2)
+				pid = USB_PACKET_ID_TTY2;
+			if (tty==3)
+				pid = USB_PACKET_ID_TTY3;
+			uint8_t pkt[3] = { 2, pid, b };
+			tud_vendor_n_write(0, &b, 3);
+		}
+		else
+			WARN("VEND0 buffer full");
+	}
+	else
+		WARN("VEND0 not connected");
+}
+
+static bool usb_vend_writable(uint8_t tty)
+{
+	if (tud_vendor_n_mounted(0))
+	{
+		return (tud_vendor_n_write_available(0) > 2);
+	}
+	return false;
+}
+
+uint8_t usb_vend_tty1_read(void)
+{
+	return usb_vend_read(1);
+}
+
+void usb_vend_tty1_write(uint8_t b)
+{
+	usb_vend_write(1, b);
+}
+
+bool usb_vend_tty1_writable(void)
+{
+	return usb_vend_writable(1);
+}
+
+uint8_t usb_vend_tty2_read(void)
+{
+	return usb_vend_read(2);
+}
+
+void usb_vend_tty2_write(uint8_t b)
+{
+	usb_vend_write(2, b);
+}
+
+bool usb_vend_tty2_writable(void)
+{
+	return usb_vend_writable(2);
+}
+
+uint8_t usb_vend_tty3_read(void)
+{
+	return usb_vend_read(3);
+}
+
+void usb_vend_tty3_write(uint8_t b)
+{
+	usb_vend_write(3, b);
+}
+
+bool usb_vend_tty3_writable(void)
+{
+	return usb_vend_writable(3);
+}
 
 //--------------------------------------------------------------------+
-// helpers
+// API
 //--------------------------------------------------------------------+
 
 static repeating_timer_t tusb_timer;
@@ -519,16 +603,16 @@ void usb_cdc3_set_cb(byte_tx_t rx_cb) {
 }
 
 void usb_vend0_set_cb(usb_packet_control_fptr packet_control_rx,
-						usb_fs_buffer_addr_fptr fs_block_addr,
-						usb_fs_rx_fptr fs_rx,
+						usb_disk_buffer_addr_fptr disk_block_addr,
+						usb_disk_rx_fptr disk_rx,
 						usb_packet_chardev_fptr packet_core1_rx,
 						usb_packet_chardev_fptr packet_tty1_rx,
 						usb_packet_chardev_fptr packet_tty2_rx,
 						usb_packet_chardev_fptr packet_tty3_rx
 						) {
 	usb_packet_control_rx = packet_control_rx;
-	usb_fs_block_addr = fs_block_addr;
-	usb_fs_rx = fs_rx;
+	usb_disk_block_addr = disk_block_addr;
+	usb_disk_rx = disk_rx;
 	usb_packet_core1_rx = packet_core1_rx;
 	usb_packet_tty1_rx = packet_tty1_rx;
 	usb_packet_tty2_rx = packet_tty2_rx;

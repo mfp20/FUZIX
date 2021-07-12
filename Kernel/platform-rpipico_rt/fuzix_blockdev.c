@@ -47,29 +47,29 @@ static int virtual_sd_trim(void) {
 }
 
 static uint_fast8_t virtual_usb_fs1_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_FS1_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK1_REQ);
 }
 
 static int virtual_usb_fs1_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_FS1_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_DISK1_REQ);
 	return 0;
 }
 
 static uint_fast8_t virtual_usb_fs2_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_FS2_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK2_REQ);
 }
 
 static int virtual_usb_fs2_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_FS2_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_DISK2_REQ);
 	return 0;
 }
 
 static uint_fast8_t virtual_usb_fs3_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_FS3_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK3_REQ);
 }
 
 static int virtual_usb_fs3_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_FS3_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_DISK3_REQ);
 	return 0;
 }
 

@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 
-uint8_t blockdev_id_usb_vend0_fs1 = 0;
-uint8_t blockdev_id_usb_vend0_fs2 = 0;
-uint8_t blockdev_id_usb_vend0_fs3 = 0;
+uint8_t blockdev_id_usb_vend0_disk1 = 0;
+uint8_t blockdev_id_usb_vend0_disk2 = 0;
+uint8_t blockdev_id_usb_vend0_disk3 = 0;
 
 static critical_section_t usb_critical;
 
@@ -20,16 +20,16 @@ static critical_section_t usb_critical;
 // low level
 //--------------------------------------------------------------------+
 
-uint32_t usb_req_lba(uint8_t fs_id) {
+uint32_t usb_req_lba(uint8_t disk_id) {
 
 	return 0;
 }
 
-uint32_t *usb_fs_buffer_addr_f(uint8_t fs_id, bool ctrl, uint8_t len) {
+uint32_t *usb_fs_buffer_addr_f(uint8_t disk_id, bool ctrl, uint8_t len) {
 
 }
 
-void usb_fs_rx_f(uint8_t fs_id, bool ctrl, uint8_t len) {
+void usb_disk_rx_f(uint8_t disk_id, bool ctrl, uint8_t len) {
 
 }
 
@@ -37,13 +37,22 @@ void usb_fs_rx_f(uint8_t fs_id, bool ctrl, uint8_t len) {
 // blockdev
 //--------------------------------------------------------------------+
 
-static uint_fast8_t usb_transfer(uint8_t fs_id) {
+static uint_fast8_t usb_transfer(uint8_t disk_id) {
+	uint8_t id = blockdev_id_usb_vend0_disk1;
+	if (disk_id==2)
+		id = blockdev_id_usb_vend0_disk2;
+	if (disk_id==3)
+		id = blockdev_id_usb_vend0_disk3;
+
+	if (blockdev[id].op->is_read)
+		; // blockdev[id].op->lba, blockdev[id].op->addr
+	else
+		; // blockdev[id].op->lba, blockdev[id].op->addr
 
 	return 1;  // success
 }
 
-static int usb_trim(uint8_t fs_id) {
-
+static int usb_trim(uint8_t disk_id) {
 	return 0;
 }
 
@@ -78,13 +87,13 @@ void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3
 	NOTICE("USB external filesystem: init");
 
 	//
-	usb_fs_block_addr = usb_fs_buffer_addr_f;
-	usb_fs_rx = usb_fs_rx_f;
+	usb_disk_block_addr = usb_fs_buffer_addr_f;
+	usb_disk_rx = usb_disk_rx_f;
 
 	// root fs
 	*lba1 = usb_req_lba(1);
 	if (*lba1) {
-		blockdev_id_usb_vend0_fs1 = blockdev_add(usb_transfer1, NULL, usb_trim1, *lba1, blk_op);
+		blockdev_id_usb_vend0_disk1 = blockdev_add(usb_transfer1, NULL, usb_trim1, *lba1, blk_op);
 		NOTICE("USB external root filesystem: %dkB logical", *lba1 / 2);
 	}
 	else
@@ -95,7 +104,7 @@ void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3
 	// swap fs
 	*lba2 = usb_req_lba(2);
 	if (*lba2) {
-		blockdev_id_usb_vend0_fs2 = blockdev_add(usb_transfer2, NULL, usb_trim2, *lba2, blk_op);
+		blockdev_id_usb_vend0_disk2 = blockdev_add(usb_transfer2, NULL, usb_trim2, *lba2, blk_op);
 		NOTICE("USB external swap filesystem: %dkB logical", *lba2 / 2);
 	}
 	else
@@ -106,7 +115,7 @@ void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3
 	// scratch fs
 	*lba3 = usb_req_lba(3);
 	if (*lba3) {
-		blockdev_id_usb_vend0_fs3 = blockdev_add(usb_transfer3, NULL, usb_trim3, *lba3, blk_op);
+		blockdev_id_usb_vend0_disk3 = blockdev_add(usb_transfer3, NULL, usb_trim3, *lba3, blk_op);
 		NOTICE("USB external scratch filesystem: %dkB logical", *lba3 / 2);
 	}
 	else

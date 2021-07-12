@@ -5,14 +5,7 @@
 
 uint8_t vend_expected = 0;
 uint8_t vend_packet[256];
-
-usb_packet_control_fptr usb_packet_control_rx = NULL;
-usb_fs_buffer_addr_fptr usb_fs_block_addr = NULL;
-usb_fs_rx_fptr usb_fs_rx = NULL;
-usb_packet_chardev_fptr usb_packet_core1_rx = NULL;
-usb_packet_chardev_fptr usb_packet_tty1_rx = NULL;
-usb_packet_chardev_fptr usb_packet_tty2_rx = NULL;
-usb_packet_chardev_fptr usb_packet_tty3_rx = NULL;
+bool usb_vend_chardev_connected = false;
 
 void usb_packet_set_size(void) {
 	tud_vendor_n_read(0, &vend_expected, 1);
@@ -38,11 +31,11 @@ void usb_packet_dispatch(uint8_t len) {
             else
                 WARN("USB VEND0: control packet received but control callback is not set");
 		break;
-		case USB_PACKET_ID_FS1:
-            if (usb_fs_block_addr&&usb_fs_rx) {
-                void *addr = usb_fs_block_addr(1, ctrl, len);
+		case USB_PACKET_ID_DISK1:
+            if (usb_disk_block_addr&&usb_disk_rx) {
+                void *addr = usb_disk_block_addr(1, ctrl, len);
                 tud_vendor_n_read(0, addr, len);
-                usb_fs_rx(1, ctrl, len);
+                usb_disk_rx(1, ctrl, len);
             }
             else
             {
@@ -50,11 +43,11 @@ void usb_packet_dispatch(uint8_t len) {
                 tud_vendor_n_read(0, (void *)&vend_packet, len);
             }
 		break;
-		case USB_PACKET_ID_FS2:
-            if (usb_fs_block_addr&&usb_fs_rx) {
-                void *addr = usb_fs_block_addr(2, ctrl, len);
+		case USB_PACKET_ID_DISK2:
+            if (usb_disk_block_addr&&usb_disk_rx) {
+                void *addr = usb_disk_block_addr(2, ctrl, len);
                 tud_vendor_n_read(0, addr, len);
-                usb_fs_rx(2, ctrl, len);
+                usb_disk_rx(2, ctrl, len);
             }
             else
             {
@@ -62,11 +55,11 @@ void usb_packet_dispatch(uint8_t len) {
                 tud_vendor_n_read(0, (void *)&vend_packet, len);
             }
 		break;
-		case USB_PACKET_ID_FS3:
-            if (usb_fs_block_addr&&usb_fs_rx) {
-                void *addr = usb_fs_block_addr(3, ctrl, len);
+		case USB_PACKET_ID_DISK3:
+            if (usb_disk_block_addr&&usb_disk_rx) {
+                void *addr = usb_disk_block_addr(3, ctrl, len);
                 tud_vendor_n_read(0, addr, len);
-                usb_fs_rx(3, ctrl, len);
+                usb_disk_rx(3, ctrl, len);
             }
             else
             {
@@ -107,3 +100,11 @@ void usb_packet_dispatch(uint8_t len) {
 		break;
 	}
 }
+
+usb_packet_control_fptr usb_packet_control_rx = NULL;
+usb_disk_buffer_addr_fptr usb_disk_block_addr = NULL;
+usb_disk_rx_fptr usb_disk_rx = NULL;
+usb_packet_chardev_fptr usb_packet_core1_rx = NULL;
+usb_packet_chardev_fptr usb_packet_tty1_rx = NULL;
+usb_packet_chardev_fptr usb_packet_tty2_rx = NULL;
+usb_packet_chardev_fptr usb_packet_tty3_rx = NULL;
