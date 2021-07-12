@@ -191,14 +191,14 @@ static bool rt_softirq(repeating_timer_t *rt)
             break;
             case DEV_ID_TTY3:
                 if (softirq_in.sig == SIG_ID_RX) {
-                    tty3_byte = usb_cdc2_read();
+                    tty3_byte = tty3_select_read();
                     tty3_irq_done = true;
                 }
                 else if (softirq_in.sig == SIG_ID_TX )
                 {
                     if (tty3_byte == '\n')
-                        usb_cdc2_write('\r');
-                    usb_cdc2_write(tty3_byte);
+                        tty3_select_write('\r');
+                    tty3_select_write(tty3_byte);
                     tty3_irq_done = true;
                 }
             break;

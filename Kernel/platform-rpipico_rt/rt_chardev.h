@@ -37,4 +37,8 @@ uint8_t rt_select_read(void);
 void rt_select_write(uint8_t b);
 bool rt_select_writable(void);
 
+uint8_t tty3_select_read(void);
+void tty3_select_write(uint8_t b);
+bool tty3_select_writable(void);
+
 #endif

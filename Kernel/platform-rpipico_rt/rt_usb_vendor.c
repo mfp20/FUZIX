@@ -26,10 +26,7 @@ void usb_packet_dispatch(uint8_t len) {
 	switch (select &= ~(1UL << USB_PACKET_CTRL_BIT)) {
 		case USB_PACKET_ID_CTRL:
         	tud_vendor_n_read(0, (void *)&vend_packet, len);
-            if (usb_packet_control_rx)
-                usb_packet_control_rx(len);
-            else
-                WARN("USB VEND0: control packet received but control callback is not set");
+            usb_packet_control_rx(len);
 		break;
 		case USB_PACKET_ID_DISK1:
             if (usb_disk_block_addr&&usb_disk_rx) {
@@ -101,7 +98,34 @@ void usb_packet_dispatch(uint8_t len) {
 	}
 }
 
-usb_packet_control_fptr usb_packet_control_rx = NULL;
+void usb_packet_control_rx(uint8_t len) {
+    switch ((uint8_t)vend_packet[0]) {
+        case USB_CTRL_ID_CONNECT:
+            // TODO what is vendor class "mounted"?
+            WARN("USB VEND0: USB_CTRL_ID_CONNECT NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_DISCONNECT:
+            // TODO what is vendor class "mounted"?
+            WARN("USB VEND0: USB_CTRL_ID_DISCONNECT command NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_CHARDEV_CONNECT:
+            //usb_vend_chardev_connected = true;
+            WARN("USB VEND0: USB_CTRL_ID_CHARDEV_CONNECT command NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_CHARDEV_DISCONNECT:
+            //usb_vend_chardev_connected = false;
+            WARN("USB VEND0: USB_CTRL_ID_CHARDEV_DISCONNECT command NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_REBOOT:
+            // TODO fuzix clean reboot?
+            WARN("USB VEND0: USB_CTRL_ID_REBOOT NOT IMPLEMENTED");
+        break;
+        default:
+            ERR("USB VEND0: Unknown ctrl command (%d)", (uint8_t)vend_packet[0]);
+        break;
+    }
+}
+
 usb_disk_buffer_addr_fptr usb_disk_block_addr = NULL;
 usb_disk_rx_fptr usb_disk_rx = NULL;
 usb_packet_chardev_fptr usb_packet_core1_rx = NULL;

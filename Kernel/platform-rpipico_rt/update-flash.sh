@@ -2,10 +2,19 @@
 
 set -e
 
-IMG=build/filesystem.img
+ROOT_FLASH=build/root.flash.img
+ROOT_32MB=build/root.img
+SWAP_32MB=build/swap.img
+SCRATCH_32MB=build/scratch.img
 
-rm -f ${IMG}
-../../Standalone/mkfs ${IMG} 32 2547
+rm -f ${ROOT_FLASH} ${ROOT_32MB} ${SWAP_32MB} ${SCRATCH_32MB}
+../../Standalone/mkfs ${ROOT_FLASH} 32 2547
+../../Standalone/mkfs ${ROOT_32MB} 256 65535
+../../Standalone/mkfs ${SWAP_32MB} 256 65535
+../../Standalone/mkfs ${SCRATCH_32MB} 256 65535
+
+for IMG in ${ROOT_FLASH} ${ROOT_32MB}
+do
 ../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -449,6 +458,11 @@ cd lib
 #chmod 0755 startrek.intro
 #chmod 0755 startrek.logo
 
-EOF
 
-../../Standalone/fsck -a ${IMG}
+EOF
+done
+
+../../Standalone/fsck -a ${ROOT_FLASH}
+../../Standalone/fsck -a ${ROOT_32MB}
+../../Standalone/fsck -a ${SWAP_32MB}
+../../Standalone/fsck -a ${SCRATCH_32MB}

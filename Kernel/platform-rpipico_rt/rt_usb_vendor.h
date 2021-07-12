@@ -13,7 +13,12 @@
 #define USB_PACKET_ID_TTY2 32
 #define USB_PACKET_ID_TTY3 64
 
-typedef void (*usb_packet_control_fptr)(uint8_t len);
+#define USB_CTRL_ID_CONNECT 0
+#define USB_CTRL_ID_DISCONNECT 1
+#define USB_CTRL_ID_CHARDEV_CONNECT 2
+#define USB_CTRL_ID_CHARDEV_DISCONNECT 3
+#define USB_CTRL_ID_REBOOT 255
+
 typedef uint32_t *(*usb_disk_buffer_addr_fptr)(uint8_t disk_id, bool ctrl, uint8_t len);
 typedef void (*usb_disk_rx_fptr)(uint8_t disk_id, bool ctrl, uint8_t len);
 typedef void (*usb_packet_chardev_fptr)(bool ctrl, uint8_t len);
@@ -25,8 +30,8 @@ extern bool usb_vend_chardev_connected;
 void usb_packet_set_size(void);
 bool usb_packet_ready(void);
 void usb_packet_dispatch(uint8_t len);
+void usb_packet_control_rx(uint8_t len);
 
-extern usb_packet_control_fptr usb_packet_control_rx;
 extern usb_disk_buffer_addr_fptr usb_disk_block_addr;
 extern usb_disk_rx_fptr usb_disk_rx;
 extern usb_packet_chardev_fptr usb_packet_core1_rx;

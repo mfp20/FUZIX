@@ -5,12 +5,10 @@ include(pico_sdk_import.cmake)
 
 project(fuzix C CXX ASM)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_BUILD_TYPE Debug)
-#set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
 
-# TODO need to fix the log in order to be pure macro
+set(CMAKE_BUILD_TYPE Debug)
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         add_definitions(-DBUILD_DEBUG)
 else()

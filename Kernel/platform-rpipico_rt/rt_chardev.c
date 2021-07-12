@@ -51,7 +51,7 @@ void chardev_mod(uint8_t chardev_id, byte_rx_t r, byte_tx_t t, byte_ready_t w)
 // real chardevs
 //--------------------------------------------------------------------+
 
-// uart0/usb0 selection for kputchar+tty1
+// uart0/cdc0/vend0 selection for kputchar+tty1
 uint8_t fuzix_select_read(void)
 {
 	if (usb_vend_chardev_connected) {
@@ -90,7 +90,7 @@ bool fuzix_select_writable(void)
 	return uart_is_writable(uart0);
 }
 
-// uart0/usb1 selection for kputchar+tty2
+// uart0/cdc1/vend0 selection for kputchar+tty2
 uint8_t rt_select_read(void)
 {
 	if (usb_vend_chardev_connected) {
@@ -127,6 +127,47 @@ bool rt_select_writable(void)
 		return usb_cdc1_writable();
 	}
 	return fuzix_select_writable();
+}
+
+// cdc2/vend0 selection for tty3
+uint8_t tty3_select_read(void)
+{
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty3_read();
+	}
+	if (tud_cdc_n_connected(2))
+	{
+		return usb_cdc2_read();
+	}
+	WARN("tty3 not connected");
+	return 0;
+}
+
+void tty3_select_write(uint8_t b)
+{
+	if (usb_vend_chardev_connected) {
+		usb_vend_tty3_write(b);
+		return;
+	}
+	if (tud_cdc_n_connected(2))
+	{
+		usb_cdc2_write(b);
+		return;
+	}
+	WARN("tty3 not connected");
+}
+
+bool tty3_select_writable(void)
+{
+	if (usb_vend_chardev_connected) {
+		return usb_vend_tty3_writable();
+	}
+	if (tud_cdc_n_connected(2))
+	{
+		return usb_cdc2_writable();
+	}
+	WARN("tty3 not connected");
+	return false;
 }
 
 /* vim: sw=4 ts=4 et: */

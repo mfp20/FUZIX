@@ -9,8 +9,7 @@ void usb_cdc0_set_cb(byte_tx_t rx_cb);
 void usb_cdc1_set_cb(byte_tx_t rx_cb);
 void usb_cdc2_set_cb(byte_tx_t rx_cb);
 void usb_cdc3_set_cb(byte_tx_t rx_cb);
-void usb_vend0_set_cb(usb_packet_control_fptr packet_control,
-						usb_disk_buffer_addr_fptr disk_block_addr,
+void usb_vend0_set_cb(usb_disk_buffer_addr_fptr disk_block_addr,
 						usb_disk_rx_fptr disk_rx,
 						usb_packet_chardev_fptr packet_core1,
 						usb_packet_chardev_fptr packet_tty1,
