@@ -76,11 +76,11 @@ static bool rt_softirq(repeating_timer_t *rt)
             break;
             case DEV_ID_FLASH:
                 //INFO("rt_softirq FLASH sig %d count %d", softirq_in.sig, softirq_in.count);
-                if (softirq_in.sig == SIG_ID_TRANSFER_REQ) {
+                if (softirq_in.sig == SIG_ID_TRANSFER_FLASH_REQ) {
                     uint_fast8_t res = blockdev[blockdev_id_flash].transfer();
                     softirq_out(DEV_ID_FLASH, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_FLASH_REQ)
                 {
                     int res = blockdev[blockdev_id_flash].trim();
                     softirq_out(DEV_ID_FLASH, res, 0, NULL);
@@ -92,11 +92,11 @@ static bool rt_softirq(repeating_timer_t *rt)
             break;
             case DEV_ID_SD:
                 INFO("rt_softirq SD sig %d count %d", softirq_in.sig, softirq_in.count);
-                if (softirq_in.sig == SIG_ID_TRANSFER_REQ) {
+                if (softirq_in.sig == SIG_ID_TRANSFER_SD_REQ) {
                     uint_fast8_t res = blockdev[blockdev_id_sd].transfer();
                     softirq_out(DEV_ID_SD, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_SD_REQ)
                 {
                     int res = blockdev[blockdev_id_sd].trim();
                     softirq_out(DEV_ID_SD, res, 0, NULL);
@@ -108,13 +108,35 @@ static bool rt_softirq(repeating_timer_t *rt)
             break;
             case DEV_ID_USB_VEND0:
                 INFO("rt_softirq VEND0 sig %d count %d", softirq_in.sig, softirq_in.count);
-                if (softirq_in.sig == SIG_ID_TRANSFER_REQ) {
-                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0].transfer();
+                if (softirq_in.sig == SIG_ID_TIMESTAMP_REQ) {
+                    //uint_fast8_t res = ;
+                    //softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                }
+                else if (softirq_in.sig == SIG_ID_TRANSFER_FS1_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_fs1].transfer();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_FS1_REQ)
                 {
-                    int res = blockdev[blockdev_id_usb_vend0].trim();
+                    int res = blockdev[blockdev_id_usb_vend0_fs1].trim();
+                    softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                }
+                else if (softirq_in.sig == SIG_ID_TRANSFER_FS2_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_fs2].transfer();
+                    softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                }
+                else if (softirq_in.sig == SIG_ID_TRIM_FS2_REQ)
+                {
+                    int res = blockdev[blockdev_id_usb_vend0_fs2].trim();
+                    softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                }
+                else if (softirq_in.sig == SIG_ID_TRANSFER_FS3_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_fs3].transfer();
+                    softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                }
+                else if (softirq_in.sig == SIG_ID_TRIM_FS3_REQ)
+                {
+                    int res = blockdev[blockdev_id_usb_vend0_fs3].trim();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
                 else
