@@ -2,17 +2,33 @@
 #include "rt_log.h"
 
 alarm_pool_t *alarm_pool[4];
-static uint32_t last = 0;
+uint32_t jitter = 0;
 
+// TODO
+static void jitter_fix(void) {
+}
+
+// TODO
 static void jitter_eval(void) {
+    static uint32_t last;
+
+    // evaluate jitter
     uint32_t now = time_us_32();
     if (now<last) {
-        uint32_t val = UINT32_MAX-last;
-        val += now;
+        jitter = UINT32_MAX-last;
+        jitter += now;
         //INFO("jitter %ld us", val-1000000);
     }
     else
-        ; //INFO("jitter %ld us", (now-last)-1000000);
+    {
+        jitter = (now-last)-1000000;
+        //INFO("jitter %ld us", );
+    }
+
+    //
+    jitter_fix();
+
+    //
     last = time_us_32();
 }
 
@@ -30,11 +46,36 @@ void time_init(void) {
     };    
     //rtc_set_alarm(&t, jitter_eval);
 
-    alarm_pool[0] = alarm_pool_create(0, 16);
-    alarm_pool[1] = alarm_pool_create(1, 16);
-    alarm_pool[2] = alarm_pool_create(2, 16);
-    alarm_pool_init_default();
-    alarm_pool[3] = alarm_pool_get_default();
+    // get pointers to all available alarm pools
+    uint8_t missing = 3;
+    if (PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM==0) {
+        alarm_pool_init_default();
+        alarm_pool[ALARM_POOL_BE] = alarm_pool_get_default();
+        missing = ALARM_POOL_PRIO;
+    }
+    else
+
+        alarm_pool[ALARM_POOL_PRIO] = alarm_pool_create(0, 16);
+    if (PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM==1) {
+        alarm_pool_init_default();
+        alarm_pool[ALARM_POOL_BE] = alarm_pool_get_default();
+        missing = ALARM_POOL_TICK;
+    }
+    else
+        alarm_pool[ALARM_POOL_TICK] = alarm_pool_create(1, 16);
+    if (PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM==2) {
+        alarm_pool_init_default();
+        alarm_pool[ALARM_POOL_BE] = alarm_pool_get_default();
+        missing = ALARM_POOL_LOW;
+    }
+    else
+        alarm_pool[ALARM_POOL_LOW] = alarm_pool_create(2, 16);
+    if (PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM==3) {
+        alarm_pool_init_default();
+        alarm_pool[ALARM_POOL_BE] = alarm_pool_get_default();
+    }
+    else
+        alarm_pool[missing] = alarm_pool_create(3, 16);
 }
 
 uint32_t monotonic32(void) {

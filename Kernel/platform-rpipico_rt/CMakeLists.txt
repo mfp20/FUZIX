@@ -41,8 +41,7 @@ add_executable(fuzix
 	fuzix_tty.c
 	fuzix_swapper.c
 	fuzix_softirq.c
-	fuzix_ticker.c
-	fuzix_rtc.c
+	fuzix_time.c
 	fuzix_chardev.c
 	fuzix_blockdev.c
 	fuzix_misc.c

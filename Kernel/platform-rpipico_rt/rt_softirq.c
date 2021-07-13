@@ -216,5 +216,5 @@ void softirq_init(void) {
 	queue_init(&softirq_out_q, sizeof(softirq_t), UINT8_MAX);
 
     // uses lowest prio alarm pool
-	add_repeating_timer_us(((1000000 / TICKSPERSEC)/2)+1, rt_softirq, NULL, &softirq_timer);
+	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_BE], ((1000000 / TICKSPERSEC)/2)+1, rt_softirq, NULL, &softirq_timer);
 }

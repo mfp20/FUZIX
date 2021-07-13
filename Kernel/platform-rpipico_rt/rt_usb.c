@@ -584,7 +584,7 @@ void usb_init(void)
 	tusb_init();
 
     // uses lowest prio alarm pool
-	add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
+	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_BE], 125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
 }
 
 void usb_cdc0_set_cb(byte_tx_t rx_cb) {
