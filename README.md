@@ -7,8 +7,10 @@ This fork adds a realtime thin layer to the original port in order to have all t
 
 It adds:
 * Power and cpu clock management
+* RTC support for jitter evaluation/correction
 * Multiple USB interfaces ready to use
 * Seamless handover between uart0 and USB on USB connect/disconnect
+* USB disks for root, swap and scratch
 * Log macros with levels and colors
 * ...
 
