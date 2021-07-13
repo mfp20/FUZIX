@@ -35,9 +35,9 @@ alternatively, you can use OpenOCD.
 If it doesn't work after the second file has been flashed in, run the flash_nuke example from pico-examples repository in order to clean the flash;
 then upload both files again.
 
-Once the board has rebooted it will appear as a USB serial devices which you can connect to. Alternatively, connect a terminal to UART0 on the Pico.
+Once the board has rebooted it will appear as multiple USB serial devices which you can connect to. Alternatively, connect a terminal to UART0 on the Pico.
 
-## Default setup
+## Default/Typical setup
 
 Out of the box:
 
@@ -61,23 +61,24 @@ SD card default pins:
 Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 3.3V. Not 5V, or it won't work.
 
+![Wiring diagram](doc/wiring.jpg)
+
 The console is accessible either via UART0 (at 115200 baud) or by connecting
 the Pico up via USB to a PC, at which point it'll present itself as a few standard
-USB CDC serial devices and a few USB Vendor devices.
-USB CDC0 is Fuzix's tty1, USB CDC1 is Fuzix's log device (accessible in-system on tty2),
-USB CDC2 is Fuzix's tty3 for user applications. USB CDC3 isn't mapped on Fuzix's ttys
-and it is available for user applications relying on pico-sdk only.
-USB Vendor0 is Fuzix's binary multiplexer for external filesystem and other purposes.
-USB Vendor1 it is available for user applications using Fuzix's code.
-USB Vendor2 isn't mapped on Fuzix and it is available to user applications relying on pico-sdk only.
+USB CDC serial devices and a few USB Vendor devices:
+* USB CDC0 is Fuzix's tty1,
+* USB CDC1 is Fuzix's log device (accessible in-system on tty2),
+* USB CDC2 is Fuzix's tty3 for user applications,
+* USB CDC3 isn't mapped on Fuzix's ttys and it is available for user applications relying on pico-sdk only,
+* USB Vendor0 is Fuzix's binary multiplexer for external filesystem and other purposes (ex: time&date setup, tty1, tty2, tty3),
+* USB Vendor1 it is available for user applications using Fuzix's code,
+* USB Vendor2 isn't mapped on Fuzix and it is available to user applications relying on pico-sdk only.
 Both USB CDC3 and USB Vendor2 can be reconfigured as other USB classes.
 
 **Note:** when using the USB console, you're unlikely to be able to connect
 quickly enough after boot to see the startup messages. Most likely when you
 connect, the Pico will be sitting waiting at the prompt to set the time. Press
 RETURN a few times to get to the getty login prompt.
-
-![Wiring diagram](doc/wiring.jpg)
 
 # Advanced installation options
 
