@@ -17,5 +17,5 @@ static bool systick_timer_handler(repeating_timer_t *rt)
 }
 
 void virtual_ticker_init(void) {
-	add_repeating_timer_us((1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
+	alarm_pool_add_repeating_timer_us(alarm_pool[1], (1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
 }

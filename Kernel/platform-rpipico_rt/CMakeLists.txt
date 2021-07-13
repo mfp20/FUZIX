@@ -42,6 +42,7 @@ add_executable(fuzix
 	fuzix_swapper.c
 	fuzix_softirq.c
 	fuzix_ticker.c
+#	fuzix_setdate.c
 	fuzix_chardev.c
 	fuzix_blockdev.c
 	fuzix_misc.c
@@ -90,6 +91,7 @@ target_link_libraries(fuzix
 	hardware_structs
 	hardware_sync
 	hardware_watchdog
+	hardware_rtc
 	hardware_flash
 	hardware_spi
 	hardware_uart

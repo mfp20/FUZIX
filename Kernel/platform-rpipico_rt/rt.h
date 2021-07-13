@@ -5,11 +5,12 @@
 
 #include <pico/stdlib.h>
 #include <pico/stdio.h>
+#include <pico/stdio/driver.h>
 #include <pico/types.h>
 #include <pico/unique_id.h>
 #include <pico/multicore.h>
 #include <pico/util/queue.h>
-#include <pico/stdio/driver.h>
+#include <pico/util/datetime.h>
 
 #include <hardware/regs/usb.h>
 
@@ -17,6 +18,7 @@
 #include <hardware/structs/timer.h>
 #include <hardware/structs/usb.h>
 
+#include <hardware/rtc.h>
 #include <hardware/vreg.h>
 #include <hardware/sync.h>
 #include <hardware/watchdog.h>

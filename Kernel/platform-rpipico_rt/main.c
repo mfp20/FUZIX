@@ -103,7 +103,24 @@ int main(void)
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
-	// softirq
+    // Set real irqs priorities
+	// NOTE: all other IRQs are set to 128 by default
+    // RTC: highest irq priority, for jitter evaluation/correction every second
+    //irq_set_priority(RTC_IRQ, 1);
+	// TIMER0: high priority timer (available to users, use with care)
+	//irq_set_priority(TIMER_IRQ_0, 2);
+	// FLASH
+	//irq_set_priority(XIP_IRQ, 4);
+	// USB
+	//irq_set_priority(USBCTRL_IRQ, 8);
+	// TIMER1: system timer (fuzix ticker and usb maintenance)
+	//irq_set_priority(TIMER_IRQ_1, 16);
+	// TIMER2: low priority timer (available to users)
+	//irq_set_priority(TIMER_IRQ_2, 32);
+	// TIMER3: softirq (available to users, default pool hooks on this timer by default)
+	//irq_set_priority(TIMER_IRQ_3, 64);
+
+	// setup softirq
 	softirq_init();
 
 	// ttys
@@ -111,6 +128,9 @@ int main(void)
 
 	// power
 	//power_set_mode(POWER_DEFAULT);
+
+	// init rtc, alarm pools, ...
+	time_init();
 
 	// usb
 	usb_init();
