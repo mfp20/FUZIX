@@ -6,7 +6,7 @@
 #include <printf.h>
 #include <tty.h>
 #include <blkdev.h>
-
+#include <rtc.h>
 
 
 #endif

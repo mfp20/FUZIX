@@ -82,9 +82,6 @@ void syscall_handler(struct svc_frame *eh)
 
 int main(void)
 {
-	//
-	virtual_stdio_init();
-
 	// sanity check
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
@@ -103,22 +100,8 @@ int main(void)
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
-    // Set real irqs priorities
-	// NOTE: all other IRQs are set to 128 by default
-    // RTC: highest irq priority, for jitter evaluation/correction every second
-    //irq_set_priority(RTC_IRQ, 1);
-	// TIMER0: high priority timer (available to users, use with care)
-	//irq_set_priority(TIMER_IRQ_0, 2);
-	// FLASH
-	//irq_set_priority(XIP_IRQ, 4);
-	// USB
-	//irq_set_priority(USBCTRL_IRQ, 8);
-	// TIMER1: system timer (fuzix ticker and usb maintenance)
-	//irq_set_priority(TIMER_IRQ_1, 16);
-	// TIMER2: low priority timer (available to users)
-	//irq_set_priority(TIMER_IRQ_2, 32);
-	// TIMER3: softirq (available to users, default pool hooks on this timer by default)
-	//irq_set_priority(TIMER_IRQ_3, 64);
+	// stdio early init
+	virtual_stdio_init();
 
 	// setup softirq
 	softirq_init();
@@ -135,9 +118,27 @@ int main(void)
 	// usb
 	usb_init();
 
+    // tweak real irqs priorities
+	// NOTE: all IRQs are set to priority 128 by default at boot
+	// NOTE: the rule of thumb is "the more often, the less priority"
+    // RTC: highest irq priority, for jitter evaluation/correction every second
+    irq_set_priority(RTC_IRQ, 1);
+	// TIMER0: high priority timer (use with care)
+	irq_set_priority(TIMER_IRQ_0, 2);
+	// FLASH and USB low level
+	irq_set_priority(XIP_IRQ, 4);
+	irq_set_priority(USBCTRL_IRQ, 4);
+	// TIMER1: system timer (fuzix ticker)
+	irq_set_priority(TIMER_IRQ_1, 8);
+	// TIMER2: low priority timer
+	irq_set_priority(TIMER_IRQ_2, 16);
+	// TIMER3: softirq and usb maintenance (default pool hooks on this timer by default)
+	irq_set_priority(TIMER_IRQ_3, 128);
+
 	//
 	log_test_color();
-	INFO("Pico realtime layer initialized");
+	INFO("");
+	INFO("Pico realtime layer initialized\n");
 
 	// disable interrupts and run fuzix
 	di();

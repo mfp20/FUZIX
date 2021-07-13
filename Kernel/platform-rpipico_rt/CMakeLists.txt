@@ -42,7 +42,7 @@ add_executable(fuzix
 	fuzix_swapper.c
 	fuzix_softirq.c
 	fuzix_ticker.c
-#	fuzix_setdate.c
+	fuzix_rtc.c
 	fuzix_chardev.c
 	fuzix_blockdev.c
 	fuzix_misc.c

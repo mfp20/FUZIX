@@ -9,10 +9,10 @@ static void jitter_eval(void) {
     if (now<last) {
         uint32_t val = UINT32_MAX-last;
         val += now;
-        INFO("jitter %ld us", val-1000000);
+        //INFO("jitter %ld us", val-1000000);
     }
     else
-        INFO("jitter %ld us", (now-last)-1000000);
+        ; //INFO("jitter %ld us", (now-last)-1000000);
     last = time_us_32();
 }
 
@@ -28,7 +28,7 @@ void time_init(void) {
             .min   = -1,
             .sec   = -1
     };    
-    rtc_set_alarm(&t, jitter_eval);
+    //rtc_set_alarm(&t, jitter_eval);
 
     alarm_pool[0] = alarm_pool_create(0, 16);
     alarm_pool[1] = alarm_pool_create(1, 16);

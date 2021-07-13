@@ -580,10 +580,11 @@ static bool tusb_handler(repeating_timer_t *rt)
 
 void usb_init(void)
 {
-	// setup tinyusb
 	tusb_id2str();
 	tusb_init();
-	alarm_pool_add_repeating_timer_us(alarm_pool[1], 125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
+
+    // uses lowest prio alarm pool
+	add_repeating_timer_us(125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
 }
 
 void usb_cdc0_set_cb(byte_tx_t rx_cb) {

@@ -44,38 +44,47 @@ chmod 0755 lib
 
 cd /
 cd /dev
-mknod tty   20666 512
-mknod tty1  20660 513
-mknod tty2  20660 514
-mknod tty3  20660 515
-mknod tty4  20660 516
-mknod tty5  20660 517
-mknod tty6  20660 518
-mknod tty7  20660 519
-mknod tty8  20660 520
 mknod hda   60660 0
 mknod hda1  60660 1
 mknod hda2  60660 2
 mknod hda3  60660 3
 mknod hda4  60660 4
-mknod hda5  60660 5
-mknod hda6  60660 6
-mknod hda7  60660 7
-mknod hda8  60660 8
-mknod hda9  60660 9
-mknod hda10 60660 10
-mknod hda11 60660 11
-mknod hda12 60660 12
-mknod hda13 60660 13
-mknod hda14 60660 14
-mknod hda15 60660 15
 mknod hdb   60660 16
 mknod hdb1  60660 17
 mknod hdb2  60660 18
+mknod hdb3  60660 19
+mknod hdb4  60660 20
+mknod hdc   60660 32
+mknod hdc1  60660 33
+mknod hdc2  60660 34
+mknod hdc3  60660 35
+mknod hdc4  60660 36
+mknod hdd   60660 48
+mknod hdd1  60660 49
+mknod hdd2  60660 50
+mknod hdd3  60660 51
+mknod hdd4  60660 52
+mknod hde   60660 64
+mknod hde1  60660 65
+mknod hde2  60660 66
+mknod hde3  60660 67
+mknod hde4  60660 68
+mknod tty   20666 512
+mknod tty1  20660 513
+mknod tty2  20660 514
+mknod tty3  20660 515
 mknod null  20666 1024
-mknod mem   20660 1025
+mknod kmem  20660 1025
 mknod zero  20444 1026
 mknod proc  20666 1027
+mknod mem   20660 1028
+mknod rtc   20666 1029
+mknod platform 20666 1030
+mknod i2c   20666 1031
+mknod gpio  20666 1032
+mknod audio 20666 1088
+mknod net   20666 1089
+mknod input 20666 1090
 
 cd /
 bget ../../Applications/util/init init
