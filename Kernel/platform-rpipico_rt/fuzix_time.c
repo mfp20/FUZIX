@@ -32,18 +32,22 @@ struct cmos_rtc
 uint_fast8_t platform_rtc_secs(void) {
     static uint8_t last;
 
-    // get datetime_t from pico's rtc
     datetime_t pico_dt;
-    if (getdate_rtc(&pico_dt))
+    if (rtc_get(&pico_dt))
         last = pico_dt.sec;
 
     return last;
 }
 
+// I'm using setdate as /dev/rtc consumer and it fails on
+//                  (read(fd, &rtc, sizeof(rtc)) != sizeof(rtc)) {
+// Looks like /dev/rtc returns 12 bytes but "struct cmos_rtc rtc" is 16 bytes.
+// My best guess is about different time_t being used by kernel and setdate, resulting in a different struct cmos_rtc rtc size (because struct cmos_rtc rtc contains a time_t)
 int platform_rtc_read(void) {
+    /*
     // get datetime_t from pico's rtc
     datetime_t pico_dt;
-    if (!getdate_rtc(&pico_dt))
+    if (!rtc_get(&pico_dt))
         return -1;
 
     // check len
@@ -62,14 +66,17 @@ int platform_rtc_read(void) {
     *p++ = pico_dt.hour;
     *p++ = pico_dt.min;
     *p++ = pico_dt.sec;
+    *p++ = pico_dt.dotw;
 
     // write cmos_rtc to system
     if (uput(&cmos, udata.u_base, len) == -1)
         return -1;
     return len;
+    */
 }
 
 int platform_rtc_write(void) {
+    /* need debug
     uint16_t len = sizeof(struct cmos_rtc);
     struct cmos_rtc cmos;
 
@@ -93,15 +100,16 @@ int platform_rtc_write(void) {
     }
 
     return len;
+    */
 }
 
 //--------------------------------------------------------------------+
 // system tick
 //--------------------------------------------------------------------+
 
-static repeating_timer_t systick_timer;
+static repeating_timer_t ticker_timer;
 
-static bool systick_timer_handler(repeating_timer_t *rt)
+static bool tick_trigger(repeating_timer_t *rt)
 {
 	if (fuzix_ready && queue_is_empty(&softirq_out_q))
 	{
@@ -116,5 +124,5 @@ static bool systick_timer_handler(repeating_timer_t *rt)
 }
 
 void virtual_ticker_init(void) {
-	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_TICK], (1000000 / TICKSPERSEC), systick_timer_handler, NULL, &systick_timer);
+	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_TICK], (1000000 / TICKSPERSEC), tick_trigger, NULL, &ticker_timer);
 }

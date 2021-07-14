@@ -36,7 +36,7 @@ add_executable(fuzix
 	rt_blockdev_sd.c
 	rt_blockdev_usb.c
 	rt_usb.c
-	rt_usb_vendor.c
+	rt_usb_mplex.c
 	fuzix_elf.c 
 	fuzix_tty.c
 	fuzix_swapper.c
@@ -44,7 +44,7 @@ add_executable(fuzix
 	fuzix_time.c
 	fuzix_chardev.c
 	fuzix_blockdev.c
-	fuzix_misc.c
+	fuzix_platform.c
 	devices.c
 	main.c
 	tricks.S
@@ -83,6 +83,7 @@ target_link_libraries(fuzix
 	tinyusb_device
 	pico_stdlib
 	pico_runtime
+	pico_util
 	pico_time
 	pico_unique_id
 	pico_multicore

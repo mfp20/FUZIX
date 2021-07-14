@@ -296,7 +296,15 @@ void tud_cdc_rx_cb(uint8_t itf)
 	else if (itf == 2)
 	{
 		uint8_t b = (uint8_t)tud_cdc_n_read_char(2);
-		if (cdc2_cb) cdc2_cb(b);
+		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc2_cb)
+		{
+			INFO("tud_cdc_rx_cb TODO direct route\n");
+			cdc2_cb(b);
+		}
+		else
+		{
+			softirq_out(DEV_ID_TTY3, b, 0, NULL);
+		}
 	}
 	else if (itf == 3)
 	{

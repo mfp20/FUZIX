@@ -2,7 +2,7 @@
 #define _RT_USB_DOT_H
 
 #include "rt.h"
-#include "rt_usb_vendor.h"
+#include "rt_usb_mplex.h"
 
 void usb_init(void);
 void usb_cdc0_set_cb(byte_tx_t rx_cb);

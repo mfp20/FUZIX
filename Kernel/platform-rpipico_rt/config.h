@@ -49,9 +49,9 @@
 
 // on-board RTC
 #define CONFIG_RTC              // enables platform_rtc_secs()
-#define CONFIG_RTC_FULL         // enables platform_rtc_read() and platform_rtc_write()
+//#define CONFIG_RTC_FULL         // enables platform_rtc_read() and platform_rtc_write()
 //#define CONFIG_RTC_EXTENDED     // enables platform_rtc_ioctl()
-#define CONFIG_RTC_INTERVAL 50  // deciseconds between reading RTC seconds counter
+#define CONFIG_RTC_INTERVAL 25  // deciseconds between reading RTC seconds counter
 
 // log config
 #ifdef BUILD_DEBUG

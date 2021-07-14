@@ -1,5 +1,5 @@
 #include "rt_log.h"
-#include "rt_usb_vendor.h"
+#include "rt_usb_mplex.h"
 
 #include <tusb.h>
 
@@ -107,6 +107,12 @@ void usb_packet_control_rx(uint8_t len) {
         case USB_CTRL_ID_DISCONNECT:
             // TODO what is vendor class "mounted"?
             WARN("USB VEND0: USB_CTRL_ID_DISCONNECT command NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_BLOCKDEV_CONNECT:
+            WARN("USB VEND0: USB_CTRL_ID_BLOCKDEV_CONNECT command NOT IMPLEMENTED");
+        break;
+        case USB_CTRL_ID_BLOCKDEV_DISCONNECT:
+            WARN("USB VEND0: USB_CTRL_ID_BLOCKDEV_DISCONNECT command NOT IMPLEMENTED");
         break;
         case USB_CTRL_ID_CHARDEV_CONNECT:
             //usb_vend_chardev_connected = true;

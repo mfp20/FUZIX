@@ -73,6 +73,7 @@ mknod tty   20666 512
 mknod tty1  20660 513
 mknod tty2  20660 514
 mknod tty3  20660 515
+mknod tty4  20660 516
 mknod null  20666 1024
 mknod kmem  20660 1025
 mknod zero  20444 1026
@@ -97,12 +98,14 @@ bget ../../Standalone/filesystem-src/etc-files/passwd
 bget ../../Standalone/filesystem-src/etc-files/inittab
 bget ../../Standalone/filesystem-src/etc-files/termcap
 bget ../../Standalone/filesystem-src/etc-files/rc
+bget ../../Standalone/filesystem-src/etc-files/fstab
 chmod 0644 issue
 chmod 0644 motd
 chmod 0644 passwd
 chmod 0644 inittab
 chmod 0644 termcap
 chmod 0755 rc
+chmod 0644 fstab
 
 cd /bin
 bget ../../Applications/util/banner

@@ -37,17 +37,20 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+	// init ttys structs
+	tty_prepare();
+
 	// time
 	virtual_ticker_init();
 
-	// USB external storage, if any
-	virtual_usb_fs_init();
+	// flash device is mounted last, it is the fallback root device
+	virtual_flash_init();
 
 	// SD external storage, if any
 	virtual_sd_init();
 
-	// flash device is mounted last, it is the fallback root device
-	virtual_flash_init();
+	// USB external storage, if any
+	virtual_usb_disk_init();
 
 	// led on, signal hw init complete
 	gpio_init(PICO_DEFAULT_LED_PIN);

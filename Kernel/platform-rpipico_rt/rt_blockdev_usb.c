@@ -4,7 +4,7 @@
 #include "rt_softirq.h"
 #include "rt_blockdev.h"
 #include "rt_blockdev_usb.h"
-#include "rt_usb_vendor.h"
+#include "rt_usb_mplex.h"
 
 #include <stdio.h>
 #include <string.h>

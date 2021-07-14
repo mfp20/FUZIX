@@ -77,10 +77,22 @@ static bool virtual_tty3_writable(void) {
 }
 
 //--------------------------------------------------------------------+
+// kputchar
+//--------------------------------------------------------------------+
+
+// output for the system log (kprintf etc)
+void kputchar(uint_fast8_t c)
+{
+	if (c == '\n')
+		chardev[tty_cd[0]].tx('\r');
+	chardev[tty_cd[0]].tx(c);
+}
+
+//--------------------------------------------------------------------+
 // init
 //--------------------------------------------------------------------+
 
-void virtual_stdio_init(void) {
+void chardev_init(void) {
 	// uart0 early init
 	uart0_init(0, 1, 115200, NULL);
 
@@ -88,9 +100,9 @@ void virtual_stdio_init(void) {
 	stdio_init_all();
 	stdio_set_driver_enabled(&stdio_driver, true);
 
-	// virtual chardevs
-	tty_cd[0] = chardev_add(virtual_stdio_read, virtual_stdio_write, virtual_stdio_writable);
-	tty_cd[1] = chardev_add(virtual_tty1_read, virtual_tty1_write, virtual_tty1_writable);
-	tty_cd[2] = chardev_add(virtual_tty2_read, virtual_tty2_write, virtual_tty2_writable);
-	tty_cd[3] = chardev_add(virtual_tty3_read, virtual_tty3_write, virtual_tty3_writable);
+	// fuzix virtual chardevs
+	tty_cd[0] = chardev_add(virtual_stdio_read, virtual_stdio_write, virtual_stdio_writable); // stdio
+	tty_cd[1] = chardev_add(virtual_tty1_read, virtual_tty1_write, virtual_tty1_writable); // tty1
+	tty_cd[2] = chardev_add(virtual_tty2_read, virtual_tty2_write, virtual_tty2_writable); // tty2
+	tty_cd[3] = chardev_add(virtual_tty3_read, virtual_tty3_write, virtual_tty3_writable); // tty3
 }

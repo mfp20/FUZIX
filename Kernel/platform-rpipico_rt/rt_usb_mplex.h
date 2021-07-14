@@ -15,8 +15,10 @@
 
 #define USB_CTRL_ID_CONNECT 0
 #define USB_CTRL_ID_DISCONNECT 1
-#define USB_CTRL_ID_CHARDEV_CONNECT 2
-#define USB_CTRL_ID_CHARDEV_DISCONNECT 3
+#define USB_CTRL_ID_BLOCKDEV_CONNECT 2
+#define USB_CTRL_ID_BLOCKDEV_DISCONNECT 3
+#define USB_CTRL_ID_CHARDEV_CONNECT 4
+#define USB_CTRL_ID_CHARDEV_DISCONNECT 5
 #define USB_CTRL_ID_REBOOT 255
 
 typedef uint32_t *(*usb_disk_buffer_addr_fptr)(uint8_t disk_id, bool ctrl, uint8_t len);

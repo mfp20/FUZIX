@@ -101,16 +101,13 @@ int main(void)
 	procmem = USERMEM / 1024;
 
 	// stdio early init
-	virtual_stdio_init();
+	chardev_init();
 
 	// init rtc, alarm pools, ...
 	time_init();
 
 	// setup softirq
 	softirq_init();
-
-	// ttys
-	tty_prepare();
 
 	// power
 	//power_set_mode(POWER_DEFAULT);
@@ -120,7 +117,6 @@ int main(void)
 
     // tweak real irqs priorities
 	// NOTE: all IRQs are set to priority 128 by default at boot
-	// NOTE: the rule of thumb is "the more often, the less priority"
     // RTC: highest irq priority, for jitter evaluation/correction every second
     irq_set_priority(RTC_IRQ, 4);
 	// TIMER0: high priority timer (use with care)
@@ -129,16 +125,17 @@ int main(void)
 	irq_set_priority(XIP_IRQ, 16);
 	irq_set_priority(USBCTRL_IRQ, 16);
 	// TIMER1: system timer (fuzix ticker)
-	irq_set_priority(TIMER_IRQ_1, 32);
+	//irq_set_priority(TIMER_IRQ_1, 32); // bug, system hangs if enabled
 	// TIMER2: low priority timer
 	irq_set_priority(TIMER_IRQ_2, 64);
 	// TIMER3: softirq and usb maintenance (default pool hooks on this timer by default)
 	irq_set_priority(TIMER_IRQ_3, 128);
 
-	//
+	// say hello
 	log_test_color();
+
 	INFO("");
-	INFO("Pico realtime layer initialized\n");
+	INFO("Pico realtime layer initialized");
 	INFO("");
 
 	// disable interrupts and run fuzix
