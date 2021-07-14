@@ -15,11 +15,11 @@ extern alarm_pool_t *alarm_pool[4];
 void time_init(void);
 
 // RTC
-bool rtc_get(datetime_t *t);
-bool rtc_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, int8_t s);
+bool rtc_datetime_get(datetime_t *t);
+bool rtc_datetime_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, int8_t s);
 
 // USB time
-extern bool (*usb_get)(datetime_t *t);
+extern bool (*usb_datetime_get)(datetime_t *t);
 
 // systick
 uint32_t monotonic32(void); // returns lower 32 bits of monotonic64()

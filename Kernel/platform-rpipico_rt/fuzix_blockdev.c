@@ -51,29 +51,29 @@ static int virtual_sd_trim(void) {
 }
 
 static uint_fast8_t virtual_usb_disk1_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK1_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_USB_DISK1_REQ);
 }
 
 static int virtual_usb_disk1_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_DISK1_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_USB_DISK1_REQ);
 	return 0;
 }
 
 static uint_fast8_t virtual_usb_disk2_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK2_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_USB_DISK2_REQ);
 }
 
 static int virtual_usb_disk2_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_DISK2_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_USB_DISK2_REQ);
 	return 0;
 }
 
 static uint_fast8_t virtual_usb_disk3_transfer(void) {
-	return blockdev_usb_signal(SIG_ID_TRANSFER_DISK3_REQ);
+	return blockdev_usb_signal(SIG_ID_TRANSFER_USB_DISK3_REQ);
 }
 
 static int virtual_usb_disk3_trim(void) {
-	blockdev_usb_signal(SIG_ID_TRIM_DISK3_REQ);
+	blockdev_usb_signal(SIG_ID_TRIM_USB_DISK3_REQ);
 	return 0;
 }
 
@@ -115,16 +115,12 @@ void virtual_sd_init(void) {
 void virtual_usb_disk_init(void) {
 	// init real device
 	uint32_t lba1, lba2, lba3;
-	usb_vend0_init(&blk_op, &lba1, &lba2, &lba3);
+	usb_blockdev_init(&blk_op, &lba1, &lba2, &lba3);
 
 	// init virtual device
 	if ((lba1)&&(lba2)&&(lba3)) {
 		blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
 		blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
 		blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
-	}
-	else
-	{
-		WARN("Can't find USB disks");
 	}
 }

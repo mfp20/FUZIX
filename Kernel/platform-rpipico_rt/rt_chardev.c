@@ -54,7 +54,7 @@ void chardev_mod(uint8_t chardev_id, byte_rx_t r, byte_tx_t t, byte_ready_t w)
 // uart0/cdc0/vend0 selection for kputchar+tty1
 uint8_t fuzix_select_read(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty1_read();
 	}
 	if (tud_cdc_n_connected(0))
@@ -66,7 +66,7 @@ uint8_t fuzix_select_read(void)
 
 void fuzix_select_write(uint8_t b)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		usb_vend_tty1_write(b);
 		return;
 	}
@@ -80,7 +80,7 @@ void fuzix_select_write(uint8_t b)
 
 bool fuzix_select_writable(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty1_writable();
 	}
 	if (tud_cdc_n_connected(0))
@@ -93,7 +93,7 @@ bool fuzix_select_writable(void)
 // uart0/cdc1/vend0 selection for kputchar+tty2
 uint8_t rt_select_read(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty2_read();
 	}
 	if (tud_cdc_n_connected(1))
@@ -105,7 +105,7 @@ uint8_t rt_select_read(void)
 
 void rt_select_write(uint8_t b)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		usb_vend_tty2_write(b);
 		return;
 	}
@@ -119,7 +119,7 @@ void rt_select_write(uint8_t b)
 
 bool rt_select_writable(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty2_writable();
 	}
 	if (tud_cdc_n_connected(1))
@@ -132,7 +132,7 @@ bool rt_select_writable(void)
 // cdc2/vend0 selection for tty3
 uint8_t tty3_select_read(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty3_read();
 	}
 	if (tud_cdc_n_connected(2))
@@ -145,7 +145,7 @@ uint8_t tty3_select_read(void)
 
 void tty3_select_write(uint8_t b)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		usb_vend_tty3_write(b);
 		return;
 	}
@@ -159,7 +159,7 @@ void tty3_select_write(uint8_t b)
 
 bool tty3_select_writable(void)
 {
-	if (usb_vend_chardev_connected) {
+	if (usb_vend0_chardev_connected) {
 		return usb_vend_tty3_writable();
 	}
 	if (tud_cdc_n_connected(2))

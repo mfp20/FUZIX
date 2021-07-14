@@ -89,11 +89,11 @@ void time_init(void) {
         alarm_pool[missing] = alarm_pool_create(3, 16);
 }
 
-bool rtc_get(datetime_t *t) {
+bool rtc_datetime_get(datetime_t *t) {
     return rtc_get_datetime(t);
 }
 
-bool rtc_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, int8_t s) {
+bool rtc_datetime_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, int8_t s) {
     datetime_t t = {
             .year  = y,
             .month = mo,
@@ -107,7 +107,7 @@ bool rtc_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, i
     return rtc_set_datetime(&t);
 }
 
-bool (*usb_get)(datetime_t *t) = NULL;
+bool (*usb_datetime_get)(datetime_t *t) = NULL;
 
 uint32_t monotonic32(void) {
     return time_us_32();

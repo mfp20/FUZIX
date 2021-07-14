@@ -8,6 +8,7 @@
 #include "rt_blockdev_sd.h"
 #include "rt_blockdev_usb.h"
 #include "rt_usb.h"
+#include "rt_usb_mplex.h"
 
 #include <stdlib.h>
 
@@ -108,35 +109,36 @@ static bool rt_softirq(repeating_timer_t *rt)
             break;
             case DEV_ID_USB_VEND0:
                 INFO("rt_softirq VEND0 sig %d count %d", softirq_in.sig, softirq_in.count);
-                if (softirq_in.sig == SIG_ID_TIMESTAMP_REQ) {
-                    //uint_fast8_t res = ;
-                    //softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
+                if (softirq_in.sig == SIG_ID_DATETIME_REQ) {
+                    datetime_t *datetime = malloc(sizeof(datetime_t));
+                    int res = usb_timestamp_req(datetime) ? 1 : 0;
+                    softirq_out(DEV_ID_USB_VEND0, res, 4, datetime);
                 }
-                else if (softirq_in.sig == SIG_ID_TRANSFER_DISK1_REQ) {
-                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_disk1].transfer();
+                else if (softirq_in.sig == SIG_ID_TRANSFER_USB_DISK1_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_disk1].transfer();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_DISK1_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_USB_DISK1_REQ)
                 {
-                    int res = blockdev[blockdev_id_usb_vend0_disk1].trim();
+                    int res = blockdev[blockdev_id_usb_disk1].trim();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRANSFER_DISK2_REQ) {
-                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_disk2].transfer();
+                else if (softirq_in.sig == SIG_ID_TRANSFER_USB_DISK2_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_disk2].transfer();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_DISK2_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_USB_DISK2_REQ)
                 {
-                    int res = blockdev[blockdev_id_usb_vend0_disk2].trim();
+                    int res = blockdev[blockdev_id_usb_disk2].trim();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRANSFER_DISK3_REQ) {
-                    uint_fast8_t res = blockdev[blockdev_id_usb_vend0_disk3].transfer();
+                else if (softirq_in.sig == SIG_ID_TRANSFER_USB_DISK3_REQ) {
+                    uint_fast8_t res = blockdev[blockdev_id_usb_disk3].transfer();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
-                else if (softirq_in.sig == SIG_ID_TRIM_DISK3_REQ)
+                else if (softirq_in.sig == SIG_ID_TRIM_USB_DISK3_REQ)
                 {
-                    int res = blockdev[blockdev_id_usb_vend0_disk3].trim();
+                    int res = blockdev[blockdev_id_usb_disk3].trim();
                     softirq_out(DEV_ID_USB_VEND0, res, 0, NULL);
                 }
                 else

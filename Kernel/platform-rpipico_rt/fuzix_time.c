@@ -33,7 +33,7 @@ uint_fast8_t platform_rtc_secs(void) {
     static uint8_t last;
 
     datetime_t pico_dt;
-    if (rtc_get(&pico_dt))
+    if (rtc_datetime_get(&pico_dt))
         last = pico_dt.sec;
 
     return last;
@@ -47,7 +47,7 @@ int platform_rtc_read(void) {
     /*
     // get datetime_t from pico's rtc
     datetime_t pico_dt;
-    if (!rtc_get(&pico_dt))
+    if (!rtc_datetime_get(&pico_dt))
         return -1;
 
     // check len

@@ -347,20 +347,20 @@ void tud_vendor_rx_cb(uint8_t itf)
 		// dispatch all packets in usb buffer
 		do {
 			uint32_t len = tud_vendor_n_available(itf);
-			// first byte
+			// first byte == packet size
 			if (vend_expected==0) {
-				usb_packet_set_size();
+				usb_rx_packet_set_size();
 				len--;
 			}
-			// whole packet ready
+			// whole packet
 			if (len>=vend_expected) {
-				usb_packet_dispatch(vend_expected);
+				usb_rx_packet_dispatch(vend_expected);
 				len = len-vend_expected;
 				// prepare next iteration
 				if (len)
-					usb_packet_set_size();
+					usb_rx_packet_set_size();
 				else
-					vend_expected = itf;
+					vend_expected = 0;
 			}
 		} while (vend_expected);
 	}
@@ -477,104 +477,6 @@ bool usb_cdc2_writable(void)
 }
 
 //--------------------------------------------------------------------+
-// vendor chardev interfaces
-//--------------------------------------------------------------------+
-
-static uint8_t usb_vend_read(uint8_t tty)
-{
-	// TODO unused?
-	if (tud_vendor_n_mounted(0))
-	{
-		if (tud_vendor_n_available(0) > 0) {
-			uint8_t b = 0;
-			tud_vendor_n_read(0, &b, 1);
-			return b;
-		}
-		else
-			WARN("VEND0 buffer full");
-	}
-	else
-	{
-		WARN("VEND0 not connected");
-	}
-	return 0;
-}
-
-static void usb_vend_write(uint8_t tty, uint8_t b)
-{
-	if (tud_vendor_n_mounted(0))
-	{
-		if (tud_vendor_n_write_available(0) > 2) {
-			uint8_t pid = USB_PACKET_ID_TTY1;
-			if (tty==2)
-				pid = USB_PACKET_ID_TTY2;
-			if (tty==3)
-				pid = USB_PACKET_ID_TTY3;
-			uint8_t pkt[3] = { 2, pid, b };
-			tud_vendor_n_write(0, &b, 3);
-		}
-		else
-			WARN("VEND0 buffer full");
-	}
-	else
-		WARN("VEND0 not connected");
-}
-
-static bool usb_vend_writable(uint8_t tty)
-{
-	if (tud_vendor_n_mounted(0))
-	{
-		return (tud_vendor_n_write_available(0) > 2);
-	}
-	return false;
-}
-
-uint8_t usb_vend_tty1_read(void)
-{
-	return usb_vend_read(1);
-}
-
-void usb_vend_tty1_write(uint8_t b)
-{
-	usb_vend_write(1, b);
-}
-
-bool usb_vend_tty1_writable(void)
-{
-	return usb_vend_writable(1);
-}
-
-uint8_t usb_vend_tty2_read(void)
-{
-	return usb_vend_read(2);
-}
-
-void usb_vend_tty2_write(uint8_t b)
-{
-	usb_vend_write(2, b);
-}
-
-bool usb_vend_tty2_writable(void)
-{
-	return usb_vend_writable(2);
-}
-
-uint8_t usb_vend_tty3_read(void)
-{
-	return usb_vend_read(3);
-}
-
-void usb_vend_tty3_write(uint8_t b)
-{
-	usb_vend_write(3, b);
-}
-
-bool usb_vend_tty3_writable(void)
-{
-	return usb_vend_writable(3);
-}
-
-//--------------------------------------------------------------------+
 // API
 //--------------------------------------------------------------------+
 
@@ -609,17 +511,6 @@ void usb_cdc2_set_cb(byte_tx_t rx_cb) {
 
 void usb_cdc3_set_cb(byte_tx_t rx_cb) {
 	cdc3_cb = rx_cb;
-}
-
-void usb_vend0_set_cb(usb_packet_chardev_fptr rx_packet_core1_rx,
-						usb_packet_chardev_fptr rx_packet_tty1_rx,
-						usb_packet_chardev_fptr rx_packet_tty2_rx,
-						usb_packet_chardev_fptr rx_packet_tty3_rx
-						) {
-	usb_packet_core1_rx = rx_packet_core1_rx;
-	usb_packet_tty1_rx = rx_packet_tty1_rx;
-	usb_packet_tty2_rx = rx_packet_tty2_rx;
-	usb_packet_tty3_rx = rx_packet_tty3_rx;
 }
 
 void usb_vend1_set_cb(byte_tx_t rx_cb) {

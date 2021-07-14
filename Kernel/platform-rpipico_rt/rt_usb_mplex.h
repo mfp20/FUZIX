@@ -27,17 +27,37 @@ typedef void (*usb_packet_chardev_fptr)(bool ctrl, uint8_t len);
 
 extern uint8_t vend_expected;
 extern uint8_t vend_packet[256];
-extern bool usb_vend_chardev_connected;
 
-extern usb_packet_chardev_fptr usb_packet_core1_rx;
-extern usb_packet_chardev_fptr usb_packet_tty1_rx;
-extern usb_packet_chardev_fptr usb_packet_tty2_rx;
-extern usb_packet_chardev_fptr usb_packet_tty3_rx;
+extern bool usb_vend0_chardev_connected;
+extern bool usb_vend0_blockdev_connected;
 
-void usb_packet_set_size(void);
-bool usb_packet_ready(void);
-void usb_packet_dispatch(uint8_t len);
+extern usb_packet_chardev_fptr usb_packet_rx_core1;
+extern usb_packet_chardev_fptr usb_packet_rx_tty1;
+extern usb_packet_chardev_fptr usb_packet_rx_tty2;
+extern usb_packet_chardev_fptr usb_packet_rx_tty3;
 
-uint32_t usb_req_lba(uint8_t disk_id);
+void usb_rx_packet_set_size(void);
+void usb_rx_packet_dispatch(uint8_t len);
+
+bool usb_timestamp_req(datetime_t *t);
+uint32_t usb_disk_lba_req(uint8_t disk_id);
+
+void usb_vend0_set_cb(usb_packet_chardev_fptr rx_packet_core1_cb,
+						usb_packet_chardev_fptr rx_packet_tty1_cb,
+						usb_packet_chardev_fptr rx_packet_tty2_cb,
+						usb_packet_chardev_fptr rx_packet_tty3_cb
+						);
+
+uint8_t usb_vend_tty1_read(void);
+void usb_vend_tty1_write(uint8_t b);
+bool usb_vend_tty1_writable(void);
+
+uint8_t usb_vend_tty2_read(void);
+void usb_vend_tty2_write(uint8_t b);
+bool usb_vend_tty2_writable(void);
+
+uint8_t usb_vend_tty3_read(void);
+void usb_vend_tty3_write(uint8_t b);
+bool usb_vend_tty3_writable(void);
 
 #endif

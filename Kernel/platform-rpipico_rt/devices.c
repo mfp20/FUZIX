@@ -43,14 +43,14 @@ void device_init(void)
 	// time
 	virtual_ticker_init();
 
-	// flash device is mounted last, it is the fallback root device
-	virtual_flash_init();
+	// USB external storage, if any
+	virtual_usb_disk_init();
 
 	// SD external storage, if any
 	virtual_sd_init();
 
-	// USB external storage, if any
-	virtual_usb_disk_init();
+	// flash device is mounted last, it is the fallback root device
+	virtual_flash_init();
 
 	// led on, signal hw init complete
 	gpio_init(PICO_DEFAULT_LED_PIN);
