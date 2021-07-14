@@ -9,7 +9,7 @@ void fuzix_softirq(void) {
         softirq_t irq;
         queue_remove_blocking(&softirq_out_q, &irq);
         switch (irq.dev) {
-            case DEV_ID_TIMER:
+            case DEV_ID_TICKER:
                 timer_interrupt();
             break;
             case DEV_ID_CORE1:

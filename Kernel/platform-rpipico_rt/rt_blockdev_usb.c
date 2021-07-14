@@ -13,26 +13,6 @@ uint8_t blockdev_id_usb_vend0_disk1 = 0;
 uint8_t blockdev_id_usb_vend0_disk2 = 0;
 uint8_t blockdev_id_usb_vend0_disk3 = 0;
 
-static critical_section_t usb_critical;
-
-
-//--------------------------------------------------------------------+
-// low level
-//--------------------------------------------------------------------+
-
-uint32_t usb_req_lba(uint8_t disk_id) {
-
-	return 0;
-}
-
-uint32_t *usb_fs_buffer_addr_f(uint8_t disk_id, bool ctrl, uint8_t len) {
-
-}
-
-void usb_disk_rx_f(uint8_t disk_id, bool ctrl, uint8_t len) {
-
-}
-
 //--------------------------------------------------------------------+
 // blockdev
 //--------------------------------------------------------------------+
@@ -82,15 +62,9 @@ static int usb_trim3(void) {
 }
 
 void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3) {
-	critical_section_init(&usb_critical);
-
 	NOTICE("USB external filesystem: init");
 
-	//
-	usb_disk_block_addr = usb_fs_buffer_addr_f;
-	usb_disk_rx = usb_disk_rx_f;
-
-	// root fs
+	// root disk
 	*lba1 = usb_req_lba(1);
 	if (*lba1) {
 		blockdev_id_usb_vend0_disk1 = blockdev_add(usb_transfer1, NULL, usb_trim1, *lba1, blk_op);
@@ -101,7 +75,7 @@ void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3
 		NOTICE("USB external root filesystem: not found on boot");
 	}
 
-	// swap fs
+	// swap disk
 	*lba2 = usb_req_lba(2);
 	if (*lba2) {
 		blockdev_id_usb_vend0_disk2 = blockdev_add(usb_transfer2, NULL, usb_trim2, *lba2, blk_op);
@@ -112,7 +86,7 @@ void usb_vend0_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3
 		NOTICE("USB external swap filesystem: not found on boot");
 	}
 
-	// scratch fs
+	// scratch disk
 	*lba3 = usb_req_lba(3);
 	if (*lba3) {
 		blockdev_id_usb_vend0_disk3 = blockdev_add(usb_transfer3, NULL, usb_trim3, *lba3, blk_op);

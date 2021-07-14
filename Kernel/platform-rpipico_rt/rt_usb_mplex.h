@@ -29,16 +29,15 @@ extern uint8_t vend_expected;
 extern uint8_t vend_packet[256];
 extern bool usb_vend_chardev_connected;
 
-void usb_packet_set_size(void);
-bool usb_packet_ready(void);
-void usb_packet_dispatch(uint8_t len);
-void usb_packet_control_rx(uint8_t len);
-
-extern usb_disk_buffer_addr_fptr usb_disk_block_addr;
-extern usb_disk_rx_fptr usb_disk_rx;
 extern usb_packet_chardev_fptr usb_packet_core1_rx;
 extern usb_packet_chardev_fptr usb_packet_tty1_rx;
 extern usb_packet_chardev_fptr usb_packet_tty2_rx;
 extern usb_packet_chardev_fptr usb_packet_tty3_rx;
+
+void usb_packet_set_size(void);
+bool usb_packet_ready(void);
+void usb_packet_dispatch(uint8_t len);
+
+uint32_t usb_req_lba(uint8_t disk_id);
 
 #endif

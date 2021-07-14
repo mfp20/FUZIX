@@ -117,7 +117,7 @@ static bool tick_trigger(repeating_timer_t *rt)
 	}
 	else
 	{
-		softirq_out(DEV_ID_TIMER, SIG_ID_TICK, 0, NULL);
+		softirq_out(DEV_ID_TICKER, SIG_ID_TICK, 0, NULL);
 	}
 
 	return true;

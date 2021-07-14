@@ -8,7 +8,7 @@ static void jitter_fix(int32_t jitter) {
     static int32_t sum = 0;
 
     sum += jitter;
-    if (sum>1000) {
+    if ((sum>=1000)||(sum<=-1000)) {
         WARN("jitter %ld us, jitter_fix NOT IMPLEMENTED", sum);
         // TODO use rtc clock as a reference to re-offset systick
         sum = 0;
@@ -16,9 +16,9 @@ static void jitter_fix(int32_t jitter) {
 }
 
 static void jitter_eval(void) {
-    static uint32_t last = 0;
+    static int32_t last = 0;
     uint32_t now = time_us_32();
-    uint32_t jitter = 0;
+    int32_t jitter = 0;
 
     if (now<last) {
         jitter = UINT32_MAX-last;

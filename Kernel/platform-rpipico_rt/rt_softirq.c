@@ -50,7 +50,7 @@ static bool rt_softirq(repeating_timer_t *rt)
 	while (!queue_is_empty(&softirq_in_q)) {
         queue_remove_blocking(&softirq_in_q, &softirq_in);
         switch (softirq_in.dev) {
-            case DEV_ID_TIMER:
+            case DEV_ID_TICKER:
                 WARN("rt_softirq TIMER sig %d count %d", softirq_in.sig, softirq_in.count);
             break;
             case DEV_ID_CORE1:

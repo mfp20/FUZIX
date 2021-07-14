@@ -611,19 +611,15 @@ void usb_cdc3_set_cb(byte_tx_t rx_cb) {
 	cdc3_cb = rx_cb;
 }
 
-void usb_vend0_set_cb(usb_disk_buffer_addr_fptr disk_block_addr,
-						usb_disk_rx_fptr disk_rx,
-						usb_packet_chardev_fptr packet_core1_rx,
-						usb_packet_chardev_fptr packet_tty1_rx,
-						usb_packet_chardev_fptr packet_tty2_rx,
-						usb_packet_chardev_fptr packet_tty3_rx
+void usb_vend0_set_cb(usb_packet_chardev_fptr rx_packet_core1_rx,
+						usb_packet_chardev_fptr rx_packet_tty1_rx,
+						usb_packet_chardev_fptr rx_packet_tty2_rx,
+						usb_packet_chardev_fptr rx_packet_tty3_rx
 						) {
-	usb_disk_block_addr = disk_block_addr;
-	usb_disk_rx = disk_rx;
-	usb_packet_core1_rx = packet_core1_rx;
-	usb_packet_tty1_rx = packet_tty1_rx;
-	usb_packet_tty2_rx = packet_tty2_rx;
-	usb_packet_tty3_rx = packet_tty3_rx;
+	usb_packet_core1_rx = rx_packet_core1_rx;
+	usb_packet_tty1_rx = rx_packet_tty1_rx;
+	usb_packet_tty2_rx = rx_packet_tty2_rx;
+	usb_packet_tty3_rx = rx_packet_tty3_rx;
 }
 
 void usb_vend1_set_cb(byte_tx_t rx_cb) {

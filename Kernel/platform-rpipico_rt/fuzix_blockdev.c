@@ -3,8 +3,12 @@
 #include <kernel.h>
 #include <blkdev.h>
 
+//--------------------------------------------------------------------+
+// blockdev drivers
+//--------------------------------------------------------------------+
+
 static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
-	// evelope blockdev reqeust for softirq
+	// evelope blockdev request for softirq
 	softirq_in(dev, req, 0, NULL);
 
 	// wait for response
@@ -73,6 +77,10 @@ static int virtual_usb_disk3_trim(void) {
 	return 0;
 }
 
+//--------------------------------------------------------------------+
+// init
+//--------------------------------------------------------------------+
+
 static void blkdev_add(transfer_function_t transfer_cb, flush_function_t flush_cb, trim_function_t trim_cb, uint32_t lba) {
 	blkdev_t *blk = blkdev_alloc();
 	if (!blk)
@@ -110,25 +118,13 @@ void virtual_usb_disk_init(void) {
 	usb_vend0_init(&blk_op, &lba1, &lba2, &lba3);
 
 	// init virtual device
-	if (lba1)
+	if ((lba1)&&(lba2)&&(lba3)) {
 		blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
-	else
-	{
-		WARN("Can't find USB DISK1");
-		return;
-	}
-	if (lba2)
 		blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
-	else
-	{
-		WARN("Can't find USB DISK2");
-		return;
-	}
-	if (lba3)
 		blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
+	}
 	else
 	{
-		WARN("Can't find USB DISK3");
-		return;
+		WARN("Can't find USB disks");
 	}
 }

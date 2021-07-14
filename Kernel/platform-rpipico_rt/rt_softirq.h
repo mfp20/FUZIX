@@ -4,7 +4,7 @@
 #include "rt.h"
 
 #define DEV_ID_RESERVED 0
-#define DEV_ID_TIMER 1
+#define DEV_ID_TICKER 1
 #define DEV_ID_CORE1 2
 #define DEV_ID_FLASH 3
 #define DEV_ID_SD 4
