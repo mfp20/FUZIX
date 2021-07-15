@@ -35,16 +35,21 @@ add_executable(fuzix
 	rt_blockdev_flash.c
 	rt_blockdev_sd.c
 	rt_blockdev_usb.c
-	rt_usb.c
 	rt_usb_mplex.c
+	rt_usb.c
 	fuzix_elf.c 
-	fuzix_tty.c
 	fuzix_swapper.c
 	fuzix_softirq.c
-	fuzix_time.c
 	fuzix_chardev.c
 	fuzix_blockdev.c
 	fuzix_platform.c
+	fuzix_devtty.c
+	fuzix_devmem.c
+	fuzix_devrtc.c
+#	fuzix_devgpio.c
+#	fuzix_devi2c.c
+#	fuzix_devaudio.c
+#	fuzix_devinput.c
 	devices.c
 	main.c
 	tricks.S
@@ -52,6 +57,8 @@ add_executable(fuzix
 	../dev/mbr.c
 	../dev/devsd_discard.c
 	../dev/devsd.c
+#	../devinput.c
+#	../dev/i2c.c
 	../lib/dhara/error.c
 	../lib/dhara/journal.c
 	../lib/dhara/map.c
@@ -61,6 +68,7 @@ add_executable(fuzix
 	../filesys.c
 	../inode.c
 	../kdata.c
+	../audio.c
 	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c

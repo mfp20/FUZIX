@@ -7,6 +7,10 @@
 #include <tty.h>
 #include <blkdev.h>
 #include <rtc.h>
+#include <audio.h>
+#include <gpio.h>
+#include <i2c.h>
+#include <input.h>
 
 
 #endif

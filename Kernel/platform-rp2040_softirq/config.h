@@ -42,7 +42,7 @@
 //#define CONFIG_COCOSDNANO
 
 //--------------------------------------------------------------------+
-// Platform specific: RP2040
+// Platform specific: RP2040 (Raspberry Pi Pico)
 //--------------------------------------------------------------------+
 //
 #include <stdint.h>
@@ -50,7 +50,7 @@
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
 //
-#define USERSTACK (4*1024)                  // 4kB
+#define USERSTACK (4*1024) // 4kB
 //
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
@@ -134,8 +134,8 @@ extern uint8_t progbase[USERMEM];
 //#define CONFIG_LEVEL_2
 // no timer interrupt available
 //#define CONFIG_NO_CLOCK
-//
-//#define CONFIG_PLATFORM_SUSPEND
+// Enables suspend to RAM, platform_suspend()
+#define CONFIG_PLATFORM_SUSPEND
 // Profil syscall support (not yet complete)
 #undef CONFIG_PROFIL
 // Use soft irqs

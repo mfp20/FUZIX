@@ -59,8 +59,26 @@ void platform_discard(void) {}
 
 void platform_monitor(void) {}
 
+uint_fast8_t platform_suspend() {
+	// TODO
+	return EOPNOTSUPP;
+}
+
 void platform_reboot(void) {
 	watchdog_reboot(0,0,0);
+}
+
+int platform_dev_ioctl(uarg_t request, char *data) {
+    if (valaddr((unsigned char *)data, 2))
+		switch (request){
+//			case IOCTL:
+//				return 0;
+//			break;
+			default:
+			break;
+		}
+	udata.u_error = EINVAL;
+	return -1;
 }
 
 /* vim: sw=4 ts=4 et: */
