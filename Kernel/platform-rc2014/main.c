@@ -27,6 +27,7 @@ uint8_t ps2kbd_present;
 uint8_t ps2mouse_present;
 uint8_t sc26c92_present;
 uint8_t u16x50_present;
+uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 
 uint8_t platform_tick_present;
 uint8_t timer_source = TIMER_NONE;
@@ -35,6 +36,7 @@ uint8_t timer_source = TIMER_NONE;
 uint16_t syscpu;
 uint16_t syskhz;
 uint8_t systype;
+uint8_t romver;
 
 /* For RTC */
 uint8_t rtc_shadow;
@@ -91,7 +93,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (timer_source != TIMER_NONE && !ps2kbd_present)
+	if (timer_source != TIMER_NONE)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
@@ -120,21 +122,37 @@ static void timer_tick(uint8_t n)
 	}
 }
 
+__sfr __at (Z180_IO_BASE + 0x10) TIME_TCR;      /* Timer control register                     */
+__sfr __at (Z180_IO_BASE + 0x0C) TIME_TMDR0L;   /* Timer data register,    channel 0L         */
+
 void platform_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
 	   should fastpath them (vector 8 and 9) */
 	uint8_t ti_r = 0;
 
-	if (timer_source == TIMER_TMS9918A)
+
+	/* We must never read this from interrupt unless it is our timer */
+	if (timer_source == TIMER_TMS9918A) {
 		ti_r = tms9918a_ctrl;
+		if (ti_r & 0x80)
+			wakeup(&shadowcon);
+	}
 
 	tty_pollirq();
 
 	/* On the Z180 we use the internal timer */
 	if (timer_source == TIMER_Z180) {
-		if (irqvector == 3)	/* Timer 0 */
-			do_timer_interrupt();
+		if (irqvector == 3) {	/* Timer 0 */
+			uint8_t r;
+			r = TIME_TMDR0L;
+			r = TIME_TCR;
+			timerct++;
+			if (timerct == 4) {
+				do_timer_interrupt();
+				timerct = 0;
+			}
+		}
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {

@@ -10,9 +10,6 @@
 platform-rc2014/crt0.rel
 platform-rc2014/commonmem.rel
 platform-rc2014/rc2014.rel
-platform-rc2014/vfd-debug.rel
-platform-rc2014/vfdterm.rel
-platform-rc2014/vfd-term.rel
 start.rel
 version.rel
 lowlevel-z80-banked.rel
@@ -69,5 +66,5 @@ platform-rc2014/zxkey.rel
 platform-rc2014/zxkeyboard.rel
 platform-rc2014/vdp1.rel
 platform-rc2014/ps2kbd.rel
-platform-rc2014/ps2bitbang-z80.rel
+platform-rc2014/ps2bitbang-rc2014-kbd.rel
 -e

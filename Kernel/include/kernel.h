@@ -373,8 +373,9 @@ struct mount {
     struct filesys m_fs;
 };
 #define MS_RDONLY	1
-#define MS_NOSUID	2	/* Not yet implemented */
-#define MS_NOEXEC	4	/* Not yet implemented */
+#define MS_NOSUID	2
+#define MS_NOEXEC	4
+#define MS_NOATIME	8
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -465,6 +466,8 @@ typedef struct p_tab {
 #define PFL_CHKSIG	1	/* Signal check required */
 #define PFL_ALARM	2	/* On alarm queue */
 #define PFL_BATCH	4	/* Used full time quantum */
+#define PFL_GRAPHICS	8	/* Graphics hint flag for some platforms
+                                   (platform owned) */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -529,9 +532,7 @@ typedef struct u_data {
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
     uaddr_t	u_break;	/* Top of data space */
-#ifdef CONFIG_32BIT
     uaddr_t	u_codebase;	/* 32bit platform base pointers */
-#endif
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
 
     uint8_t *   u_base;         /* Source or dest for I/O */
@@ -1007,7 +1008,7 @@ extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 #ifdef CONFIG_LEVEL_2
-extern uint_fast8_t dump_core(uint8_t sig);
+extern uint_fast8_t dump_core(uint_fast8_t sig);
 #endif
 
 /* select.c */

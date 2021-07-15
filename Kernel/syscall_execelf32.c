@@ -55,7 +55,8 @@ arg_t _execve(void)
 	uaddr_t dynamic;
 	uaddr_t lomem;
 	uaddr_t himem;
-	uaddr_t stacktop;
+	uaddr_t stacktop; // davidgiven TODO remove
+	uint_fast8_t mflags;
 
 	himem = ramtop - PROGLOAD;
 
@@ -75,6 +76,12 @@ arg_t _execve(void)
 		#ifdef DEBUG
 			kprintf("failed: not accessible\n");
 		#endif
+		goto eacces;
+	}
+
+	mflags = fs_tab[ino->c_super].m_flags;
+	if (mflags & MS_NOEXEC) {
+		udata.u_error = EACCES;
 		goto eacces;
 	}
 
@@ -294,13 +301,13 @@ arg_t _execve(void)
 
 	uzero((void*)dynamic, USERSTACK);
 
-	/* setuid, setgid if the executable requires it. */
-
-	if (ino->c_node.i_mode & SET_UID)
-		udata.u_euid = ino->c_node.i_uid;
-
-	if (ino->c_node.i_mode & SET_GID)
-		udata.u_egid = ino->c_node.i_gid;
+	if (!(mflags & MS_NOSUID)) {
+		/* setuid, setgid if executable requires it */
+		if (ino->c_node.i_mode & SET_UID)
+			udata.u_euid = ino->c_node.i_uid;
+		if (ino->c_node.i_mode & SET_GID)
+			udata.u_egid = ino->c_node.i_gid;
+	}
 
 	/* Set initial break for program. */
 
@@ -453,6 +460,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	return (char **)argbase;
 }
 
+#ifndef CONFIG_FLAT
 /*
  *	Stub the 32bit only allocator calls
  */
@@ -468,6 +476,7 @@ arg_t _memfree(void)
 	udata.u_error = ENOMEM;
 	return -1;
 }
+#endif
 
 #ifdef CONFIG_LEVEL_2
 

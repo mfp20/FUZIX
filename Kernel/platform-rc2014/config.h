@@ -8,8 +8,6 @@
 #undef CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
-/* Set this if you have a VFD interface */
-#undef CONFIG_RC2014_VFD
 /* Set this for SD card support via PIO or SC129 at 0x68 */
 #define CONFIG_RC2014_SD
 
@@ -37,9 +35,6 @@
 #endif
 #ifdef CONFIG_RC2014_FLOPPY
 #define CONFIG_FLOPPY
-#endif
-#ifdef CONFIG_RC2014_VFD
-#define CONFIG_VFD_TERM
 #endif
 #ifdef CONFIG_RC2014_SD
 #define CONFIG_SD
@@ -83,8 +78,7 @@ extern uint16_t swap_dev;
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
- *	physical address. For a simple banked setup there is no conversion
- *	needed so identity map it.
+ *	physical address. We use the second 16K window
  */
 #define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
@@ -115,10 +109,12 @@ extern uint16_t swap_dev;
 /* Multiple consoles */
 #define CONFIG_VT_MULTI
 /* Vt definitions */
-#define VT_WIDTH	40
+#define VT_WIDTH	vt_twidth
 #define VT_HEIGHT	24
-#define VT_RIGHT	39
+#define VT_RIGHT	vt_tright
 #define VT_BOTTOM	23
+#define MAX_VT		4		/* Always come up as lowest minors */
+
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
 /* Font for the TMS9918A */
@@ -143,6 +139,6 @@ extern void qwrite(uint8_t *addr, uint8_t val);
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define Z180_IO_BASE	0x40
+#define Z180_IO_BASE	0xC0
 
 #define platform_copyright()		// for now

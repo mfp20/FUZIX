@@ -39,6 +39,7 @@
         .globl outhl
         .globl outnewline
 	.globl interrupt_handler
+	.globl interrupt_legacy
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
@@ -107,6 +108,11 @@ init_hardware:
         ld a, #0x0C
         out (FDC_DOR), a
 
+	; Let keyboard initialize freely - float all the lines
+
+	ld a,#0xFF
+	out (0xBB),a
+
 	; Play guess the serial port
 
 	;
@@ -174,7 +180,7 @@ not_acia:
 
 not_16x50:
 	ld a,e
-	out (0xC3),a
+	out (0xA3),a
 
 	xor a
 	ld c,#SIOA_C
@@ -514,7 +520,7 @@ do_program_vectors:
 	; now install the interrupt vector at 0x0038
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
-	ld hl,#interrupt_handler
+	ld hl,#interrupt_legacy
 	ld (0x0039),hl
 
 	; set restart vector for UZI system calls
