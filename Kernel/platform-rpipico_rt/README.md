@@ -94,7 +94,7 @@ to tty1, tty2 and tty3.
 
 ## SD card
 
-You can partition the SD card in system or prepare on host as you wish. The 
+You can partition the SD card in system or prepare on host as you wish.
 
 ![Wiring diagram](doc/wiring.jpg)
 
@@ -182,9 +182,10 @@ it would render the binaries non-portable.
 There's a Forth interpreter as `fforth` (use capital letters) and some games
 are in `/usr/games`.
 
-You can customized the filesystem by modifing the `update-flash.sh` script 
+You can customize the root filesystem by modifing the `update-flash.sh` script 
 to include/exclude libraries and other binaries existing and built by default
 from `[FUZIX]/Library` and `[FUZIX]/Applications`.
+You can also use `ucp` command on linux host to manually mod the disk image.
 
 # Issues
 
