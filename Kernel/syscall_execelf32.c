@@ -55,8 +55,8 @@ arg_t _execve(void)
 	uaddr_t dynamic;
 	uaddr_t lomem;
 	uaddr_t himem;
-	uaddr_t stacktop; // davidgiven TODO remove
-	uint_fast8_t mflags;
+	uaddr_t stacktop; // davidgiven
+	uint_fast8_t mflags; // etchedpixels
 
 	himem = ramtop - PROGLOAD;
 
@@ -81,7 +81,6 @@ arg_t _execve(void)
 
 	mflags = fs_tab[ino->c_super].m_flags;
 	if (mflags & MS_NOEXEC) {
-		udata.u_error = EACCES;
 		goto eacces;
 	}
 
