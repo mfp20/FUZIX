@@ -22,10 +22,10 @@ size.report
 .obj
 bin
 #
-Kernel/platform-rpipico_rt/build
-Kernel/platform-rpipico_rt/.vscode/
-Kernel/platform-rpipico_rt/uf2conv
-Kernel/platform-rpipico_rt/filesystem.*
+Kernel/platform-rp2040_softirq/build
+Kernel/platform-rp2040_softirq/.vscode/
+Kernel/platform-rp2040_softirq/uf2conv
+Kernel/platform-rp2040_softirq/filesystem.*
 Applications/**/*.debug
 Library/libs/fuzixarmm0/*.S
 Applications/V7/cmd/ed
