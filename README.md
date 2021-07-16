@@ -1,7 +1,7 @@
 # FuzixOS: Because Small Is Beautiful, and Pico Is Realtime!
 
 This is a fork of [David Given's FUZIX Raspberry Pi Pico port](https://github.com/davidgiven/FUZIX), which in turn is a fork of [Alan Cox's Fuzix](https://github.com/EtchedPixels/FUZIX).
-Look at those repositories for the README.md. Raspberry Pi Pico specific README and HOWTO is in [its own code directory](https://github.com/mfp20/FUZIX/tree/rpipico/Kernel/platform-rpipico_rt).
+Look at those repositories for the README.md. Raspberry Pi Pico specific README and HOWTO is in [its own code directory](https://github.com/mfp20/FUZIX/tree/rpipico/Kernel/platform-rp2040_softirq).
 
 This fork adds a realtime thin layer to the original port in order to have all time-sensitive basic peripherals (ie: flash and usb) running on core0 and have core1 available for realtime user apps.
 

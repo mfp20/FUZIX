@@ -27,13 +27,13 @@ void fuzix_softirq(void) {
                 usb_irq_done = true;
             break;
             case DEV_ID_TTY1:
-                tty_inproc(minor((512 + 1)), irq.sig);
+                fuzix_tty1_write(irq.sig);
             break;
             case DEV_ID_TTY2:
-                tty_putc(minor((512 + 2)), irq.sig);
+                fuzix_tty2_write(irq.sig);
             break;
             case DEV_ID_TTY3:
-                tty_putc(minor((512 + 3)), irq.sig);
+                fuzix_tty3_write(irq.sig);
             break;
             default:
                 ERR("fuzix_softirq unknown irq sig %d count %d", irq.sig, irq.count);

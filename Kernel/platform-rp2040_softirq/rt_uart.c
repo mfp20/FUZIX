@@ -22,12 +22,17 @@ static void on_uart0_rx_isr(void)
 	}
 	else
 	{
-		// evelope uart0 byte for softirq
-		softirq_out(DEV_ID_TTY1, b, 0, NULL);
+		// TODO skip softirq
+		//if (fuzix_ready && queue_is_empty(&softirq_out_q))
+		//{
+		//	fuzix_tty1_write(b);
+		//}
+		//else
+			softirq_out(DEV_ID_TTY1, b, 0, NULL);
 	}
 }
 
-void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_cb)
+void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate)
 {
 	// uart gpios
 	gpio_set_function(tx_pin, GPIO_FUNC_UART);
@@ -42,9 +47,6 @@ void uart0_init(uint8_t tx_pin, uint8_t rx_pin, uint32_t baudrate, byte_tx_t rx_
 	irq_set_exclusive_handler(UART0_IRQ, on_uart0_rx_isr);
 	irq_set_enabled(UART0_IRQ, true);
 	uart_set_irq_enables(uart0, true, false);
-
-	//
-	rx0_cb = rx_cb;
 }
 
 void uart0_set_cb(byte_tx_t rx_cb) {

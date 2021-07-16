@@ -40,7 +40,6 @@ add_executable(fuzix
 	fuzix_elf.c 
 	fuzix_swapper.c
 	fuzix_softirq.c
-	fuzix_chardev.c
 	fuzix_blockdev.c
 	fuzix_platform.c
 	fuzix_devtty.c

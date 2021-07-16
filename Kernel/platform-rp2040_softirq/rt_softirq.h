@@ -49,6 +49,14 @@ typedef struct softirq_s {
 extern pico_queue_t softirq_in_q;
 extern pico_queue_t softirq_out_q;
 
+extern bool stdio_irq_done;
+extern bool tty1_irq_done;
+extern bool tty2_irq_done;
+extern bool tty3_irq_done;
+extern bool flash_irq_done;
+extern bool sd_irq_done;
+extern bool usb_irq_done;
+
 void softirq_init(void);
 void softirq_out(uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data);
 void softirq_in(uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data);

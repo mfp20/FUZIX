@@ -4,7 +4,7 @@
 #include <blkdev.h>
 
 //--------------------------------------------------------------------+
-// blockdev drivers
+// virtual blockdev drivers
 //--------------------------------------------------------------------+
 
 static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
@@ -81,7 +81,7 @@ static int virtual_usb_disk3_trim(void) {
 // init
 //--------------------------------------------------------------------+
 
-static void blkdev_add(transfer_function_t transfer_cb, flush_function_t flush_cb, trim_function_t trim_cb, uint32_t lba) {
+static void fuzix_blkdev_add(transfer_function_t transfer_cb, flush_function_t flush_cb, trim_function_t trim_cb, uint32_t lba) {
 	blkdev_t *blk = blkdev_alloc();
 	if (!blk)
 		return;
@@ -101,7 +101,7 @@ void virtual_flash_init(void) {
 	uint32_t lba = flash_init(&blk_op);
 
 	// init virtual device
-	blkdev_add(virtual_flash_transfer, NULL, virtual_flash_trim, lba);
+	fuzix_blkdev_add(virtual_flash_transfer, NULL, virtual_flash_trim, lba);
 }
 
 void virtual_sd_init(void) {
@@ -109,7 +109,7 @@ void virtual_sd_init(void) {
 	uint32_t lba = sd_init(&blk_op);
 
 	// init virtual device
-	//blkdev_add(virtual_sd_transfer, NULL, virtual_sd_trim, lba);
+	//fuzix_blkdev_add(virtual_sd_transfer, NULL, virtual_sd_trim, lba);
 }
 
 void virtual_usb_disk_init(void) {
@@ -119,8 +119,8 @@ void virtual_usb_disk_init(void) {
 
 	// init virtual device
 	if ((lba1)&&(lba2)&&(lba3)) {
-		blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
-		blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
-		blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
+		fuzix_blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
+		fuzix_blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
+		fuzix_blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
 	}
 }

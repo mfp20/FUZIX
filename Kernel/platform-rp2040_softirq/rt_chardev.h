@@ -1,5 +1,5 @@
-#ifndef _SDK_CHARDEV_DOT_H
-#define _SDK_CHARDEV_DOT_H
+#ifndef _RT_CHARDEV_DOT_H
+#define _RT_CHARDEV_DOT_H
 
 #include "rt.h"
 
@@ -15,11 +15,6 @@ typedef struct chardev_s
 
 extern chardev_t *chardev;
 extern uint8_t tty_cd[4];
-
-extern bool stdio_irq_done;
-extern bool tty1_irq_done;
-extern bool tty2_irq_done;
-extern bool tty3_irq_done;
 
 extern uint8_t stdio_byte;
 extern uint8_t tty1_byte;

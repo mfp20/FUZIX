@@ -7,10 +7,6 @@
 blockdev_t *blockdev;
 uint8_t blockdev_no = 0;
 
-bool flash_irq_done = false;
-bool sd_irq_done = false;
-bool usb_irq_done = false;
-
 uint8_t blockdev_add(uint_fast8_t (*transfer)(void), int (*flush)(void), int (*trim)(void), uint32_t lba, void *op) {
 	if (blockdev_no)
 		blockdev = realloc(blockdev, sizeof(blockdev_t) * (blockdev_no + 1));

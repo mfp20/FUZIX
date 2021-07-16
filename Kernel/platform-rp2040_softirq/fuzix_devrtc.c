@@ -1,6 +1,30 @@
 #include "platform.h"
 
 //--------------------------------------------------------------------+
+// system tick
+//--------------------------------------------------------------------+
+
+static repeating_timer_t ticker_timer;
+
+static bool tick_trigger(repeating_timer_t *rt)
+{
+	if (fuzix_ready && queue_is_empty(&softirq_out_q))
+	{
+		timer_interrupt();
+	}
+	else
+	{
+		softirq_out(DEV_ID_TICKER, SIG_ID_TICK, 0, NULL);
+	}
+
+	return true;
+}
+
+void virtual_ticker_init(void) {
+	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_TICK], (1000000 / TICKSPERSEC), tick_trigger, NULL, &ticker_timer);
+}
+
+//--------------------------------------------------------------------+
 // real time clock
 //--------------------------------------------------------------------+
 
@@ -101,28 +125,4 @@ int platform_rtc_write(void) {
 
     return len;
     */
-}
-
-//--------------------------------------------------------------------+
-// system tick
-//--------------------------------------------------------------------+
-
-static repeating_timer_t ticker_timer;
-
-static bool tick_trigger(repeating_timer_t *rt)
-{
-	if (fuzix_ready && queue_is_empty(&softirq_out_q))
-	{
-		timer_interrupt();
-	}
-	else
-	{
-		softirq_out(DEV_ID_TICKER, SIG_ID_TICK, 0, NULL);
-	}
-
-	return true;
-}
-
-void virtual_ticker_init(void) {
-	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_TICK], (1000000 / TICKSPERSEC), tick_trigger, NULL, &ticker_timer);
 }

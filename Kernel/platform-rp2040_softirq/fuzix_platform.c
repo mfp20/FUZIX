@@ -1,8 +1,5 @@
 #include "platform.h"
 
-#include <kdata.h>
-#include <exec.h>
-
 uint8_t sys_cpu = A_ARM;
 uint8_t sys_cpu_feat = AF_CORTEX_M0;
 uint8_t need_resched;
@@ -68,6 +65,7 @@ void platform_reboot(void) {
 	watchdog_reboot(0,0,0);
 }
 
+// /dev/platform
 int platform_dev_ioctl(uarg_t request, char *data) {
     if (valaddr((unsigned char *)data, 2))
 		switch (request){

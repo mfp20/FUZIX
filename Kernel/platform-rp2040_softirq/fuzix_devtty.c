@@ -3,23 +3,25 @@
 #include <kdata.h>
 #include <vt.h>
 
-// fuzix ttys, note: ttyinq[0] is never used
-struct s_queue ttyinq[NUM_DEV_TTY + 1];
+struct s_queue ttyinq[NUM_DEV_TTY + 1]; // note: ttyinq[0] is never used
 tcflag_t termios_mask[NUM_DEV_TTY + 1];
 uint8_t buf[NUM_DEV_TTY][TTYSIZ];
 
-// setup ttys
-void tty_prepare(void)
+//--------------------------------------------------------------------+
+// kputchar
+//--------------------------------------------------------------------+
+
+// output for the system log (kprintf etc)
+void kputchar(uint_fast8_t c)
 {
-    // ttyinq[0] is never used
-    ttyinq[0] = (struct s_queue){0, 0, 0, 0, 0, 0};
-    termios_mask[0] = 0;
-    for (int i = 1; i < NUM_DEV_TTY + 1; i++)
-    {
-        ttyinq[i] = (struct s_queue){buf[i], buf[i], buf[i], TTYSIZ, 0, TTYSIZ / 2};
-        termios_mask[i] = _CSYS;
-    }
+	if (c == '\n')
+		chardev[tty_cd[0]].tx('\r');
+	chardev[tty_cd[0]].tx(c);
 }
+
+//--------------------------------------------------------------------+
+// fuzix API
+//--------------------------------------------------------------------+
 
 // called on tty_open() and ioctl
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
@@ -68,6 +70,34 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 void tty_sleeping(uint_fast8_t minor)
 {
     kprintf("tty_sleeping minor: %d\n", minor);
+}
+
+//--------------------------------------------------------------------+
+// rt API
+//--------------------------------------------------------------------+
+
+void fuzix_ttys_prepare(void)
+{
+    // ttyinq[0] is never used
+    ttyinq[0] = (struct s_queue){0, 0, 0, 0, 0, 0};
+    termios_mask[0] = 0;
+    for (int i = 1; i < NUM_DEV_TTY + 1; i++)
+    {
+        ttyinq[i] = (struct s_queue){buf[i], buf[i], buf[i], TTYSIZ, 0, TTYSIZ / 2};
+        termios_mask[i] = _CSYS;
+    }
+}
+
+void fuzix_tty1_write(uint8_t b) {
+	tty_inproc(minor((512 + 1)), b);
+}
+
+void fuzix_tty2_write(uint8_t b) {
+	tty_putc(minor((512 + 2)), b);
+}
+
+void fuzix_tty3_write(uint8_t b) {
+	tty_putc(minor((512 + 3)), b);
 }
 
 /* vim: sw=4 ts=4 et: */

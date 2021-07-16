@@ -57,14 +57,15 @@ extern uint8_t progbase[USERMEM];
 #define PROGSIZE (65536 - UDATA_SIZE)
 //
 #define FLASH_OFFSET (96*1024)
-// Enable USB interfaces
-#define USB_DEV_CONSOLE (1) // system console
-#define USB_DEV_LOG     (1) // system log
-#define USB_DEV_MPLEX   (1) // system binary multiplexer for multiple binary streams (ex: external fs, RPC, ...)
-#define USB_DEV_TTY1    (1) // user tty 1
-#define USB_DEV_RAW1    (1) // user custom interface 1
-#define USB_DEV_TTY2    (1) // user tty 2
-#define USB_DEV_RAW2    (1) // user custom interface 2
+// USB
+#define USB_DEV_TTY1        (1) // system console
+#define USB_DEV_TTY2        (1) // system log
+#define USB_DEV_MPLEX_SYS   (1) // system binary multiplexer for multiple binary streams (ex: external fs, RPC, ...)
+#define USB_DEV_TTY3        (1) // user tty 1
+#define USB_DEV_MPLEX_USR   (1) // user custom interface 1
+#define USB_DEV_CDC         (1) // user tty 2
+#define USB_DEV_VENDOR      (1) // user custom interface 2
+#define USB_MPLEX_TIMEOUT   (500) // on boot connection timeout in milliseconds, 0 to disable USB on boot
 // log config
 #ifdef BUILD_DEBUG
 #define LOG_LEVEL (7)

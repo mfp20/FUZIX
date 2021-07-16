@@ -15,6 +15,14 @@
 pico_queue_t softirq_in_q;
 pico_queue_t softirq_out_q;
 
+bool stdio_irq_done = false;
+bool tty1_irq_done = false;
+bool tty2_irq_done = false;
+bool tty3_irq_done = false;
+bool flash_irq_done = false;
+bool sd_irq_done = false;
+bool usb_irq_done = false;
+
 static repeating_timer_t softirq_timer;
 
 static bool softirq_alloc(softirq_t *irq, uint8_t dev_id, uint8_t signal_id, uint32_t count, void *data) {

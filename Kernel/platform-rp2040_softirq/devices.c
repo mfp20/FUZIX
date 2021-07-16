@@ -1,29 +1,20 @@
 #include "platform.h"
 
-#include <version.h>
-#include <kernel.h>
-#include <kdata.h>
-#include <devsys.h>
-#include <blkdev.h>
-#include <tty.h>
-#include <printf.h>
-#include <dev/devsd.h>
-
-// The device driver switch table
+// the device driver switch table
 struct devsw dev_tab[] = {
-	// minor    open         close        read      write           ioctl
+	// open         close		read			write			ioctl
 	// ---------------------------------------------------------------------
-	/* 0: /dev/hd - block device interface */
-	{blkdev_open, no_close, blkdev_read, blkdev_write, blkdev_ioctl},
-	/* 1: /dev/fd - Floppy disk block devices */
-	{no_open, no_close, no_rdwr, no_rdwr, no_ioctl},
-	/* 2: /dev/tty	TTY devices */
-	{tty_open, tty_close, tty_read, tty_write, tty_ioctl},
-	/* 3: /dev/lpr	Printer devices */
-	{no_open, no_close, no_rdwr, no_rdwr, no_ioctl},
-	/* 4: /dev/mem etc	System devices (one offs) */
-	{no_open, no_close, sys_read, sys_write, sys_ioctl},
-	/* Pack to 7 with nxio if adding private devices and start at 8 */
+	// 0: /dev/hd - block device interface
+	{blkdev_open,	no_close,	blkdev_read,	blkdev_write,	blkdev_ioctl},
+	// 1: /dev/fd - Floppy disk block devices
+	{no_open,		no_close,	no_rdwr,		no_rdwr,		no_ioctl},
+	// 2: /dev/tty	TTY devices
+	{tty_open,		tty_close,	tty_read,		tty_write,		tty_ioctl},
+	// 3: /dev/lpr	Printer devices
+	{no_open,		no_close,	no_rdwr,		no_rdwr,		no_ioctl},
+	// 4: /dev/mem etc	System devices (one offs)
+	{no_open,		no_close,	sys_read,		sys_write,		sys_ioctl},
+	// Pack to 7 with nxio if adding private devices and start at 8
 };
 
 bool validdev(uint16_t dev)
@@ -38,7 +29,7 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
 	// init ttys structs
-	tty_prepare();
+	fuzix_ttys_prepare();
 
 	// time
 	virtual_ticker_init();

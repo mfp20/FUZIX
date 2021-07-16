@@ -2,8 +2,8 @@
 #include "rt_softirq.h"
 #include "rt_chardev.h"
 #include "rt_blockdev.h"
-#include "rt_uart.h"
 #include "rt_usb.h"
+#include "rt_usb_mplex.h"
 #include "rt_fuzix.h"
 
 #include <tusb.h>
@@ -29,17 +29,17 @@
 // Temporary setup until I figure out how to dynamically reconfigure USB at runtime
 // PID depends on the 8 interfaces availability and we have 16 bits to flag:
 // (MSb) 0--- ---- ---- ---- (LSb)
-//       |||| |||| |||| |||`-----  cdc tty
-//       |||| |||| |||| ||`------  cdc log
-//       |||| |||| |||| |`-------  cdc user1
-//       |||| |||| ||||  `-------  cdc user2
+//       |||| |||| |||| |||`-----  cdc tty1
+//       |||| |||| |||| ||`------  cdc tty2
+//       |||| |||| |||| |`-------  cdc tty3
+//       |||| |||| ||||  `-------  cdc spare
 //       |||| |||| |||`----------  unused
 //       |||| |||| ||`-----------  unused
 //       |||| |||| |`------------  unused
 //       |||| |||| `-------------  unused
-//       |||| |||`---------------  vendor binary multiplexer
-//       |||| ||`----------------  vendor user1
-//       |||| |`-----------------  vendor user2
+//       |||| |||`---------------  system binary multiplexer
+//       |||| ||`----------------  user binary multiplexer
+//       |||| |`-----------------  vendor spare
 //       |||| `------------------  unused
 //       |||`--------------------  unused
 //       ||`---------------------  unused
@@ -47,26 +47,26 @@
 //       `-----------------------  set to 0 to avoid PID 0xFFFF
 #define PID_MAP(dev, nbit) ((USB_DEV_##dev) << (nbit))
 #define USBD_PID (        \
-	PID_MAP(CONSOLE, 1) + \
-	PID_MAP(LOG, 2) +     \
-	PID_MAP(TTY1, 3) +    \
-	PID_MAP(TTY2, 4) +    \
-	PID_MAP(MPLEX, 9) +   \
-	PID_MAP(RAW1, 10) +   \
-	PID_MAP(RAW2, 11) +   \
+	PID_MAP(TTY1, 1) + \
+	PID_MAP(TTY2, 2) +     \
+	PID_MAP(TTY3, 3) +    \
+	PID_MAP(CDC, 4) +    \
+	PID_MAP(MPLEX_SYS, 9) +   \
+	PID_MAP(MPLEX_USR, 10) +   \
+	PID_MAP(VENDOR, 11) +   \
 	0)
 
 #define USBD_STR_LANG (0x00)
 #define USBD_STR_MANUF (0x01)
 #define USBD_STR_PRODUCT (0x02)
 #define USBD_STR_SERIAL (0x03)
-#define USBD_STR_CONSOLE (0x04)
-#define USBD_STR_LOG (0x05)
-#define USBD_STR_CDC1 (0x06)
-#define USBD_STR_CDC2 (0x07)
-#define USBD_STR_MPLEX (0x08)
-#define USBD_STR_VENDOR1 (0x09)
-#define USBD_STR_VENDOR2 (0x0a)
+#define USBD_STR_TTY1 (0x04)
+#define USBD_STR_TTY2 (0x05)
+#define USBD_STR_TTY3 (0x06)
+#define USBD_STR_CDC (0x07)
+#define USBD_STR_MPLEX_SYS (0x08)
+#define USBD_STR_MPLEX_USR (0x09)
+#define USBD_STR_VENDOR (0x0a)
 
 //--------------------------------------------------------------------+
 // Device Descriptors
@@ -102,31 +102,31 @@ const uint8_t *tud_descriptor_device_cb(void)
 
 enum
 {
-#if USB_DEV_CONSOLE
+#if USB_DEV_TTY1
 	ITFNUM0,
 	ITFNUM0_DATA,
 #endif
-#if USB_DEV_LOG
+#if USB_DEV_TTY2
 	ITFNUM1,
 	ITFNUM1_DATA,
 #endif
-#if USB_DEV_TTY1
+#if USB_DEV_TTY3
 	ITFNUM2,
 	ITFNUM3_DATA,
 #endif
-#if USB_DEV_TTY2
+#if USB_DEV_CDC
 	ITFNUM3,
 	ITFNUM5_DATA,
 #endif
-#if USB_DEV_MPLEX
+#if USB_DEV_MPLEX_SYS
 	ITFNUM4,
 	ITFNUM2_DATA,
 #endif
-#if USB_DEV_RAW1
+#if USB_DEV_MPLEX_USR
 	ITFNUM5,
 	ITFNUM4_DATA,
 #endif
-#if USB_DEV_RAW2
+#if USB_DEV_VENDOR
 	ITFNUM6,
 	ITFNUM6_DATA,
 #endif
@@ -140,26 +140,26 @@ static const uint8_t desc_configuration[] = {
 	// header
 	TUD_CONFIG_DESCRIPTOR(1, (CFG_TUD_CDC * 2) + CFG_TUD_VENDOR, USBD_STR_LANG, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA),
 // Interfaces
-#if USB_DEV_CONSOLE
-	TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_CONSOLE, EPNUM1, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM2 & 0x7F, EPNUM2, USB_PACKET_MAX_SIZE_DATA_SINGLE),
-#endif
-#if USB_DEV_LOG
-	TUD_CDC_DESCRIPTOR(ITFNUM1, USBD_STR_LOG, EPNUM3, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM4 & 0x7F, EPNUM4, USB_PACKET_MAX_SIZE_DATA_SINGLE),
-#endif
 #if USB_DEV_TTY1
-	TUD_CDC_DESCRIPTOR(ITFNUM2, USBD_STR_CDC1, EPNUM5, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM6 & 0x7F, EPNUM6, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+	TUD_CDC_DESCRIPTOR(ITFNUM0, USBD_STR_TTY1, EPNUM1, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM2 & 0x7F, EPNUM2, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 #if USB_DEV_TTY2
-	TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC2, EPNUM7, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM8 & 0x7F, EPNUM8, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+	TUD_CDC_DESCRIPTOR(ITFNUM1, USBD_STR_TTY2, EPNUM3, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM4 & 0x7F, EPNUM4, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
-#if USB_DEV_MPLEX
-	TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_MPLEX, EPNUM9 & 0x7F, EPNUM10, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#if USB_DEV_TTY3
+	TUD_CDC_DESCRIPTOR(ITFNUM2, USBD_STR_TTY3, EPNUM5, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM6 & 0x7F, EPNUM6, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
-#if USB_DEV_RAW1
-	TUD_VENDOR_DESCRIPTOR(ITFNUM5, USBD_STR_VENDOR1, EPNUM11 & 0x7F, EPNUM12, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#if USB_DEV_CDC
+	TUD_CDC_DESCRIPTOR(ITFNUM3, USBD_STR_CDC, EPNUM7, USB_PACKET_MAX_SIZE_DATA_SINGLE, EPNUM8 & 0x7F, EPNUM8, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
-#if USB_DEV_RAW2
-	TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR2, EPNUM13 & 0x7F, EPNUM14, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#if USB_DEV_MPLEX_SYS
+	TUD_VENDOR_DESCRIPTOR(ITFNUM4, USBD_STR_MPLEX_SYS, EPNUM9 & 0x7F, EPNUM10, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#endif
+#if USB_DEV_MPLEX_USR
+	TUD_VENDOR_DESCRIPTOR(ITFNUM5, USBD_STR_MPLEX_USR, EPNUM11 & 0x7F, EPNUM12, USB_PACKET_MAX_SIZE_DATA_SINGLE),
+#endif
+#if USB_DEV_VENDOR
+	TUD_VENDOR_DESCRIPTOR(ITFNUM6, USBD_STR_VENDOR, EPNUM13 & 0x7F, EPNUM14, USB_PACKET_MAX_SIZE_DATA_SINGLE),
 #endif
 };
 
@@ -204,13 +204,13 @@ static const char *const string_desc_arr[] = {
 	[USBD_STR_MANUF] = "Raspberry Pi",
 	[USBD_STR_PRODUCT] = "Pico Fuzix",
 	[USBD_STR_SERIAL] = usb_serial,
-	[USBD_STR_CONSOLE] = "Fuzix tty1 (system console)",
-	[USBD_STR_LOG] = "Fuzix tty2 (system log)",
-	[USBD_STR_MPLEX] = "Fuzix binary interface",
-	[USBD_STR_CDC1] = "Fuzix tty3 (user chardev)",
-	[USBD_STR_VENDOR1] = "User binary interface",
-	[USBD_STR_CDC2] = "Pico chardev",
-	[USBD_STR_VENDOR2] = "Pico protocol"};
+	[USBD_STR_TTY1] = "Fuzix tty1 (system console)",
+	[USBD_STR_TTY2] = "Fuzix tty2 (system log)",
+	[USBD_STR_MPLEX_SYS] = "Fuzix binary interface",
+	[USBD_STR_TTY3] = "Fuzix tty3 (user chardev)",
+	[USBD_STR_MPLEX_USR] = "User binary interface",
+	[USBD_STR_CDC] = "Pico chardev",
+	[USBD_STR_VENDOR] = "Pico protocol"};
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -257,9 +257,6 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 //--------------------------------------------------------------------+
 
 // callbacks for received data
-static byte_tx_t cdc0_cb = NULL;
-static byte_tx_t cdc1_cb = NULL;
-static byte_tx_t cdc2_cb = NULL;
 static byte_tx_t cdc3_cb = NULL;
 static byte_tx_t vend1_cb = NULL;
 static byte_tx_t vend2_cb = NULL;
@@ -270,12 +267,12 @@ void tud_cdc_rx_cb(uint8_t itf)
 	if (itf == 0)
 	{
 		uint8_t b = (uint8_t)tud_cdc_n_read_char(0);
-		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc0_cb)
-		{
-			INFO("tud_cdc_rx_cb TODO direct route\n");
-			cdc0_cb(b);
-		}
-		else
+		// TODO skip softirq
+		//if (fuzix_ready && queue_is_empty(&softirq_out_q))
+		//{
+		//	fuzix_tty1_write(b);
+		//}
+		//else
 		{
 			softirq_out(DEV_ID_TTY1, b, 0, NULL);
 		}
@@ -283,12 +280,12 @@ void tud_cdc_rx_cb(uint8_t itf)
 	else if (itf == 1)
 	{
 		uint8_t b = (uint8_t)tud_cdc_n_read_char(1);
-		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc1_cb)
-		{
-			INFO("tud_cdc_rx_cb TODO direct route\n");
-			cdc1_cb(b);
-		}
-		else
+		// TODO skip softirq
+		//if (fuzix_ready && queue_is_empty(&softirq_out_q))
+		//{
+		//	fuzix_tty2_write(b);
+		//}
+		//else
 		{
 			softirq_out(DEV_ID_TTY2, b, 0, NULL);
 		}
@@ -296,12 +293,12 @@ void tud_cdc_rx_cb(uint8_t itf)
 	else if (itf == 2)
 	{
 		uint8_t b = (uint8_t)tud_cdc_n_read_char(2);
-		if (fuzix_ready && queue_is_empty(&softirq_out_q) && cdc2_cb)
-		{
-			INFO("tud_cdc_rx_cb TODO direct route\n");
-			cdc2_cb(b);
-		}
-		else
+		// TODO skip softirq
+		//if (fuzix_ready && queue_is_empty(&softirq_out_q))
+		//{
+		//	fuzix_tty3_write(b);
+		//}
+		//else
 		{
 			softirq_out(DEV_ID_TTY3, b, 0, NULL);
 		}
@@ -385,6 +382,47 @@ void tud_vendor_rx_cb(uint8_t itf)
                 WARN("USB VEND2: packet received but callback is not set");
 		}
 	}
+}
+
+//--------------------------------------------------------------------+
+// API
+//--------------------------------------------------------------------+
+
+static repeating_timer_t tusb_timer;
+
+static bool tusb_handler(repeating_timer_t *rt)
+{
+	tud_task();
+	return true;
+}
+
+void usb_init(void)
+{
+	// tinyusb
+	tusb_id2str();
+	tusb_init();
+    // uses lowest prio alarm pool
+	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_BE], 125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
+
+	uint32_t start = monotonic32();
+	uint32_t elapsed = 0;
+	while (elapsed<USB_MPLEX_TIMEOUT*1000) {
+		if (usb_connection_req())
+			break;
+		elapsed = monotonic32()-start;
+	}
+}
+
+void usb_cdc3_set_cb(byte_tx_t rx_cb) {
+	cdc3_cb = rx_cb;
+}
+
+void usb_vend1_set_cb(byte_tx_t rx_cb) {
+	vend1_cb = rx_cb;
+}
+
+void usb_vend2_set_cb(byte_tx_t rx_cb) {
+	vend2_cb = rx_cb;
 }
 
 //--------------------------------------------------------------------+
@@ -474,49 +512,4 @@ void usb_cdc2_write(uint8_t b)
 bool usb_cdc2_writable(void)
 {
 	return usb_cdc_writable(2);
-}
-
-//--------------------------------------------------------------------+
-// API
-//--------------------------------------------------------------------+
-
-static repeating_timer_t tusb_timer;
-
-static bool tusb_handler(repeating_timer_t *rt)
-{
-	tud_task();
-	return true;
-}
-
-void usb_init(void)
-{
-	tusb_id2str();
-	tusb_init();
-
-    // uses lowest prio alarm pool
-	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_BE], 125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
-}
-
-void usb_cdc0_set_cb(byte_tx_t rx_cb) {
-	cdc0_cb = rx_cb;
-}
-
-void usb_cdc1_set_cb(byte_tx_t rx_cb) {
-	cdc1_cb = rx_cb;
-}
-
-void usb_cdc2_set_cb(byte_tx_t rx_cb) {
-	cdc2_cb = rx_cb;
-}
-
-void usb_cdc3_set_cb(byte_tx_t rx_cb) {
-	cdc3_cb = rx_cb;
-}
-
-void usb_vend1_set_cb(byte_tx_t rx_cb) {
-	vend1_cb = rx_cb;
-}
-
-void usb_vend2_set_cb(byte_tx_t rx_cb) {
-	vend2_cb = rx_cb;
 }

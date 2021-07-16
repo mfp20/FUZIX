@@ -39,6 +39,7 @@ extern usb_packet_chardev_fptr usb_packet_rx_tty3;
 void usb_rx_packet_set_size(void);
 void usb_rx_packet_dispatch(uint8_t len);
 
+bool usb_connection_req(void);
 bool usb_timestamp_req(datetime_t *t);
 uint32_t usb_disk_lba_req(uint8_t disk_id);
 

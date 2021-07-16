@@ -65,7 +65,6 @@ void time_init(void) {
         missing = ALARM_POOL_PRIO;
     }
     else
-
         alarm_pool[ALARM_POOL_PRIO] = alarm_pool_create(0, 16);
     if (PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM==1) {
         alarm_pool_init_default();
@@ -103,7 +102,6 @@ bool rtc_datetime_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int
             .min   = mi,
             .sec   = s
     };
-
     return rtc_set_datetime(&t);
 }
 

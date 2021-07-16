@@ -82,24 +82,6 @@ void syscall_handler(struct svc_frame *eh)
 
 int main(void)
 {
-	// sanity check
-	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
-		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
-		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
-		(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)) ||
-		(UDATA_SIZE_ASM != UDATA_SIZE))
-	{
-		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
-		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
-		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
-		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
-		panic("bad offsets");
-	}
-
-	// TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
-	ramsize = (SRAM_END - SRAM_BASE) / 1024;
-	procmem = USERMEM / 1024;
-
 	// stdio early init
 	chardev_init();
 
@@ -135,8 +117,29 @@ int main(void)
 	log_test_color();
 
 	INFO("");
-	INFO("Pico realtime layer initialized");
+	INFO("Pico realtime layer initialized. Fuzix starting...");
 	INFO("");
+
+	// sanity check
+	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
+		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
+		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
+		(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)) ||
+		(UDATA_SIZE_ASM != UDATA_SIZE))
+	{
+		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
+		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
+		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
+		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
+		panic("bad offsets");
+	}
+
+	// TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
+
+	// The total amount of memory available in the system, including memory used for the kernel and other resources
+	ramsize = (SRAM_END - SRAM_BASE) / 1024;
+	// the number of Kbytes of memory available for process allocation
+	procmem = USERMEM / 1024;
 
 	// disable interrupts and run fuzix
 	di();

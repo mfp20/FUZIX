@@ -5,9 +5,6 @@
 #include "rt_usb_mplex.h"
 
 void usb_init(void);
-void usb_cdc0_set_cb(byte_tx_t rx_cb);
-void usb_cdc1_set_cb(byte_tx_t rx_cb);
-void usb_cdc2_set_cb(byte_tx_t rx_cb);
 void usb_cdc3_set_cb(byte_tx_t rx_cb);
 void usb_vend1_set_cb(byte_tx_t rx_cb);
 void usb_vend2_set_cb(byte_tx_t rx_cb);

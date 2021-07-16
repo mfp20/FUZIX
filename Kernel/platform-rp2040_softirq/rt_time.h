@@ -1,5 +1,5 @@
-#ifndef _SDK_TIME_DOT_H
-#define _SDK_TIME_DOT_H
+#ifndef _RT_TIME_DOT_H
+#define _RT_TIME_DOT_H
 
 #include "rt.h"
 

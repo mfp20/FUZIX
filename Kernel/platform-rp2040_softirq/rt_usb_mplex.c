@@ -125,9 +125,14 @@ static void usb_tx_packet(void)
 {
 }
 
+bool usb_connection_req(void) {
+
+    return false;
+}
+
 bool usb_timestamp_req(datetime_t *t) {
 
-    return 0;
+    return false;
 }
 
 //--------------------------------------------------------------------+
