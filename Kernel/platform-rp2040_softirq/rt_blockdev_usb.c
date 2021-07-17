@@ -1,7 +1,5 @@
 
-#include "config.h"
 #include "rt_log.h"
-#include "rt_softirq.h"
 #include "rt_blockdev.h"
 #include "rt_blockdev_usb.h"
 #include "rt_usb_mplex.h"
@@ -13,10 +11,6 @@ uint8_t blockdev_id_usb_disk1 = 0;
 uint8_t blockdev_id_usb_disk2 = 0;
 uint8_t blockdev_id_usb_disk3 = 0;
 
-//--------------------------------------------------------------------+
-// blockdev
-//--------------------------------------------------------------------+
-
 static uint_fast8_t usb_transfer(uint8_t disk_id) {
 	uint8_t id = blockdev_id_usb_disk1;
 	if (disk_id==2)
@@ -26,13 +20,20 @@ static uint_fast8_t usb_transfer(uint8_t disk_id) {
 
 	bool res = false;
 	if (blockdev[id].op->is_read)
-		res = usb_disk_read_req(id, blockdev[id].op->lba, blockdev[id].op->addr);
+		res = usb_disk_read_req(id, blockdev[id].lba);
 	else
-		res = usb_disk_write_req(id, blockdev[id].op->lba, blockdev[id].op->addr);
+		res = usb_disk_write_req(id, blockdev[id].lba);
 	return res ? 1 : 0;
 }
 
 static int usb_trim(uint8_t disk_id) {
+	uint8_t id = blockdev_id_usb_disk1;
+	if (disk_id==2)
+		id = blockdev_id_usb_disk2;
+	if (disk_id==3)
+		id = blockdev_id_usb_disk3;
+
+	usb_disk_trim_req(id, blockdev[id].lba);
 	return 0;
 }
 
@@ -45,7 +46,6 @@ static int usb_trim_disk1(void) {
 }
 
 static uint_fast8_t usb_transfer_disk2(void) {
-
 	return usb_transfer(2);
 }
 

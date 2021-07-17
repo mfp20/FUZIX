@@ -31,6 +31,10 @@ static void usb_packet_rx_control(uint8_t len) {
             WARN("USB VEND0: USB_CTRL_ID_DISCONNECT command NOT IMPLEMENTED");
 			usb_vend0_connected = false;
         break;
+        case USB_CTRL_ID_DATETIME:
+            WARN("USB VEND0: USB_CTRL_ID_DATETIME command NOT IMPLEMENTED");
+			// TODO get date and time and fill a datetime_t
+        break;
         case USB_CTRL_ID_BLOCKDEV_CONNECT:
             WARN("USB VEND0: USB_CTRL_ID_BLOCKDEV_CONNECT command NOT IMPLEMENTED");
 			usb_vend0_blockdev_enabled = true;
@@ -118,62 +122,100 @@ void usb_rx_packet_dispatch(uint8_t len) {
 // vendor0 tx
 //--------------------------------------------------------------------+
 
-static void usb_tx_packet(void)
+static void usb_tx_packet(uint8_t packet_id, uint8_t op_id, uint8_t count, void *data)
 {
-}
-
-bool usb_connection_req(void) {
-	// TODO perform handshaking
-    return false;
-}
-
-bool usb_datetime_req(datetime_t *t) {
-	// TODO get date and time and fill t
-    return false;
-}
-
-//--------------------------------------------------------------------+
-// vendor0 chardev
-//--------------------------------------------------------------------+
-
-static uint8_t usb_vend_read(uint8_t tty)
-{
-	// TODO unused?
 	if (tud_vendor_n_mounted(0))
 	{
-		if (tud_vendor_n_available(0) > 0) {
-			uint8_t b = 0;
-			tud_vendor_n_read(0, &b, 1);
-			return b;
+		if (tud_vendor_n_write_available(0) > 3+count) {
+			uint8_t len = 2+count;
+			tud_vendor_n_write(0, &len, 1);
+			tud_vendor_n_write(0, &packet_id, 1);
+			tud_vendor_n_write(0, &op_id, 1);
+			if (count) tud_vendor_n_write(0, data, count);
 		}
 		else
 			WARN("VEND0 buffer full");
 	}
 	else
-	{
 		WARN("VEND0 not connected");
-	}
+}
+
+//--------------------------------------------------------------------+
+// ctrl
+//--------------------------------------------------------------------+
+
+bool usb_connection_req(void) {
+    usb_tx_packet(USB_PACKET_ID_CTRL, USB_CTRL_ID_SYN, 0, NULL);
+    return false;
+}
+
+bool usb_datetime_req(datetime_t *t) {
+    usb_tx_packet(USB_PACKET_ID_CTRL, USB_CTRL_ID_DATETIME, 0, NULL);
+    return false;
+}
+
+//--------------------------------------------------------------------+
+// blockdev
+//--------------------------------------------------------------------+
+
+uint32_t usb_disk_lba_req(uint8_t disk_id)
+{
+	uint8_t pid = USB_PACKET_ID_DISK1;
+	if (disk_id==2)
+		pid = USB_PACKET_ID_DISK2;
+	if (disk_id==3)
+		pid = USB_PACKET_ID_DISK3;
+		
+    usb_tx_packet(pid, USB_DISK_OP_LBA, 0, NULL);
+	return 0;
+}
+
+bool usb_disk_read_req(uint8_t disk_id, uint32_t lba)
+{
+	uint8_t pid = USB_PACKET_ID_DISK1;
+	if (disk_id==2)
+		pid = USB_PACKET_ID_DISK2;
+	if (disk_id==3)
+		pid = USB_PACKET_ID_DISK3;
+
+    usb_tx_packet(pid, USB_DISK_OP_READ, 4, &lba);
+}
+
+bool usb_disk_write_req(uint8_t disk_id, uint32_t lba)
+{
+	uint8_t pid = USB_PACKET_ID_DISK1;
+	if (disk_id==2)
+		pid = USB_PACKET_ID_DISK2;
+	if (disk_id==3)
+		pid = USB_PACKET_ID_DISK3;
+	
+    usb_tx_packet(pid, USB_DISK_OP_WRITE, 4, &lba);
+}
+
+bool usb_disk_trim_req(uint8_t disk_id, uint32_t lba)
+{
+	uint8_t pid = USB_PACKET_ID_DISK1;
+	if (disk_id==2)
+		pid = USB_PACKET_ID_DISK2;
+	if (disk_id==3)
+		pid = USB_PACKET_ID_DISK3;
+		
+    usb_tx_packet(pid, USB_DISK_OP_TRIM, 4, &lba);
+}
+
+//--------------------------------------------------------------------+
+// chardev
+//--------------------------------------------------------------------+
+
+static uint8_t usb_vend_read(uint8_t tty)
+{
+	// TODO
 	return 0;
 }
 
 static void usb_vend_write(uint8_t tty, uint8_t b)
 {
-	if (tud_vendor_n_mounted(0))
-	{
-		if (tud_vendor_n_write_available(0) > 2) {
-			uint8_t pid = USB_PACKET_ID_TTY1;
-			if (tty==2)
-				pid = USB_PACKET_ID_TTY2;
-			if (tty==3)
-				pid = USB_PACKET_ID_TTY3;
-			uint8_t pkt[3] = { 2, pid, b };
-			tud_vendor_n_write(0, &b, 3);
-		}
-		else
-			WARN("VEND0 buffer full");
-	}
-	else
-		WARN("VEND0 not connected");
+	// TODO
 }
 
 static bool usb_vend_writable(uint8_t tty)
@@ -228,32 +270,4 @@ void usb_vend_tty3_write(uint8_t b)
 bool usb_vend_tty3_writable(void)
 {
 	return usb_vend_writable(3);
-}
-
-//--------------------------------------------------------------------+
-// vendor0 blockdev
-//--------------------------------------------------------------------+
-
-uint32_t usb_disk_lba_req(uint8_t disk_id)
-{
-    // usb_tx_packet(void);
-	return 0;
-}
-
-bool usb_disk_read_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
-{
-    // usb_tx_packet(void);
-    return false;
-}
-
-bool usb_disk_write_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
-{
-    // usb_tx_packet(void);
-    return false;
-}
-
-bool usb_disk_trim_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
-{
-    // usb_tx_packet(void);
-    return false;
 }

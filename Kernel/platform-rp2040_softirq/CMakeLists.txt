@@ -24,6 +24,7 @@ include_directories(
 )
 
 add_executable(fuzix
+# Pico realtime layer code
 	rt_time.c
 	rt_stdio.c
 	rt_softirq.c
@@ -37,11 +38,12 @@ add_executable(fuzix
 	rt_blockdev_usb.c
 	rt_usb_mplex.c
 	rt_usb.c
+# Pico port code
 	fuzix_elf.c 
 	fuzix_swapper.c
 	fuzix_softirq.c
-	fuzix_blockdev.c
 	fuzix_platform.c
+	fuzix_devblock.c
 	fuzix_devtty.c
 	fuzix_devmem.c
 	fuzix_devrtc.c
@@ -50,30 +52,19 @@ add_executable(fuzix
 #	fuzix_devaudio.c
 #	fuzix_devinput.c
 	devices.c
-	main.c
 	tricks.S
-	../dev/blkdev.c
-	../dev/mbr.c
-	../dev/devsd_discard.c
-	../dev/devsd.c
-#	../devinput.c
-#	../dev/i2c.c
-	../lib/dhara/error.c
-	../lib/dhara/journal.c
-	../lib/dhara/map.c
-	../lib/hexdump.c
-	../devio.c
-	../devsys.c
-	../filesys.c
-	../inode.c
-	../kdata.c
-	../audio.c
+# Fuzix code
+	../version.c
 	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c
 	../process.c
 	../start.c
+	../filesys.c
+	../inode.c
+	../kdata.c
 	../swap.c
+	../usermem.c
 	../syscall_execelf32.c
 	../syscall_fs.c
 	../syscall_fs2.c
@@ -82,8 +73,21 @@ add_executable(fuzix
 	../syscall_proc.c
 	../timer.c
 	../tty.c
-	../usermem.c
-	../version.c
+	../audio.c
+	../devio.c
+	../devsys.c
+#	../devinput.c
+	../dev/blkdev.c
+	../dev/mbr.c
+	../dev/devsd_discard.c
+	../dev/devsd.c
+#	../dev/i2c.c
+	../lib/dhara/error.c
+	../lib/dhara/journal.c
+	../lib/dhara/map.c
+	../lib/hexdump.c
+# main()
+	main.c
 )
 
 target_link_libraries(fuzix

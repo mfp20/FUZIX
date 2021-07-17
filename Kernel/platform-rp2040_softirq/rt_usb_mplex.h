@@ -13,13 +13,20 @@
 #define USB_PACKET_ID_TTY2 32
 #define USB_PACKET_ID_TTY3 64
 
-#define USB_CTRL_ID_CONNECT 0
-#define USB_CTRL_ID_DISCONNECT 1
-#define USB_CTRL_ID_BLOCKDEV_CONNECT 2
-#define USB_CTRL_ID_BLOCKDEV_DISCONNECT 3
-#define USB_CTRL_ID_CHARDEV_CONNECT 4
-#define USB_CTRL_ID_CHARDEV_DISCONNECT 5
+#define USB_CTRL_ID_SYN 0
+#define USB_CTRL_ID_CONNECT 1
+#define USB_CTRL_ID_DISCONNECT 2
+#define USB_CTRL_ID_DATETIME 3
+#define USB_CTRL_ID_BLOCKDEV_CONNECT 4
+#define USB_CTRL_ID_BLOCKDEV_DISCONNECT 5
+#define USB_CTRL_ID_CHARDEV_CONNECT 6
+#define USB_CTRL_ID_CHARDEV_DISCONNECT 7
 #define USB_CTRL_ID_REBOOT 255
+
+#define USB_DISK_OP_LBA 0
+#define USB_DISK_OP_READ 1
+#define USB_DISK_OP_WRITE 2
+#define USB_DISK_OP_TRIM 3
 
 typedef void (*usb_packet_chardev_fptr)(bool ctrl, uint8_t len);
 
@@ -34,9 +41,11 @@ void usb_rx_packet_dispatch(uint8_t len);
 
 bool usb_connection_req(void);
 bool usb_datetime_req(datetime_t *t);
+
 uint32_t usb_disk_lba_req(uint8_t disk_id);
-bool usb_disk_read_req(uint8_t disk_id, uint32_t lba, uint8_t *addr);
-bool usb_disk_write_req(uint8_t disk_id, uint32_t lba, uint8_t *addr);
+bool usb_disk_read_req(uint8_t disk_id, uint32_t lba);
+bool usb_disk_write_req(uint8_t disk_id, uint32_t lba);
+bool usb_disk_trim_req(uint8_t disk_id, uint32_t lba);
 
 uint8_t usb_vend_tty1_read(void);
 void usb_vend_tty1_write(uint8_t b);
