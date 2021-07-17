@@ -17,6 +17,7 @@ void time_init(void);
 // RTC
 bool rtc_datetime_get(datetime_t *t);
 bool rtc_datetime_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int8_t mi, int8_t s);
+bool rtc_datetime_tostring(datetime_t *t, char *str);
 
 // USB time
 extern bool (*usb_datetime_get)(datetime_t *t);

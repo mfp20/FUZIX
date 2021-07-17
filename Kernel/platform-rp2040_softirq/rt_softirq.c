@@ -119,7 +119,7 @@ static bool rt_softirq(repeating_timer_t *rt)
                 INFO("rt_softirq VEND0 sig %d count %d", softirq_in.sig, softirq_in.count);
                 if (softirq_in.sig == SIG_ID_DATETIME_REQ) {
                     datetime_t *datetime = malloc(sizeof(datetime_t));
-                    int res = usb_timestamp_req(datetime) ? 1 : 0;
+                    int res = usb_datetime_req(datetime) ? 1 : 0;
                     softirq_out(DEV_ID_USB_VEND0, res, 4, datetime);
                 }
                 else if (softirq_in.sig == SIG_ID_TRANSFER_USB_DISK1_REQ) {

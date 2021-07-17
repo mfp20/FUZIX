@@ -1,55 +1,60 @@
 #include "rt_log.h"
+#include "rt_softirq.h"
+#include "rt_blockdev.h"
+#include "rt_blockdev_usb.h"
+#include "rt_core1.h"
+#include "rt_fuzix.h"
 #include "rt_usb_mplex.h"
 
 #include <tusb.h>
 
+bool usb_vend0_connected = false;
+bool usb_vend0_chardev_enabled = false;
+bool usb_vend0_blockdev_enabled = false;
+
 //--------------------------------------------------------------------+
-// rx
+// vendor0 rx
 //--------------------------------------------------------------------+
 
 uint8_t vend_expected = 0;
-uint8_t vend_packet[256];
 
 static void usb_packet_rx_control(uint8_t len) {
-    switch ((uint8_t)vend_packet[0]) {
+	uint8_t b = 0;
+    tud_vendor_n_read(0, &b, len);
+
+    switch (b) {
         case USB_CTRL_ID_CONNECT:
-            // TODO what is vendor class "mounted"?
             WARN("USB VEND0: USB_CTRL_ID_CONNECT NOT IMPLEMENTED");
+			usb_vend0_connected = true;
         break;
         case USB_CTRL_ID_DISCONNECT:
-            // TODO what is vendor class "mounted"?
             WARN("USB VEND0: USB_CTRL_ID_DISCONNECT command NOT IMPLEMENTED");
+			usb_vend0_connected = false;
         break;
         case USB_CTRL_ID_BLOCKDEV_CONNECT:
             WARN("USB VEND0: USB_CTRL_ID_BLOCKDEV_CONNECT command NOT IMPLEMENTED");
+			usb_vend0_blockdev_enabled = true;
         break;
         case USB_CTRL_ID_BLOCKDEV_DISCONNECT:
             WARN("USB VEND0: USB_CTRL_ID_BLOCKDEV_DISCONNECT command NOT IMPLEMENTED");
+			usb_vend0_blockdev_enabled = false;
         break;
         case USB_CTRL_ID_CHARDEV_CONNECT:
-            //usb_vend0_chardev_connected = true;
             WARN("USB VEND0: USB_CTRL_ID_CHARDEV_CONNECT command NOT IMPLEMENTED");
+			usb_vend0_chardev_enabled = true;
         break;
         case USB_CTRL_ID_CHARDEV_DISCONNECT:
-            //usb_vend0_chardev_connected = false;
             WARN("USB VEND0: USB_CTRL_ID_CHARDEV_DISCONNECT command NOT IMPLEMENTED");
+			usb_vend0_chardev_enabled = false;
         break;
         case USB_CTRL_ID_REBOOT:
-            // TODO fuzix clean reboot?
             WARN("USB VEND0: USB_CTRL_ID_REBOOT NOT IMPLEMENTED");
+            // TODO fuzix clean reboot?
         break;
         default:
-            ERR("USB VEND0: Unknown ctrl command (%d)", (uint8_t)vend_packet[0]);
+            ERR("USB VEND0: Unknown ctrl command (%d)", b);
         break;
     }
-}
-
-static uint32_t *usb_disk_block_addr(uint8_t disk_id, bool ctrl, uint8_t len) {
-
-}
-
-static void usb_packet_rx_disk_block(uint8_t disk_id, bool ctrl, uint8_t len) {
-
 }
 
 void usb_rx_packet_set_size(void) {
@@ -61,55 +66,47 @@ void usb_rx_packet_dispatch(uint8_t len) {
 	tud_vendor_n_read(0, (void *)&select, 1);
     len--;
 	bool ctrl = (select >> USB_PACKET_CTRL_BIT) & 1U;
-    void *addr;
+	uint8_t b = 0;
 
 	switch (select &= ~(1UL << USB_PACKET_CTRL_BIT)) {
 		case USB_PACKET_ID_CTRL:
-        	tud_vendor_n_read(0, (void *)&vend_packet, len);
             usb_packet_rx_control(len);
 		break;
 		case USB_PACKET_ID_DISK1:
-            addr = usb_disk_block_addr(1, ctrl, len);
-            tud_vendor_n_read(0, addr, len);
-            usb_packet_rx_disk_block(1, ctrl, len);
+            tud_vendor_n_read(0, blockdev[blockdev_id_usb_disk1].op->addr, len);
+			softirq_out(DEV_ID_USB_VEND0, 1, 0, NULL);
 		break;
 		case USB_PACKET_ID_DISK2:
-            addr = usb_disk_block_addr(2, ctrl, len);
-            tud_vendor_n_read(0, addr, len);
-            usb_packet_rx_disk_block(2, ctrl, len);
+            tud_vendor_n_read(0, blockdev[blockdev_id_usb_disk2].op->addr, len);
+			softirq_out(DEV_ID_USB_VEND0, 2, 0, NULL);
 		break;
 		case USB_PACKET_ID_DISK3:
-            addr = usb_disk_block_addr(3, ctrl, len);
-            tud_vendor_n_read(0, addr, len);
-            usb_packet_rx_disk_block(3, ctrl, len);
+            tud_vendor_n_read(0, blockdev[blockdev_id_usb_disk3].op->addr, len);
+			softirq_out(DEV_ID_USB_VEND0, 3, 0, NULL);
 		break;
 		case USB_PACKET_ID_CORE1:
-        	tud_vendor_n_read(0, (void *)&vend_packet, len);
-            if (usb_packet_rx_core1)
-                usb_packet_rx_core1(ctrl, len);
-            else
-                WARN("USB VEND0: core1 packet received but core1 callback is not set");
+			for (int i=0;i<len;i++) {
+	        	tud_vendor_n_read(0, &b, 1);
+				core1_write(b);
+			}
 		break;
 		case USB_PACKET_ID_TTY1:
-        	tud_vendor_n_read(0, (void *)&vend_packet, len);
-            if (usb_packet_rx_tty1)
-                usb_packet_rx_tty1(ctrl, len);
-            else
-                WARN("USB VEND0: tty1 packet received but tty1 callback is not set");
+			for (int i=0;i<len;i++) {
+	        	tud_vendor_n_read(0, &b, 1);
+				softirq_out(DEV_ID_TTY1, b, 0, NULL);
+			}
 		break;
 		case USB_PACKET_ID_TTY2:
-        	tud_vendor_n_read(0, (void *)&vend_packet, len);
-            if (usb_packet_rx_tty2)
-                usb_packet_rx_tty2(ctrl, len);
-            else
-                WARN("USB VEND0: tty2 packet received but tty2 callback isnot set");
+			for (int i=0;i<len;i++) {
+	        	tud_vendor_n_read(0, &b, 1);
+				softirq_out(DEV_ID_TTY2, b, 0, NULL);
+			}
 		break;
 		case USB_PACKET_ID_TTY3:
-        	tud_vendor_n_read(0, (void *)&vend_packet, len);
-            if (usb_packet_rx_tty3)
-                usb_packet_rx_tty3(ctrl, len);
-            else
-                WARN("USB VEND0: tty3 packet received but tty3 callback is not set");
+			for (int i=0;i<len;i++) {
+	        	tud_vendor_n_read(0, &b, 1);
+				softirq_out(DEV_ID_TTY3, b, 0, NULL);
+			}
 		break;
 		default:
             ERR("USB VEND0: Unknown packet");
@@ -118,7 +115,7 @@ void usb_rx_packet_dispatch(uint8_t len) {
 }
 
 //--------------------------------------------------------------------+
-// tx
+// vendor0 tx
 //--------------------------------------------------------------------+
 
 static void usb_tx_packet(void)
@@ -126,20 +123,18 @@ static void usb_tx_packet(void)
 }
 
 bool usb_connection_req(void) {
-
+	// TODO perform handshaking
     return false;
 }
 
-bool usb_timestamp_req(datetime_t *t) {
-
+bool usb_datetime_req(datetime_t *t) {
+	// TODO get date and time and fill t
     return false;
 }
 
 //--------------------------------------------------------------------+
 // vendor0 chardev
 //--------------------------------------------------------------------+
-
-bool usb_vend0_chardev_connected = false;
 
 static uint8_t usb_vend_read(uint8_t tty)
 {
@@ -239,31 +234,26 @@ bool usb_vend_tty3_writable(void)
 // vendor0 blockdev
 //--------------------------------------------------------------------+
 
-bool usb_vend0_blockdev_connected = false;
-
 uint32_t usb_disk_lba_req(uint8_t disk_id)
 {
     // usb_tx_packet(void);
-
 	return 0;
 }
 
-//--------------------------------------------------------------------+
-// vendor0 callbacks
-//--------------------------------------------------------------------+
+bool usb_disk_read_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
+{
+    // usb_tx_packet(void);
+    return false;
+}
 
-usb_packet_chardev_fptr usb_packet_rx_core1 = NULL;
-usb_packet_chardev_fptr usb_packet_rx_tty1 = NULL;
-usb_packet_chardev_fptr usb_packet_rx_tty2 = NULL;
-usb_packet_chardev_fptr usb_packet_rx_tty3 = NULL;
+bool usb_disk_write_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
+{
+    // usb_tx_packet(void);
+    return false;
+}
 
-void usb_vend0_set_cb(usb_packet_chardev_fptr rx_packet_core1_cb,
-						usb_packet_chardev_fptr rx_packet_tty1_cb,
-						usb_packet_chardev_fptr rx_packet_tty2_cb,
-						usb_packet_chardev_fptr rx_packet_tty3_cb
-						) {
-	usb_packet_rx_core1 = rx_packet_core1_cb;
-	usb_packet_rx_tty1 = rx_packet_tty1_cb;
-	usb_packet_rx_tty2 = rx_packet_tty2_cb;
-	usb_packet_rx_tty3 = rx_packet_tty3_cb;
+bool usb_disk_trim_req(uint8_t disk_id, uint32_t lba, uint8_t *addr)
+{
+    // usb_tx_packet(void);
+    return false;
 }

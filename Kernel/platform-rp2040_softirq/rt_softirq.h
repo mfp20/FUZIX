@@ -1,5 +1,5 @@
-#ifndef _SDK_VIRTDEV_DOT_H
-#define _SDK_VIRTDEV_DOT_H
+#ifndef _RT_SOFTIRQ_DOT_H
+#define _RT_SOFTIRQ_DOT_H
 
 #include "rt.h"
 

@@ -24,12 +24,12 @@ static uint_fast8_t usb_transfer(uint8_t disk_id) {
 	if (disk_id==3)
 		id = blockdev_id_usb_disk3;
 
+	bool res = false;
 	if (blockdev[id].op->is_read)
-		; // blockdev[id].op->lba, blockdev[id].op->addr
+		res = usb_disk_read_req(id, blockdev[id].op->lba, blockdev[id].op->addr);
 	else
-		; // blockdev[id].op->lba, blockdev[id].op->addr
-
-	return 1;  // success
+		res = usb_disk_write_req(id, blockdev[id].op->lba, blockdev[id].op->addr);
+	return res ? 1 : 0;
 }
 
 static int usb_trim(uint8_t disk_id) {
@@ -62,21 +62,17 @@ static int usb_trim_disk3(void) {
 }
 
 void usb_blockdev_init(void *blk_op, uint32_t *lba1, uint32_t *lba2, uint32_t *lba3) {
-	// root disk
+	INFO("USB disks init");
 	*lba1 = usb_disk_lba_req(1);
 	*lba2 = usb_disk_lba_req(2);
 	*lba3 = usb_disk_lba_req(3);
 	if ((*lba1)&&(*lba2)&&(*lba3)) {
 		blockdev_id_usb_disk1 = blockdev_add(usb_transfer_disk1, NULL, usb_trim_disk1, *lba1, blk_op);
-		NOTICE("USB external root disk: %dkB logical", *lba1 / 2);
+		INFO("USB external root disk: %dkB logical", *lba1 / 2);
 		blockdev_id_usb_disk2 = blockdev_add(usb_transfer_disk2, NULL, usb_trim_disk2, *lba2, blk_op);
-		NOTICE("USB external swap disk: %dkB logical", *lba2 / 2);
+		INFO("USB external swap disk: %dkB logical", *lba2 / 2);
 		blockdev_id_usb_disk3 = blockdev_add(usb_transfer_disk3, NULL, usb_trim_disk3, *lba3, blk_op);
-		NOTICE("USB external scratch disk: %dkB logical", *lba3 / 2);
-	}
-	else
-	{
-		NOTICE("USB disks not found");
+		INFO("USB external scratch disk: %dkB logical", *lba3 / 2);
 	}
 }
 

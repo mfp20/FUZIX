@@ -1,4 +1,5 @@
 #include "rt_log.h"
+#include "rt_time.h"
 #include "rt_softirq.h"
 #include "rt_chardev.h"
 #include "rt_blockdev.h"
@@ -404,6 +405,8 @@ void usb_init(void)
     // uses lowest prio alarm pool
 	alarm_pool_add_repeating_timer_us(alarm_pool[ALARM_POOL_BE], 125, tusb_handler, NULL, &tusb_timer); // USB 2.0 -> 125us microframes
 
+	// connect to binary server on host and enable options
+	INFO("USB waiting %lums for binary server...", USB_MPLEX_TIMEOUT);
 	uint32_t start = monotonic32();
 	uint32_t elapsed = 0;
 	while (elapsed<USB_MPLEX_TIMEOUT*1000) {
@@ -411,6 +414,24 @@ void usb_init(void)
 			break;
 		elapsed = monotonic32()-start;
 	}
+	if (usb_vend0_connected) {
+		// set RTC date and time
+		usb_datetime_get = usb_datetime_req;
+		datetime_t t;
+		usb_datetime_req(&t);
+		rtc_datetime_set(t.year, t.month, t.day, t.dotw, t.hour, t.min, t.sec);
+		char dt[32];
+		rtc_datetime_tostring(&t, dt);
+		INFO("USB time server enabled, new date and time: %s", dt);
+		// chardevs
+		if (usb_vend0_chardev_enabled)
+			INFO("USB binary ttys enabled");
+		// blockdevs
+		if (usb_vend0_blockdev_enabled)
+			INFO("USB external disks enabled");
+	}
+	else
+		INFO("USB binary server not found, skipping");
 }
 
 void usb_cdc3_set_cb(byte_tx_t rx_cb) {

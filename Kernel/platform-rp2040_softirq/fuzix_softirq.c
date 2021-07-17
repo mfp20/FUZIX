@@ -19,11 +19,9 @@ void fuzix_softirq(void) {
                 flash_irq_done = true;
             break;
             case DEV_ID_SD:
-                INFO("fuzix_softirq SD sig %d count %d", irq.sig, irq.count);
                 sd_irq_done = true;
             break;
             case DEV_ID_USB_VEND0:
-                INFO("fuzix_softirq VEND0 sig %d count %d", irq.sig, irq.count);
                 usb_irq_done = true;
             break;
             case DEV_ID_TTY1:

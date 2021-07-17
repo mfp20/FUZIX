@@ -21,15 +21,15 @@ static uint_fast8_t blockdev_signal(uint8_t dev, uint8_t req, bool *flag) {
 }
 
 static uint_fast8_t blockdev_flash_signal(uint8_t req) {
-	return blockdev_signal( DEV_ID_FLASH, req, &flash_irq_done);
+	return blockdev_signal(DEV_ID_FLASH, req, &flash_irq_done);
 }
 
 static uint_fast8_t blockdev_sd_signal(uint8_t req) {
-	blockdev_signal( DEV_ID_SD, req, &sd_irq_done);
+	blockdev_signal(DEV_ID_SD, req, &sd_irq_done);
 }
 
 static uint_fast8_t blockdev_usb_signal(uint8_t req) {
-	//blockdev_signal( DEV_ID_USB_VEND0, req, &usb_irq_done);
+	blockdev_signal(DEV_ID_USB_VEND0, req, &usb_irq_done);
 }
 
 static uint_fast8_t virtual_flash_transfer(void) {
@@ -113,14 +113,16 @@ void virtual_sd_init(void) {
 }
 
 void virtual_usb_disk_init(void) {
-	// init real device
-	uint32_t lba1, lba2, lba3;
-	usb_blockdev_init(&blk_op, &lba1, &lba2, &lba3);
+	if (usb_vend0_blockdev_enabled) {
+		// init real device
+		uint32_t lba1, lba2, lba3;
+		usb_blockdev_init(&blk_op, &lba1, &lba2, &lba3);
 
-	// init virtual device
-	if ((lba1)&&(lba2)&&(lba3)) {
-		fuzix_blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
-		fuzix_blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
-		fuzix_blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
+		// init virtual device
+		if ((lba1)&&(lba2)&&(lba3)) {
+			fuzix_blkdev_add(virtual_usb_disk1_transfer, NULL, virtual_usb_disk1_trim, lba1);
+			fuzix_blkdev_add(virtual_usb_disk2_transfer, NULL, virtual_usb_disk2_trim, lba2);
+			fuzix_blkdev_add(virtual_usb_disk3_transfer, NULL, virtual_usb_disk3_trim, lba3);
+		}
 	}
 }

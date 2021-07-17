@@ -105,7 +105,7 @@ static int flash_trim(void) {
 uint32_t flash_init(void *blk_op) {
 	critical_section_init(&flash_critical);
 
-	NOTICE("NAND flash: init");
+	NOTICE("NAND flash init");
 	dhara_map_init(&dhara, &nand, journal_buf, 10);
 	dhara_error_t err = DHARA_E_NONE;
 	dhara_map_resume(&dhara, &err);

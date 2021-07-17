@@ -1,6 +1,8 @@
 #include "rt_time.h"
 #include "rt_log.h"
 
+#include <stdio.h>
+
 alarm_pool_t *alarm_pool[4];
 
 // TODO
@@ -106,6 +108,10 @@ bool rtc_datetime_set(int16_t y, int8_t mo, int8_t d, int8_t dotw, int8_t h, int
 }
 
 bool (*usb_datetime_get)(datetime_t *t) = NULL;
+
+bool rtc_datetime_tostring(datetime_t *t, char *str) {
+    snprintf(str, 32, "%d-%d-%d, %d:%d:%d", t->year, t->month, t->day, t->hour, t->min, t->sec);
+}
 
 uint32_t monotonic32(void) {
     return time_us_32();

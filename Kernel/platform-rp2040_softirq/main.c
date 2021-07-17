@@ -84,6 +84,8 @@ int main(void)
 {
 	// stdio early init
 	chardev_init();
+	// say hello
+	log_test_color();
 
 	// init rtc, alarm pools, ...
 	time_init();
@@ -113,10 +115,6 @@ int main(void)
 	// TIMER3: softirq and usb maintenance (default pool hooks on this timer by default)
 	irq_set_priority(TIMER_IRQ_3, 128);
 
-	// say hello
-	log_test_color();
-
-	INFO("");
 	INFO("Pico realtime layer initialized. Fuzix starting...");
 	INFO("");
 
