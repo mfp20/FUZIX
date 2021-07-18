@@ -22,13 +22,6 @@ CONFIG_FLAT
 #define PROGTOP
 
 /*
-Set by the platform the number of Kbytes of memory available for process
-allocation. This is used by tools such as 'free' to help report memory
-utilization.
-*/
-usize_t procmem;
-
-/*
 The total amount of memory available in the system, including memory used for
 the kernel and other resources. This should reflect the way the platform
 normal reports total memory. It is used solely to provide feedback to the user
@@ -36,6 +29,13 @@ on their system configuration. It should thus match the values reported by
 firmware or other convention.
 */
 usize_t ramsize;
+
+/*
+Set by the platform the number of Kbytes of memory available for process
+allocation. This is used by tools such as 'free' to help report memory
+utilization.
+*/
+usize_t procmem;
 
 /*
 Allocate memory for the process p.  If no memory is available or the request is
@@ -85,6 +85,9 @@ used internally by the execve syscall code on 32bit systems.
 uaddr_t pagemap_base(void) {}
 
 /*
+arg_t _memalloc(void) {}
+arg_t _memfree(void) {}
+
 These functions are an implementation of the additional user space memory
 allocator functions on flat memory model systems. They are directly hooked
 into the system call tables.
@@ -100,5 +103,3 @@ allocations via kmalloc and kfree, as well as the process space for
 executables in flat memory space. The passed base address must be aligned to
 the alignment required by the processor and allocator.
 */
-arg_t _memalloc(void) {}
-arg_t _memfree(void) {}

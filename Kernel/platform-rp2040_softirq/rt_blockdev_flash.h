@@ -1,5 +1,5 @@
-#ifndef _SDK_VIRTDEV_FLASH_DOT_H
-#define _SDK_VIRTDEV_FLASH_DOT_H
+#ifndef _RT_BLOCKDEV_FLASH_DOT_H
+#define _RT_BLOCKDEV_FLASH_DOT_H
 
 #include "rt.h"
 

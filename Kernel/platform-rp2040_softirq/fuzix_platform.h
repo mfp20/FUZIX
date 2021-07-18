@@ -1,9 +1,10 @@
-#ifndef _FUZIX_RT_DOT_H
-#define _FUZIX_RT_DOT_H
+#ifndef _FUZIX_PLATFORM_DOT_H
+#define _FUZIX_PLATFORM_DOT_H
 
 #include <version.h>
 #include <kernel.h>
 #include <kdata.h>
+#include <kernel-armm0.def>
 #include <exec.h>
 #include <printf.h>
 #include <tty.h>
@@ -16,5 +17,7 @@
 
 #include <devsys.h>
 #include <dev/devsd.h>
+
+#include "fuzix_swapper.h"
 
 #endif

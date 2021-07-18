@@ -1,10 +1,5 @@
 #include "platform.h"
 
-#include <kernel.h>
-#include <kdata.h>
-#include <printf.h>
-#include <exec.h>
-
 #undef DEBUG
 
 /* A special swap and pagemap implementation for the Raspberry Pi Pico. Available

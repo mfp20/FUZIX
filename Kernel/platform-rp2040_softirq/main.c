@@ -1,10 +1,5 @@
 #include "platform.h"
 
-#include <kernel.h>
-#include <kdata.h>
-#include <kernel-armm0.def>
-#include <printf.h>
-
 struct svc_frame
 {
 	uint32_t r12;

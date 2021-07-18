@@ -44,28 +44,39 @@
 //--------------------------------------------------------------------+
 // Platform specific: RP2040 (Raspberry Pi Pico)
 //--------------------------------------------------------------------+
-//
+
 #include <stdint.h>
+
+//
 #define USERMEM (216*1024)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
+
+// low memory address for applications (should be 0x100 to run standard binaries)
+#define PROGBASE ((uaddr_t)&progbase[0])
+// In most cases PROGBASE is 0 and PROGLOAD is 0x100. In all cases, PROGBASE<=PROGLOAD.
+#define PROGLOAD ((uaddr_t)&progbase[UDATA_SIZE])
+// first byte above main memory, usually the start of the udata area and common memory
+#define PROGTOP (PROGLOAD + PROGSIZE)
+
 //
 #define USERSTACK (4*1024) // 4kB
+
 //
-#define UDATA_BLKS  3
-#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define PROGSIZE (65536 - UDATA_SIZE)
+
 //
-#define FLASH_OFFSET (96*1024)
+#define swap_map(x) ((uint8_t*)(x))
+
 // USB
-#define USB_DEV_TTY1        (1) // system console
-#define USB_DEV_TTY2        (1) // system log
-#define USB_DEV_MPLEX_SYS   (1) // system binary multiplexer for multiple binary streams (ex: external fs, RPC, ...)
-#define USB_DEV_TTY3        (1) // user tty 1
-#define USB_DEV_MPLEX_USR   (1) // user custom interface 1
-#define USB_DEV_CDC         (1) // user tty 2
-#define USB_DEV_VENDOR      (1) // user custom interface 2
-#define USB_MPLEX_TIMEOUT   (500) // on boot connection timeout in milliseconds, 0 to disable USB on boot
+#define USB_DEV_TTY1        (1) // build system tty1
+#define USB_DEV_TTY2        (1) // build system tty2
+#define USB_DEV_TTY3        (1) // build system tty3
+#define USB_DEV_MPLEX_SYS   (1) // build system binary multiplexer (ex: external rtc, external fs, RPC, ...)
+#define USB_DEV_MPLEX_USR   (1) // build spare binary multiplexer for fuzix apps
+#define USB_DEV_CDC         (1) // build spare CDC interface for custom users needs
+#define USB_DEV_VENDOR      (1) // build spare USB VENDOR interface for custom users needs
+#define USB_MPLEX_TIMEOUT   (500) // connection timeout in milliseconds, 0 to disable USB on boot
 // log config
 #ifdef BUILD_DEBUG
 #define LOG_LEVEL (7)
@@ -115,12 +126,6 @@ extern uint8_t progbase[USERMEM];
 //--------------------------------------------------------------------+
 // clock rate
 #define TICKSPERSEC 1000
-// low memory address for applications (should be 0x100 to run standard binaries)
-#define PROGBASE ((uaddr_t)&progbase[0])
-// In most cases PROGBASE is 0 and PROGLOAD is 0x100. In all cases, PROGBASE<=PROGLOAD.
-#define PROGLOAD ((uaddr_t)&progbase[UDATA_SIZE])
-// first byte above main memory, usually the start of the udata area and common memory
-#define PROGTOP (PROGLOAD + PROGSIZE)
 // pointer to a null-terminated command line passed from the loader/firmware. Set to NULL if none
 #define CMDLINE NULL
 // Enables kernel32.h on 32bits ports
@@ -234,8 +239,10 @@ extern uint8_t progbase[USERMEM];
 #define SWAPBASE PROGBASE
 // highest address that will be swapped
 #define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) // never swap in/out data above break
-// special use (set to 0)
-//#define UDATA_BLOCKS 0
+//
+#define UDATA_BLKS  3
+//
+#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 //
 //#define UDATA_SWAPSIZE
 // number of disk blocks needed to hold all the swap for one process
@@ -280,8 +287,6 @@ extern uint8_t progbase[USERMEM];
 //#define CONFIG_VMMU
 // Search for the first swap partition on MBR partitioned disks
 //#define CONFIG_DYNAMIC_SWAP
-//
-#define swap_map(x) ((uint8_t*)(x))
 
 //--------------------------------------------------------------------+
 // tty, gfx
@@ -372,6 +377,7 @@ extern uint8_t progbase[USERMEM];
 //#define CONFIG_CPM_EMU
 //#define CONFIG_LEGACY_EXEC
 //#define CONFIG_PAGE_SIZE    16
+//#define UDATA_BLOCKS 0
 
 #define MANGLED 1
 #include "mangle.h"

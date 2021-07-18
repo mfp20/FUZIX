@@ -3,6 +3,9 @@
 
 #include "rt.h"
 
+//
+#define FLASH_OFFSET (96*1024)
+
 // clone of Fuzix's struct blkparam
 typedef struct blkparam_s {
     // do not change the order
