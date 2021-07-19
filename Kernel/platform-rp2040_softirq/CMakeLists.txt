@@ -40,7 +40,7 @@ add_executable(fuzix
 	rt_usb.c
 # Pico port code
 	fuzix_elf.c 
-	fuzix_swapper.c
+	fuzix_mm.c
 	fuzix_softirq.c
 	fuzix_platform.c
 	fuzix_devblock.c

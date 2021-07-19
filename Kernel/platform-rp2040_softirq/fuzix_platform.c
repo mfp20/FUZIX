@@ -11,10 +11,6 @@ void set_cpu_type(void) {}
 void map_init(void) {}
 void program_vectors(uint16_t* pageptr) {}
 
-uaddr_t pagemap_base(void) {
-    return PROGBASE;
-}
-
 // This checks to see if a user-supplied address is legitimate
 usize_t valaddr(const uint8_t *base, usize_t size) {
 	if (base + size < base)

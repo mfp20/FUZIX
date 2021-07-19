@@ -46,8 +46,13 @@
 //--------------------------------------------------------------------+
 
 #include <stdint.h>
+extern uint8_t __end__, __StackLimit;
+#define HEAP_BASE ((&__end__)+1)
+#define HEAP_END (&__StackLimit-1)
+#define HEAP_SIZE ((uint32_t)(HEAP_END-HEAP_BASE))
+#define HEAP_RESERVED 16384
 
-//
+// TODO calculate USERMEM at boot time from the end address of the OS and top of usable memory
 #define USERMEM (216*1024)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
