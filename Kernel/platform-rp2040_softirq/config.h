@@ -45,28 +45,28 @@
 // Platform specific: RP2040 (Raspberry Pi Pico)
 //--------------------------------------------------------------------+
 
+// user process memory
 #include <stdint.h>
-
-//
-#define USERMEM (216*1024)
-extern uint8_t progbase[USERMEM];
-#define udata (*(struct u_data*)progbase)
-
-// low memory address for applications (should be 0x100 to run standard binaries)
-#define PROGBASE ((uaddr_t)&progbase[0])
-// In most cases PROGBASE is 0 and PROGLOAD is 0x100. In all cases, PROGBASE<=PROGLOAD.
-#define PROGLOAD ((uaddr_t)&progbase[UDATA_SIZE])
-// first byte above main memory, usually the start of the udata area and common memory
-#define PROGTOP (PROGLOAD + PROGSIZE)
-
-//
-#define USERSTACK (4*1024) // 4kB
-
-//
-#define PROGSIZE (65536 - UDATA_SIZE)
-
-//
-#define swap_map(x) ((uint8_t*)(x))
+extern uint8_t __end__, __StackLimit;
+#define HEAP_BASE ((&__end__)+8)
+#define HEAP_END (&__StackLimit-1)
+#define HEAP_SIZE ((uint32_t)(HEAP_END-HEAP_BASE))
+#define HEAP_RESERVED 16384
+#define PROCESS_MAX_MEM 65536
+// beginning of process memory (ie: udata+program)
+#define PROGBASE ((uaddr_t)&__end__+8)
+// process data is partially stored in a per process structure called udata structure
+// placed at the beginning of the process memory
+#define udata (*(struct u_data*)PROGBASE)
+// beginning of program
+#define PROGLOAD ((uaddr_t)PROGBASE+UDATA_SIZE)
+// first byte above process memory
+#define PROGTOP (PROGBASE+PROCESS_MAX_MEM)
+// program maximum size
+#define PROGSIZE (PROCESS_MAX_MEM-UDATA_SIZE)
+#define BLOCKSIZE 4096
+#define FUZIX_MEM_SIZE ((uint32_t)((HEAP_END-HEAP_BASE)-HEAP_RESERVED))
+#define NUM_ALLOCATION_BLOCKS ((FUZIX_MEM_SIZE / BLOCKSIZE)-1)
 
 // USB
 #define USB_DEV_TTY1        (1) // build system tty1
@@ -128,30 +128,36 @@ extern uint8_t progbase[USERMEM];
 #define TICKSPERSEC 1000
 // pointer to a null-terminated command line passed from the loader/firmware. Set to NULL if none
 #define CMDLINE NULL
-// Enables kernel32.h on 32bits ports
-#define CONFIG_32BIT
-// Enables process accounting
-//#define CONFIG_ACCT
-// Inlined irq handling
-#define CONFIG_INLINE_IRQ
 //
 //#define CONFIG_LEVEL_0
 //
 //#define CONFIG_LEVEL_2
+// Enables kernel32.h on 32bits ports
+#define CONFIG_32BIT
+// Inlined irq handling
+#define CONFIG_INLINE_IRQ
+// Use soft irqs
+#define CONFIG_SOFT_IRQ
 // no timer interrupt available
 //#define CONFIG_NO_CLOCK
 // Enables suspend to RAM, platform_suspend()
 #define CONFIG_PLATFORM_SUSPEND
 // Profil syscall support (not yet complete)
 #undef CONFIG_PROFIL
-// Use soft irqs
-#define CONFIG_SOFT_IRQ
 //
 //#define CONFIG_UDATA_TEXTTOP
+// Enables process accounting
+//#define CONFIG_ACCT
 
 //--------------------------------------------------------------------+
 // memory banks
 //--------------------------------------------------------------------+
+//
+//#define CONFIG_BANKED
+//
+#define CONFIG_BANKS 1
+//
+//#define CONFIG_BANK8
 // Selects support for four flexible 16K bank registers
 //#define CONFIG_BANK16
 //
@@ -163,17 +169,16 @@ extern uint8_t progbase[USERMEM];
 //
 //#define CONFIG_BANK_65C816
 //
-//#define CONFIG_BANK8
-//
 //#define CONFIG_BANK_8086
-//
-//#define CONFIG_BANKED
-// Selects support for lower memory bank selector / fixed common at the top
+// bank model: selects support for lower memory bank selector / fixed common at the top
 //#define CONFIG_BANK_FIXED
-// Selects a system where memory is managed linearly with base/limit pairs or similar and a common
+//#define MAX_MAPS //The number of banks that are available to userspace
+//#define MAP_SIZE //The size of the bankable area
+//#define MAP_BASE //The base address of the bankable area
+// bank model: selects a system where memory is managed linearly with base/limit pairs or similar and a common
 //#define CONFIG_BANK_LINEAR
-//
-#define CONFIG_BANKS 1
+// bank model: selects a system with single flat address space and no bank or limit registers
+#undef CONFIG_FLAT
 // 32K common, ldir copying to use for 48K apps
 //#define CONFIG_COMMON_COPY
 //
@@ -235,16 +240,22 @@ extern uint8_t progbase[USERMEM];
 //--------------------------------------------------------------------+
 // ram and swap
 //--------------------------------------------------------------------+
-// lowest address that will be swapped
-#define SWAPBASE PROGBASE
-// highest address that will be swapped
-#define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) // never swap in/out data above break
+// use the standard C helpers for user memory copying
+//#define CONFIG_USERMEM_C
+// all memory is always mapped for live processes and kernel
+#define CONFIG_USERMEM_DIRECT
+// multiple processes in memory at once
+#define CONFIG_MULTI
 //
 #define UDATA_BLKS  3
 //
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 //
 //#define UDATA_SWAPSIZE
+// lowest address that will be swapped
+#define SWAPBASE PROGBASE
+// highest address that will be swapped
+#define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) // never swap in/out data above break
 // number of disk blocks needed to hold all the swap for one process
 #define SWAP_SIZE ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
 // largest number of SWAP_SIZE chunks that will be used
@@ -259,12 +270,8 @@ extern uint8_t progbase[USERMEM];
 #define CONFIG_CUSTOM_VALADDR
 //
 //#define CONFIG_DYNAMIC_BUFPOOL
-// Memory allocation on systems with a single flat address space and no bank or limit registers
-#undef CONFIG_FLAT
 //
 //#define CONFIG_INDIRECT_QUEUES
-// swap: multiple processes in memory at once
-#define CONFIG_MULTI
 // pure swap config: always give the parent a chance to get to waitpid()
 //#define CONFIG_PARENT_FIRST
 // Enable dynamic swap
@@ -279,14 +286,12 @@ extern uint8_t progbase[USERMEM];
 //#define CONFIG_SWAP
 // Selects NO user banking
 #define CONFIG_SWAP_ONLY
-// Tells the kernel to use the standard C helpers for user memory copying
-//#define CONFIG_USERMEM_C
-//
-#define CONFIG_USERMEM_DIRECT
 //
 //#define CONFIG_VMMU
 // Search for the first swap partition on MBR partitioned disks
 //#define CONFIG_DYNAMIC_SWAP
+//
+#define swap_map(x) ((uint8_t*)(x))
 
 //--------------------------------------------------------------------+
 // tty, gfx

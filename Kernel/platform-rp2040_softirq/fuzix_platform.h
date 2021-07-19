@@ -1,6 +1,10 @@
 #ifndef _FUZIX_PLATFORM_DOT_H
 #define _FUZIX_PLATFORM_DOT_H
 
+#include <stdint.h>
+
+#include "config.h"
+
 #include <version.h>
 #include <kernel.h>
 #include <kdata.h>
@@ -18,6 +22,6 @@
 #include <devsys.h>
 #include <dev/devsd.h>
 
-#include "fuzix_swapper.h"
+#include "fuzix_mm.h"
 
 #endif

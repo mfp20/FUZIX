@@ -40,7 +40,7 @@ add_executable(fuzix
 	rt_usb.c
 # Pico port code
 	fuzix_elf.c 
-	fuzix_swapper.c
+	fuzix_mm.c
 	fuzix_softirq.c
 	fuzix_platform.c
 	fuzix_devblock.c
@@ -54,8 +54,8 @@ add_executable(fuzix
 	devices.c
 	tricks.S
 # Fuzix code
+	../lowlevel-armm0.S
 	../version.c
-	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c
 	../process.c
@@ -85,7 +85,6 @@ add_executable(fuzix
 	../lib/dhara/error.c
 	../lib/dhara/journal.c
 	../lib/dhara/map.c
-	../lib/hexdump.c
 # main()
 	main.c
 )

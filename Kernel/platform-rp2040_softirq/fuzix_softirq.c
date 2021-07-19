@@ -40,7 +40,7 @@ void fuzix_softirq(void) {
     }
 }
 
-uint32_t di(void) {
+irqflags_t di(void) {
 	fuzix_ready = false;
 	return 0;
 }
@@ -50,7 +50,7 @@ void ei(void) {
 	fuzix_softirq();
 }
 
-void irqrestore(uint32_t ps) {
+void irqrestore(irqflags_t ps) {
 	fuzix_ready = true;
 	fuzix_softirq();
 }

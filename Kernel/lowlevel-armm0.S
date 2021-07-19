@@ -1,5 +1,8 @@
 #include "kernel-armm0.def"
 
+.global udata
+udata = progbase
+
 .code 16
 
 .text

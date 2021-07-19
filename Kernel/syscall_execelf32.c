@@ -84,7 +84,8 @@ arg_t _execve(void)
 	mflags = fs_tab[ino->c_super].m_flags;
 	if (mflags & MS_NOEXEC) {
 		udata.u_error = EACCES;
-		goto nogood;
+		// TODO goto nogood;
+		goto eacces;
 	}
 
 	setftime(ino, A_TIME);

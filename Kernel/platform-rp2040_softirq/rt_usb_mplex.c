@@ -134,10 +134,14 @@ static void usb_tx_packet(uint8_t packet_id, uint8_t op_id, uint8_t count, void 
 			if (count) tud_vendor_n_write(0, data, count);
 		}
 		else
+		{
 			WARN("VEND0 buffer full");
+		}
 	}
 	else
+	{
 		WARN("VEND0 not connected");
+	}
 }
 
 //--------------------------------------------------------------------+
