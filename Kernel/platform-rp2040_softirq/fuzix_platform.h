@@ -18,6 +18,6 @@
 #include <devsys.h>
 #include <dev/devsd.h>
 
-#include "fuzix_swapper.h"
+#include "fuzix_mm.h"
 
 #endif

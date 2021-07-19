@@ -52,7 +52,8 @@ class PicoBlockdev:
     dev = None
     def __init__(self, filename):
         self.filename = filename
-        self.dev = open(filename, "rb+")
+    def open(self):
+        self.dev = open(self.filename, "rb+")
     def lba(self):
         return os.stat(self.filename).st_size / self.BLOCKSIZE
     def read(self, blocknum):
@@ -179,16 +180,32 @@ class Pyco:
         elif (command == 2):
             pkt = self.packet_gen(64, 2, 0, 1)
         usb.write(pkt)
+    def ctrl_syn(self, data, len):
+        print("control syn")
     def ctrl_connect(self, data, len):
         print("control connect")
     def ctrl_disconnect(self, data, len):
         print("control disconnect")
+    def ctrl_datetime(self, data, len):
+        print("control datetime")
+    def ctrl_blockdev_connect(self, data, len):
+        print("control blockdev connect")
+    def ctrl_blockdev_disconnect(self, data, len):
+        print("control blockdev disconnect")
     def ctrl_chardev_connect(self, data, len):
         print("control chardev connect")
     def ctrl_chardev_disconnect(self, data, len):
         print("control chardev disconnect")
     def ctrl_reboot(self, data, len):
         print("control reboot")
+    def usb_disk_op_lba(self, data, len):
+        print("usb_disk_op_lba")
+    def usb_disk_op_read(self, data, len):
+        print("usb_disk_op_read")
+    def usb_disk_op_write(self, data, len):
+        print("usb_disk_op_write")
+    def usb_disk_op_trim(self, data, len):
+        print("usb_disk_op_trim")
     # protocol: packet IDs
     USB_PACKET_CTRL_BIT=8
     USB_PACKET_ID = {
@@ -203,11 +220,22 @@ class Pyco:
     }
     # protocol: control packets IDs
     USB_CTRL_ID = {
-        0 : ctrl_connect,
-        1 : ctrl_disconnect,
-        2 : ctrl_chardev_connect,
-        3 : ctrl_chardev_disconnect,
+        0 : ctrl_syn,
+        1 : ctrl_connect,
+        2 : ctrl_disconnect,
+        3 : ctrl_datetime,
+        4 : ctrl_blockdev_connect,
+        5 : ctrl_blockdev_disconnect,
+        6 : ctrl_chardev_connect,
+        7 : ctrl_chardev_disconnect,
         255 : ctrl_reboot
+    }
+    # disk operations
+    USB_DISK_OP = {
+        0 : usb_disk_op_lba,
+        0 : usb_disk_op_read,
+        0 : usb_disk_op_write,
+        0 : usb_disk_op_trim
     }
 
 def main():
